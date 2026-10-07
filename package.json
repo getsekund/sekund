@@ -7,7 +7,9 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "dev": "pnpm --parallel --filter @sekund/protocol --filter @sekund/companion --filter @sekund/watch-sim dev",
     "relay": "pnpm --filter @sekund/protocol relay",
+    "devnet:proof": "pnpm --filter @sekund/companion devnet:proof",
     "dev:companion": "pnpm --filter @sekund/companion dev",
     "dev:watch": "pnpm --filter @sekund/watch-sim dev",
     "test": "vitest run",
