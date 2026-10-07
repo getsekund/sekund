@@ -25,13 +25,13 @@ Scope: the hackathon software proof of concept on Solana devnet. Based on spec v
 | PIN brute force | Counter written before each check and persisted; third failure wipes key and PIN | `chip.ts` | Built, tested |
 | Unlocked watch left unattended | Wrist-off ends the session and revokes tokens (a toggle in the PoC) | watch-sim, `chip.ts` | Built (toggle) |
 | Key extraction through the SE interface | No export command; key created non-extractable; test-key import disabled in the Worker | `chip.ts`, `worker.ts` | Built, tested |
-| Key extraction from the browser | **Not protected.** Same-profile scripts, extensions or a compromised machine can use the key | — | Accepted for the PoC |
-| Malicious watch code (fake display, auto-approve) | **Not protected.** Hardware needs signed firmware and secure boot | — | Roadmap |
+| Key extraction from the browser | **Not protected.** Same-profile scripts, extensions or a compromised machine can use the key | None | Accepted for the PoC |
+| Malicious watch code (fake display, auto-approve) | **Not protected.** Hardware needs signed firmware and secure boot | None | Roadmap |
 | Eavesdropping on the link | Frames contain no secrets (no key, PIN or token); devnet only | `protocol/` | Accepted |
-| BLE MITM | Not applicable to the relay. Hardware: LE Secure Connections with Numeric Comparison | — | Roadmap |
-| PIN or commands sniffed on the MCU–SE bus | Not applicable in the PoC. Hardware: SCP03 (SE050E) or the TROPIC01 secure channel | — | Roadmap |
-| Debug-port attack | Not applicable in the PoC. Hardware: debug lock | — | Roadmap |
-| Lost or broken watch | No recovery: the key cannot be exported. Recovery design (spec 5.1) is needed before mainnet | — | Open decision |
+| BLE MITM | Not applicable to the relay. Hardware: LE Secure Connections with Numeric Comparison | None | Roadmap |
+| PIN or commands sniffed on the MCU-to-SE bus | Not applicable in the PoC. Hardware: SCP03 (SE050E) or the TROPIC01 secure channel | None | Roadmap |
+| Debug-port attack | Not applicable in the PoC. Hardware: debug lock | None | Roadmap |
+| Lost or broken watch | No recovery: the key cannot be exported. Recovery design (spec 5.1) is needed before mainnet | None | Open decision |
 
 ## Residual risks to state in the demo
 
