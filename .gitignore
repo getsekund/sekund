@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+.DS_Store
+
+# Never commit keys or secrets
+.env
+.env.*
+!.env.example
+*.keypair.json
+keys/

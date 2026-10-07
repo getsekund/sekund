@@ -1,0 +1,8 @@
+packages:
+  - protocol
+  - se-sim
+  - companion
+  - watch-sim
+
+onlyBuiltDependencies:
+  - esbuild
