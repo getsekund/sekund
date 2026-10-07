@@ -20,6 +20,8 @@ A Solana hardware wallet inside a retro digital watch. This repository is the so
 | `se-sim/` | Simulated secure element: Web Worker, IndexedDB key store, TROPIC01/SE050E profiles, `seDriver` |
 | `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317 |
 | `watch-sim/` | Watch simulator, port 4318 (built in parallel) |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, trust boundary and request lifecycle as built |
+| [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | Threats, where each is handled, and what the PoC does not protect |
 | `docs/PROTOCOL.md` | Wire contract and transport |
 | `docs/SOLANA_SIGNING.md` | Signing path and the four signing fixes |
 
