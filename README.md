@@ -2,26 +2,118 @@
 
 A Solana hardware wallet inside a retro digital watch. This repository is the software proof of concept for the Colosseum Crypto World's Fair hackathon, on **Solana devnet only**.
 
-The secure element in this proof of concept is **simulated in software**. Real hardware (nRF52840 plus a TROPIC01 or SE050E secure element) is the post-hackathon roadmap.
+> **The secure element in this proof of concept is simulated in software.** It runs in a Web Worker and holds a non-extractable WebCrypto Ed25519 key in IndexedDB. Real hardware (nRF52840 with a TROPIC01 or SE050E secure element) is the post-hackathon roadmap. Nothing here claims hardware security or mainnet readiness.
+
+## What works
+
+- A companion app builds a devnet SOL transfer right after fetching the blockhash and sends the exact message bytes to the watch over a local link that stands in for Bluetooth.
+- The watch side refuses replays, expired requests, oversize messages (before display), durable-nonce messages, lookup-table (v0) messages and anything other than one System Program transfer from its own address.
+- The simulated secure element signs pure Ed25519 over the unhashed bytes, only inside a PIN session and only with a one-time approve token bound to those bytes. Three wrong PINs wipe the key.
+- Two secure-element profiles mirror the hardware candidates: TROPIC01 (4,096-byte limit, little-endian) and SE050E (919-byte limit, big-endian on the wire, converted by one `seDriver` wrapper).
+- The companion verifies every signature against the message and the address, assembles the transaction, broadcasts it to devnet and links to the explorer. `EXPIRED` leads to a new request with a new blockhash.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `protocol/` | Request envelope, `SecureElement` interface, local transport (relay) |
-| `se-sim/` | Simulated secure element (Web Worker) |
-| `companion/` | Devnet companion app, port 4317 |
-| `watch-sim/` | Watch simulator, port 4318 |
-| `docs/PROTOCOL.md` | Wire contract between companion and watch |
+| `protocol/` | Request envelope, `SecureElement` interface, message parser and allowlist, request guard, local relay transport |
+| `se-sim/` | Simulated secure element: Web Worker, IndexedDB key store, TROPIC01/SE050E profiles, `seDriver` |
+| `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317 |
+| `watch-sim/` | Watch simulator, port 4318 (built in parallel) |
+| `docs/PROTOCOL.md` | Wire contract and transport |
+| `docs/SOLANA_SIGNING.md` | Signing path and the four signing fixes |
+
+## Requirements
+
+- Node.js 22.12 or newer, pnpm 10 (`corepack enable`)
+- A browser with WebCrypto Ed25519: Chrome or Edge 137+, Firefox, or Safari
 
 ## Run
 
 ```bash
 pnpm install
-pnpm relay      # local transport on ws://127.0.0.1:4319
-pnpm test
+pnpm dev
 ```
+
+`pnpm dev` starts three processes:
+
+| Process | URL |
+|---|---|
+| Local link (relay standing in for BLE) | `ws://127.0.0.1:4319` |
+| Companion | http://localhost:4317 |
+| Watch simulator | http://localhost:4318 |
+
+Open both apps in separate windows. Unlock the watch with its PIN, then send a transfer from the companion and approve it on the watch.
+
+To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`.
+
+Without the watch simulator, a terminal stand-in can answer the companion over the same link (ephemeral key, for development only):
+
+```bash
+pnpm --filter @sekund/companion watch:headless
+```
+
+### Devnet SOL
+
+The companion's **Airdrop devnet SOL** button asks the public faucet for 1 SOL, then 0.1 SOL. The faucet is often rate-limited; the app then tells you to copy the address, request SOL at [faucet.solana.com](https://faucet.solana.com) (choose Devnet), and press **Refresh**.
+
+## Tests
+
+```bash
+pnpm test        # Vitest across all packages
+pnpm typecheck
+```
+
+The suite covers every item in spec section 11.1:
+
+| Requirement | Test file |
+|---|---|
+| Signature verifies against the message and address | `companion/test/signing-path.test.ts`, `se-sim/test/secure-element.test.ts` |
+| Reject produces no signature | `companion/test/signing-path.test.ts` |
+| Replayed request refused | `companion/test/signing-path.test.ts`, `protocol/test/guard.test.ts` |
+| Payload altered after display refused | `se-sim/test/secure-element.test.ts`, `companion/test/signing-path.test.ts` |
+| Three wrong PINs wipe the key | `se-sim/test/secure-element.test.ts`, `companion/test/signing-path.test.ts` |
+| Oversize message refused before display | `protocol/test/guard.test.ts`, `companion/test/signing-path.test.ts` |
+| Expired request produces no signature; retry is a new request | `companion/test/signing-path.test.ts` |
+| RFC 8032 §7.1 vectors byte-exact on both profiles | `se-sim/test/rfc8032.test.ts` |
+| Nonce and lookup-table messages refused | `protocol/test/parser.test.ts`, `companion/test/signing-path.test.ts` |
+
+## Devnet proof
+
+```bash
+pnpm devnet:proof
+```
+
+The script creates a simulated SE (TROPIC01 profile), generates the key inside it, funds the address, builds a transfer, runs the full protocol path (guard, review, scripted APPROVE, approve token, pure Ed25519), verifies the signature, broadcasts to devnet and prints the explorer link. In the demo, a person presses APPROVE on the watch simulator instead.
+
+If the public faucet refuses, the script falls back to a devnet-only funder wallet at `companion/.devnet/funder.json` (gitignored, created on first run), or to a Solana CLI keypair given in `SEKUND_FUNDER_KEYPAIR`. Fund that address once at [faucet.solana.com](https://faucet.solana.com). The funder only pays for the test; it never signs the SEKUND transaction.
+
+Recorded run: _pending devnet funding (see below)._
+
+## Solana SDK
+
+| Package | Version |
+|---|---|
+| `@solana/kit` | 8.4.0 |
+| `@solana-program/system` | 0.15.0 |
+
+Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api.devnet.solana.com`) only.
+
+## Security rules
+
+1. Private keys never leave the secure element (simulated in this proof of concept).
+2. No wallet private key is stored in plaintext; the simulated SE stores a non-extractable `CryptoKey` handle.
+3. No private keys or sensitive cryptographic material are logged.
+4. Nothing is signed without explicit physical approval inside a PIN session, before expiry.
+5. Pure Ed25519 over the exact, unhashed message bytes that were displayed.
+6. Messages longer than `maxMessageBytes` are rejected before display.
+7. All secure-element byte-order conversion happens in the `seDriver` wrapper only.
+8. Requests are single-use and replay-protected.
+9. No hand-written cryptographic primitives: WebCrypto only.
+10. Approval and display logic is security-critical; changes need review and tests.
 
 ## Disclosure
 
-All work in this repository started on or after 5 October 2026, during the hackathon window.
+- All work in this repository started on or after 5 October 2026, inside the hackathon window. There is no prior work.
+- Team: Goran (3D model, watch face, pitch, video) and Srki (code). The code was written with AI coding agents (Cursor) working under the team's direction.
+- Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components). The Ed25519 test vectors are copied from RFC 8032 §7.1.
