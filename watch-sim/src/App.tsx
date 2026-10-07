@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { STUB_DEMO_PIN } from '@/adapters/stubSecureElement'
-import type { StubRequestKind } from '@/adapters/stubTransport'
 import { renderFace } from '@/face/screens'
 import { Watch } from '@/face/Watch'
 import { hintsFor } from '@/hints'
 import { secondsLeft } from '@/machine/machine'
-import { controller, secureElement, transport } from '@/services'
+import { controller, relayUrl, startSecureElement, transport } from '@/services'
 import { KEY_FOR, useWatch } from '@/useWatch'
 
 function Section({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
@@ -32,63 +31,51 @@ function Kbd({ children }: { children: React.ReactNode }) {
   )
 }
 
-const STATUS_TONE: Record<string, string> = {
-  APPROVED: 'text-sk-ok',
-  REJECTED: 'text-sk-warn',
-  EXPIRED: 'text-sk-warn',
-  TOO_LARGE: 'text-sk-danger',
-  UNSUPPORTED: 'text-sk-danger',
-  LOCKED: 'text-sk-danger',
-  SENT: 'text-muted-foreground',
+function Code({ children }: { children: React.ReactNode }) {
+  return <code className="font-mono text-foreground">{children}</code>
 }
 
-const KIND_LABEL: Record<StubRequestKind, string> = {
-  transfer: 'Transfer 0.01 SOL',
-  'short-expiry': 'Transfer, 12 s expiry',
-  oversize: 'Oversize message',
-  nonce: 'Durable nonce',
-  replay: 'Replay last request',
-}
-
-function StubCompanion() {
-  const log = useSyncExternalStore(
-    (fn) => transport.subscribe(fn),
-    () => transport.log,
+function useLink(): { state: TransportState; peer: boolean } {
+  const state = useSyncExternalStore(
+    (fn) => transport.onState(fn),
+    () => transport.state,
   )
+  const peer = useSyncExternalStore(
+    (fn) => transport.onPeer(fn),
+    () => transport.peerConnected,
+  )
+  return { state, peer }
+}
+
+function CompanionLink() {
+  const link = useLink()
+  const relayUp = link.state === 'open'
+  const badge = !relayUp ? 'Relay offline' : link.peer ? 'Paired' : 'Waiting'
   return (
-    <Section title="Stub companion" aside={<Badge variant="outline">local stub</Badge>}>
+    <Section
+      title="Companion link"
+      aside={
+        <Badge variant="outline" className={link.peer ? 'text-sk-ok' : relayUp ? '' : 'text-sk-warn'}>
+          {badge}
+        </Badge>
+      }
+    >
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Stands in for the companion app until the shared transport lands. It sends signed-request envelopes to the
-        watch and verifies returned signatures. It does not broadcast.
+        {relayUp ? (
+          link.peer ? (
+            <>The companion is connected. Sign requests appear on the watch once Secure Mode is unlocked.</>
+          ) : (
+            <>
+              Connected to the local relay. Open the companion on port <Code>{COMPANION_PORT}</Code> to pair.
+            </>
+          )
+        ) : (
+          <>
+            Stands in for Bluetooth. Run <Code>pnpm relay</Code> in the repo; the watch reconnects to{' '}
+            <Code>{relayUrl}</Code> on its own.
+          </>
+        )}
       </p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button className="col-span-2" onClick={() => transport.send('transfer')}>
-          Send sign request
-        </Button>
-        {(['short-expiry', 'replay', 'oversize', 'nonce'] as const).map((k) => (
-          <Button key={k} variant="outline" size="sm" onClick={() => transport.send(k)}>
-            {KIND_LABEL[k]}
-          </Button>
-        ))}
-      </div>
-      {log.length === 0 ? (
-        <p className="text-xs text-sk-faint">No requests yet.</p>
-      ) : (
-        <ul className="flex flex-col gap-1.5 font-mono text-xs">
-          {log.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-2">
-              <span className="truncate text-muted-foreground">
-                {e.requestId.slice(0, 8)} · {KIND_LABEL[e.kind]}
-              </span>
-              <span className={`shrink-0 ${STATUS_TONE[e.status]}`}>
-                {e.status}
-                {e.verified === true && ' · verified'}
-                {e.verified === false && ' · BAD SIG'}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
     </Section>
   )
 }
@@ -98,17 +85,15 @@ export default function App() {
   const { state } = watch
   const face = useMemo(() => renderFace(state), [state])
   const hints = hintsFor(state)
-  const [booting, setBooting] = useState(true)
   const [bootError, setBootError] = useState<string | null>(null)
 
   useEffect(() => {
-    controller
-      .boot()
-      .catch((err: unknown) => setBootError(err instanceof Error ? err.message : String(err)))
-      .finally(() => setBooting(false))
+    startSecureElement().catch((err: unknown) => setBootError(err instanceof Error ? err.message : String(err)))
   }, [])
 
-  const seStatus = state.wiped ? 'Key wiped' : state.address ? 'Key present' : booting ? 'Generating key…' : 'No key'
+  const se = controller.secureElement
+  const wiped = state.screen.kind === 'wiped'
+  const wallet = !state.ready ? 'Starting…' : wiped ? 'Key wiped' : state.address ? 'Ready' : 'Not set up'
   const pending = state.request ? secondsLeft(state) : null
 
   return (
@@ -129,11 +114,6 @@ export default function App() {
             <Button variant="outline" size="sm" onClick={() => watch.chord('A', 'D')}>
               Press A + D
             </Button>
-            {transport.kind === 'stub' && (
-              <Button variant="outline" size="sm" onClick={() => transport.send('transfer')}>
-                Send request
-              </Button>
-            )}
           </div>
         </div>
 
@@ -149,7 +129,7 @@ export default function App() {
           {bootError && (
             <p className="rounded-md border border-sk-danger/40 p-3 text-xs text-sk-danger">
               The simulated secure element could not start: {bootError}. This browser may lack WebCrypto Ed25519
-              (Chrome 137+, Firefox, Safari).
+              (Chrome 137+, Firefox, Safari) or IndexedDB.
             </p>
           )}
 
@@ -192,37 +172,32 @@ export default function App() {
 
           <Separator />
 
-          <Section title="Secure element" aside={<Badge variant="outline">{secureElement.profile} · stub</Badge>}>
+          <CompanionLink />
+
+          <Separator />
+
+          <Section title="Secure element" aside={<Badge variant="outline">{se?.profile ?? 'TROPIC01'} · simulated</Badge>}>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
               <dt className="text-muted-foreground">Wallet</dt>
-              <dd className={state.wiped ? 'text-sk-danger' : ''}>{seStatus}</dd>
+              <dd className={wiped ? 'text-sk-danger' : ''}>{wallet}</dd>
               <dt className="text-muted-foreground">Session</dt>
               <dd>{state.session ? 'Open' : 'Closed'}</dd>
               <dt className="text-muted-foreground">PIN tries left</dt>
-              <dd>{state.attemptsLeft}</dd>
+              <dd>{state.hasPin ? state.attemptsLeft : '—'}</dd>
               <dt className="text-muted-foreground">Max message</dt>
-              <dd>{secureElement.maxMessageBytes} bytes</dd>
+              <dd>{se ? `${se.maxMessageBytes} bytes` : '—'}</dd>
               <dt className="text-muted-foreground">Request</dt>
               <dd>{pending === null ? 'None' : `${pending} s left`}</dd>
-              <dt className="text-muted-foreground">Demo PIN</dt>
-              <dd className="font-mono">{STUB_DEMO_PIN}</dd>
             </dl>
-            {controller.address && (
-              <p className="font-mono text-xs break-all text-muted-foreground">{controller.address}</p>
-            )}
-            {state.wiped && (
-              <Button variant="outline" onClick={() => void controller.resetWallet()}>
-                Create a new wallet key
-              </Button>
+            {state.address && <p className="font-mono text-xs break-all text-muted-foreground">{state.address}</p>}
+            {state.ready && !state.hasPin && (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {wiped ? 'The key was wiped after 3 wrong PINs. ' : 'First use. '}
+                Press <Kbd>A</Kbd> + <Kbd>D</Kbd> on the watch and choose a 4-digit PIN to create a new devnet key. It
+                stays in this browser (Web Worker + IndexedDB) and never leaves the simulated chip.
+              </p>
             )}
           </Section>
-
-          {transport.kind === 'stub' && (
-            <>
-              <Separator />
-              <StubCompanion />
-            </>
-          )}
         </aside>
       </main>
     </div>

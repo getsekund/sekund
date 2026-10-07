@@ -35,12 +35,13 @@ export function drawText(grid: Grid, text: string, x: number, y: number, scale =
     const g = glyph(ch)
     for (let r = 0; r < GLYPH_H; r++) {
       for (let c = 0; c < GLYPH_W; c++) {
-        if (!g[r][c]) continue
+        if (!g[r]?.[c]) continue
         for (let dy = 0; dy < scale; dy++) {
+          const row = grid[y + r * scale + dy]
+          if (!row) continue
           for (let dx = 0; dx < scale; dx++) {
-            const row = y + r * scale + dy
             const col = cx + c * scale + dx
-            if (row >= 0 && row < grid.length && col >= 0 && col < grid[0].length) grid[row][col] = value
+            if (col >= 0 && col < row.length) row[col] = value
           }
         }
       }
@@ -67,7 +68,7 @@ export function composeLines(lines: (MatrixLine | null)[]): Grid {
       align === 'center' ? Math.floor((MATRIX_COLS - width) / 2) : align === 'right' ? MATRIX_COLS - width : 0
     drawText(grid, line.text, x, scale === 2 ? top + 1 : top, scale)
     if (line.right) drawText(grid, line.right, MATRIX_COLS - textWidth(line.right, 1), top, 1)
-    if (line.rule && top + GLYPH_H < MATRIX_ROWS) grid[top + GLYPH_H].fill(true)
+    if (line.rule) grid[top + GLYPH_H]?.fill(true)
     slot += scale
   }
   return grid

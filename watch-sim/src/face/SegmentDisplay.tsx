@@ -94,13 +94,14 @@ const SMALL = { w: 22, h: 38, t: 5.5, step: 26 }
 export function SegmentDisplay({ big, colon, small, x, y }: Props) {
   const chars = big.padEnd(4, ' ').slice(0, 4).split('')
   const smallChars = small.padEnd(2, ' ').slice(0, 2).split('')
-  const xs = [0, BIG.step, BIG.step * 2 + 16, BIG.step * 3 + 16]
+  const lastX = BIG.step * 3 + 16
+  const xs = [0, BIG.step, BIG.step * 2 + 16, lastX]
   const colonX = BIG.step * 2 + 4
-  const smallX = xs[3] + BIG.w + 10
+  const smallX = lastX + BIG.w + 10
   return (
     <g transform={`translate(${x} ${y})`}>
       {chars.map((ch, i) => (
-        <SegmentDigit key={i} ch={ch} x={xs[i]} y={0} w={BIG.w} h={BIG.h} t={BIG.t} />
+        <SegmentDigit key={i} ch={ch} x={xs[i] ?? 0} y={0} w={BIG.w} h={BIG.h} t={BIG.t} />
       ))}
       <g transform={`skewX(-6) translate(${BIG.h * 0.1} 0)`}>
         <rect x={colonX} y={BIG.h * 0.28} width={7} height={7} className={colon ? 'sk-ink' : 'sk-ghost'} />

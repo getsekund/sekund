@@ -2,17 +2,30 @@
 
 The SEKUND face in the browser: a resin digital watch with four side buttons, a segment clock and a dot-matrix review strip, plus the watch state machine from spec v1.1 §6, §7 and §11.1. Solana devnet only. The secure element is simulated in software; the hardware is the roadmap.
 
+It speaks the real protocol (`docs/PROTOCOL.md`): frames arrive over the local relay, pass the shared `RequestGuard` from `@sekund/protocol`, and are signed by the simulated SE from `@sekund/se-sim` running in a Web Worker with IndexedDB.
+
 ## Run
 
+From the repo root:
+
 ```bash
-cd watch-sim
-npm install
-npm run dev      # http://127.0.0.1:4318
-npm test         # state machine, gestures, parser, controller
-npm run build    # typecheck + production build
+pnpm install
+pnpm relay        # ws://127.0.0.1:4319, stands in for Bluetooth
+pnpm dev:watch    # http://127.0.0.1:4318
+pnpm dev:companion  # http://127.0.0.1:4317, sends sign requests
+```
+
+```bash
+pnpm --filter @sekund/watch-sim test       # state machine, gestures, controller against the in-process SE
+pnpm --filter @sekund/watch-sim typecheck
+pnpm --filter @sekund/watch-sim build
 ```
 
 WebCrypto Ed25519 is required (Chrome 137+, Firefox, Safari).
+
+## First run
+
+The SE starts in factory state. Press A+D on the watch, choose a 4-digit PIN, then enter it again to confirm. The SE sets the PIN and generates the devnet key inside the chip; the address appears under Menu → Address and in the side panel. The key persists in this browser's IndexedDB. After that, A+D asks for the PIN.
 
 ## Controls
 
@@ -26,27 +39,25 @@ Buttons sit A (upper left), B (upper right), C (lower left), D (lower right). Cl
 | Review | A/B previous/next field, D approve (last field only), C reject |
 | Result | any button continues |
 
-The stub secure element's demo PIN is `1234`. Three wrong PINs wipe the key; the panel can create a new one.
-
 ## States
 
 Normal → hidden combination → PIN → Menu (Address, Sign request, Lock) → Review (amount, destination, network, sender, approve; countdown on the segment display) → Approve or Reject → result. Expired, Locked (key wiped) and off-wrist are handled from any state:
 
+- Requests are answered `LOCKED` unless a PIN session is open.
 - A request expires at zero: the watch answers `EXPIRED` and never signs.
-- Off-wrist ends the session at once; the PIN is required again.
-- Oversize (`TOO_LARGE`), non-transfer, durable-nonce, versioned, foreign-wallet and replayed requests are refused before display.
+- Off-wrist ends the SE session at once and answers anything under review `LOCKED`.
+- Three wrong PINs wipe the key; the next A+D starts first-run setup again.
+- Oversize (`TOO_LARGE`), non-transfer, durable-nonce, versioned, foreign-wallet and replayed requests are refused by the guard before display.
+- Approve issues an SE approve token bound to the exact message bytes, then signs those bytes with Ed25519 (no pre-hash).
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `src/machine/machine.ts` | Pure state machine: `transition(state, event) → { state, effects }`. Security-critical. |
-| `src/machine/controller.ts` | Runs effects against the secure element and transport. |
+| `src/machine/controller.ts` | Runs the guard on incoming frames and the effects against the SE and transport. |
 | `src/machine/gestures.ts` | Press/release → button combinations. |
-| `src/adapters/` | Local stand-ins for `protocol/` and `se-sim/`: the `SecureElement` interface (spec §5.6), envelope (§8.1), transfer parser, stub SE, stub transport. |
+| `src/services.ts` | Relay transport (role `watch`) and the browser SE. |
 | `src/face/` | SVG watch, 5×8 dot-matrix font, 7-segment digits, screen renderer. |
 | `src/styles/tokens.css` | Every color, font, spacing, radius and motion value. Re-skin here. |
-
-## Status
-
-The adapters are a stub until `protocol/` and `se-sim/` land on main: the stub secure element runs in-page (not in a Worker), keeps the key in memory only, and the stub companion in the side panel builds the request and verifies the signature but does not broadcast.
+| `src/testing/` | Message builder and request fixtures for tests. |

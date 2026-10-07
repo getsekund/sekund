@@ -1,5 +1,4 @@
-import { base58Encode } from '@/adapters/base58'
-import { formatSol } from '@/adapters/transferParser'
+import { MAX_PIN_ATTEMPTS } from '@sekund/protocol'
 import { MENU_ITEMS, REVIEW_PAGES, secondsLeft, type WatchState } from '@/machine/machine'
 import { chunk, type MatrixLine } from './matrix'
 import type { SegmentContent } from './SegmentDisplay'
@@ -31,10 +30,12 @@ function center(text: string, size: 1 | 2 = 1): MatrixLine {
   return { text, align: 'center', size }
 }
 
-function addressLines(bytes: Uint8Array | null): MatrixLine[] {
-  if (!bytes) return [center('NO KEY')]
-  return chunk(base58Encode(bytes)).map((text) => ({ text }))
+function addressLines(address: string | null): MatrixLine[] {
+  if (!address) return [center('NO KEY')]
+  return chunk(address).map((text) => ({ text }))
 }
+
+const PIN_HEADERS = { unlock: 'ENTER PIN', create: 'NEW PIN', confirm: 'CONFIRM PIN' } as const
 
 function clock(state: WatchState): { segment: SegmentContent; tag: string } {
   const d = new Date(state.now)
@@ -89,15 +90,16 @@ export function renderFace(state: WatchState): FaceContent {
       const big = Array.from({ length: n }, (_, i) =>
         i < screen.digits.length ? '-' : i === screen.digits.length ? String(screen.current) : '_',
       ).join('')
-      const status = screen.wrong
-        ? `WRONG PIN ${state.attemptsLeft} LEFT`
-        : state.attemptsLeft < 3
-          ? `${state.attemptsLeft} TRIES LEFT`
-          : ''
+      let status = ''
+      if (screen.notice === 'wrong') status = `WRONG PIN ${state.attemptsLeft} LEFT`
+      else if (screen.notice === 'mismatch') status = 'PINS DIFFER'
+      else if (screen.mode === 'unlock' && state.attemptsLeft < MAX_PIN_ATTEMPTS) status = `${state.attemptsLeft} TRIES LEFT`
+      else if (screen.mode === 'create') status = 'FIRST USE'
+      else if (screen.mode === 'confirm') status = 'ONCE MORE'
       return {
         ...base,
         segment: { big, colon: false, small: '  ' },
-        lines: [header('ENTER PIN', `${screen.digits.length + 1}/${n}`), null, center(status)],
+        lines: [header(PIN_HEADERS[screen.mode], `${screen.digits.length + 1}/${n}`), null, center(status)],
       }
     }
 
@@ -106,6 +108,13 @@ export function renderFace(state: WatchState): FaceContent {
         ...base,
         segment: { big: '----', colon: false, small: '  ' },
         lines: [header('ENTER PIN'), null, center('CHECKING…')],
+      }
+
+    case 'creating':
+      return {
+        ...base,
+        segment: { big: '----', colon: false, small: '  ' },
+        lines: [header('NEW WALLET'), null, center('CREATING KEY…')],
       }
 
     case 'menu':
@@ -129,8 +138,8 @@ export function renderFace(state: WatchState): FaceContent {
     case 'review': {
       const req = state.request
       if (!req) return { ...base, lines: [header('REVIEW'), null, center('NO REQUEST')] }
-      const page = REVIEW_PAGES[screen.page]
-      const amount = formatSol(req.transfer.lamports)
+      const page = REVIEW_PAGES[screen.page] ?? 'AMOUNT'
+      const amount = req.transfer.sol
       const pageTag = `${screen.page + 1}/${REVIEW_PAGES.length}`
       const seg = countdown(state)
       const body = (): (MatrixLine | null)[] => {
@@ -167,7 +176,7 @@ export function renderFace(state: WatchState): FaceContent {
         case 'EXPIRED':
           return { ...base, lines: [header('EXPIRED'), center('TIME RAN OUT'), center('NOTHING SIGNED')] }
         case 'FAILED':
-          return { ...base, lines: [header('SIGN FAILED'), center('NOTHING SIGNED')] }
+          return { ...base, lines: [header('FAILED'), center('SECURE ELEMENT'), center('NOTHING SIGNED')] }
         default:
           return { ...base, lines: [header('REJECTED'), center('NOTHING SIGNED')] }
       }

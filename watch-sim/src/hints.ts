@@ -15,12 +15,15 @@ export function hintsFor(state: WatchState): Hint[] {
         { keys: 'B', action: '12 / 24 hour' },
         { keys: 'A + D', action: 'Secure Mode (hidden)' },
       ]
-    case 'pin':
+    case 'pin': {
+      const lastDigit = s.digits.length === state.config.pinLength - 1
+      const finish = s.mode === 'unlock' ? 'Unlock' : s.mode === 'create' ? 'Set PIN' : 'Confirm PIN'
       return [
         { keys: 'A / B', action: 'Digit down / up' },
-        { keys: 'C + D', action: s.digits.length === state.config.pinLength - 1 ? 'Confirm PIN' : 'Next digit' },
+        { keys: 'C + D', action: lastDigit ? finish : 'Next digit' },
         { keys: 'C', action: s.digits.length === 0 ? 'Leave Secure Mode' : 'Previous digit' },
       ]
+    }
     case 'menu':
       return [
         { keys: 'A / B', action: 'Move' },
@@ -40,6 +43,7 @@ export function hintsFor(state: WatchState): Hint[] {
     case 'wiped':
       return [{ keys: 'C', action: 'Back to the time' }]
     case 'verifying':
+    case 'creating':
     case 'signing':
       return [{ keys: '—', action: 'Secure element working' }]
   }

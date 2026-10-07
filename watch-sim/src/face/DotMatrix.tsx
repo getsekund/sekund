@@ -21,7 +21,7 @@ export function DotMatrix({ grid, x, y, pitch, fill = 0.84 }: Props) {
     let d = ''
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        if (grid[r][c]) d += `M${(c * pitch).toFixed(2)} ${(r * pitch).toFixed(2)}h${dot.toFixed(2)}v${dot.toFixed(2)}h${(-dot).toFixed(2)}z`
+        if (grid[r]?.[c]) d += `M${(c * pitch).toFixed(2)} ${(r * pitch).toFixed(2)}h${dot.toFixed(2)}v${dot.toFixed(2)}h${(-dot).toFixed(2)}z`
       }
     }
     return d

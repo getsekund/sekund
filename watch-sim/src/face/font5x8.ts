@@ -109,7 +109,7 @@ const cache = new Map<string, boolean[][]>()
 export function glyph(ch: string): boolean[][] {
   const hit = cache.get(ch)
   if (hit) return hit
-  const src = GLYPHS[ch] ?? GLYPHS['?']
+  const src = GLYPHS[ch] ?? GLYPHS['?'] ?? ''
   const rows = src.split(' ').map((row) => [...row.padEnd(GLYPH_W, '.')].slice(0, GLYPH_W).map((c) => c === '#'))
   cache.set(ch, rows)
   return rows

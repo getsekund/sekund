@@ -1,27 +1,14 @@
-/// <reference types="vitest/config" />
-import path from 'node:path'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { fileURLToPath, URL } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: {
-      '@': path.resolve(import.meta.dirname, './src'),
-    },
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
-  server: {
-    port: 4318,
-    strictPort: true,
-    host: '127.0.0.1',
-  },
-  preview: {
-    port: 4318,
-    strictPort: true,
-  },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
-  },
-})
+  server: { host: "127.0.0.1", port: 4318, strictPort: true },
+  preview: { host: "127.0.0.1", port: 4318, strictPort: true },
+  worker: { format: "es" },
+});
