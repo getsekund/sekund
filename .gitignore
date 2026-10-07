@@ -12,3 +12,7 @@ coverage/
 *.keypair.json
 keys/
 .devnet/
+
+# Playwright
+playwright-report/
+test-results/

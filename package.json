@@ -14,6 +14,7 @@
     "dev:watch": "pnpm --filter ./watch-sim dev",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "pnpm --filter @sekund/companion e2e",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {

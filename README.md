@@ -18,7 +18,7 @@ A Solana hardware wallet inside a retro digital watch. This repository is the so
 |---|---|
 | `protocol/` | Request envelope, `SecureElement` interface, message parser and allowlist, request guard, local relay transport |
 | `se-sim/` | Simulated secure element: Web Worker, IndexedDB key store, TROPIC01/SE050E profiles, `seDriver` |
-| `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317 |
+| `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317. Styles come from one tokens file, `companion/src/styles/tokens.css` (SEKUND design system) |
 | `watch-sim/` | Watch simulator, port 4318 (built in parallel) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, trust boundary and request lifecycle as built |
 | [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | Threats, where each is handled, and what the PoC does not protect |
@@ -80,6 +80,22 @@ The suite covers every item in spec section 11.1:
 | RFC 8032 §7.1 vectors byte-exact on both profiles | `se-sim/test/rfc8032.test.ts` |
 | Nonce and lookup-table messages refused | `protocol/test/parser.test.ts`, `companion/test/signing-path.test.ts` |
 
+### End-to-end (Playwright)
+
+```bash
+pnpm --filter @sekund/companion e2e:install   # once: Chromium for Playwright
+pnpm e2e
+```
+
+`pnpm e2e` starts the relay, the companion and (when present) the watch simulator, or reuses them if they are already running. Stop any `watch:headless` first: the relay forwards to every watch. Devnet RPC is mocked inside the page, and each test checks the broadcast transaction itself: one signer (the watch address), and pure Ed25519 over the exact message bytes, verified with WebCrypto.
+
+| Spec | What drives the watch | Covers | Status |
+|---|---|---|---|
+| `companion/e2e/companion.spec.ts` | Headless watch over the real relay (same `RequestGuard` and simulated SE, buttons scripted) | Not connected, waiting with countdown, approve with verified signature and explorer link, reject, expire and send again, devnet error | Passing |
+| `companion/e2e/watch-sim.spec.ts` | The watch simulator page: Secure Mode combination, PIN, review pages, APPROVE / REJECT with keys `a` `b` `c` `d` | Approve with verified signature, reject, expire | Pending (`test.fixme`) until `watch-sim/` is on `main` and uses the relay and `se-sim` |
+
+`?reviewSeconds=N` on the companion URL caps the review window at N seconds for the expiry tests. It can only shorten the window. `SEKUND_E2E_PIN` (default `1234`) and `SEKUND_E2E_COMBO` (default `a+d`) configure the watch-simulator spec.
+
 ## Devnet proof
 
 ```bash
@@ -127,4 +143,5 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 
 - All work in this repository started on or after 5 October 2026, inside the hackathon window. There is no prior work.
 - Team: Goran (3D model, watch face, pitch, video) and Srki (code). The code was written with AI coding agents (Cursor) working under the team's direction.
-- Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components). The Ed25519 test vectors are copied from RFC 8032 §7.1.
+- Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components, Phosphor Icons, Playwright). The Ed25519 test vectors are copied from RFC 8032 §7.1.
+- Fonts: Archivo (Omnibus-Type) and IBM Plex Mono (IBM), SIL Open Font License 1.1, self-hosted in `companion/public/fonts/` with their license files.
