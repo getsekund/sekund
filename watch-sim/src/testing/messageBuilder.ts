@@ -1,5 +1,5 @@
 /**
- * Builds legacy Solana message bytes for the stub companion and the tests.
+ * Builds legacy Solana message bytes for the tests.
  * The real companion builds messages with the pinned Solana SDK.
  */
 
