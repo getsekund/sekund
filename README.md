@@ -37,7 +37,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm dev` starts three processes:
+`pnpm dev` starts three processes in parallel with prefixed output; Ctrl+C stops all of them:
 
 | Process | URL |
 |---|---|
@@ -47,7 +47,7 @@ pnpm dev
 
 Open both apps in separate windows. Unlock the watch with its PIN, then send a transfer from the companion and approve it on the watch.
 
-To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`.
+To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`. Until `watch-sim/` is on `main`, pnpm prints "No projects matched" for it and `pnpm dev` starts only the relay and the companion; use the headless watch below.
 
 Without the watch simulator, a terminal stand-in can answer the companion over the same link (ephemeral key, for development only):
 

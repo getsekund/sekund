@@ -7,11 +7,11 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @sekund/protocol --filter @sekund/companion --filter @sekund/watch-sim dev",
+    "dev": "pnpm --parallel --filter @sekund/protocol --filter @sekund/companion --filter ./watch-sim dev",
     "relay": "pnpm --filter @sekund/protocol relay",
     "devnet:proof": "pnpm --filter @sekund/companion devnet:proof",
     "dev:companion": "pnpm --filter @sekund/companion dev",
-    "dev:watch": "pnpm --filter @sekund/watch-sim dev",
+    "dev:watch": "pnpm --filter ./watch-sim dev",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck"
