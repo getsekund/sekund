@@ -88,7 +88,16 @@ The script creates a simulated SE (TROPIC01 profile), generates the key inside i
 
 If the public faucet refuses, the script falls back to a devnet-only funder wallet at `companion/.devnet/funder.json` (gitignored, created on first run), or to a Solana CLI keypair given in `SEKUND_FUNDER_KEYPAIR`. Fund that address once at [faucet.solana.com](https://faucet.solana.com). The funder only pays for the test; it never signs the SEKUND transaction.
 
-Recorded run: _pending devnet funding (see below)._
+Recorded run, 7 October 2026, 23:11:10 UTC (devnet slot 508616269):
+
+| Item | Value |
+|---|---|
+| Simulated SE address (fee payer, TROPIC01 profile) | `EB3hDgSXN5oEyiE2xErRSKsGk5egkpyq1HQ3N2KaQRkU` |
+| Transfer | 0.01 SOL to `5awdRY3zVWWNZXmHH955bDxdUoZ7aFqjKKaCeCeBuAbg`, 150-byte legacy message |
+| Transaction signature | `2G7xpmPKfpXRuhdXXbgNq22NHgHc7bEKsNJ7MaDFNANj8RshowqaKusAx8ACTmEwVMYj1CAuftaSePn9T5bSbwnU` |
+| Explorer | https://explorer.solana.com/tx/2G7xpmPKfpXRuhdXXbgNq22NHgHc7bEKsNJ7MaDFNANj8RshowqaKusAx8ACTmEwVMYj1CAuftaSePn9T5bSbwnU?cluster=devnet |
+
+The companion verified the signature before broadcast. Re-checked afterwards from the chain: the transaction succeeded, its only signer is the simulated SE address, and the Ed25519 signature verifies over the on-chain message bytes. The SE address was funded beforehand by the funder wallet (transaction `446Ko2zsMkjjcP8yGbpgSXoXdYdvbmZ9FK6bE5yELgLqQpBe1fSqqiz18qzJaMraL3x7Ue8PYRdKK5rnHQs1FSnU`), which did not sign the SEKUND transfer.
 
 ## Solana SDK
 
