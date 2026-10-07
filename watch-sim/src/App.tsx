@@ -2,37 +2,44 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { renderFace } from '@/face/screens'
 import { Watch } from '@/face/Watch'
-import { hintsFor } from '@/hints'
+import { WORDMARK_PATH, WORDMARK_VIEWBOX } from '@/face/wordmark'
+import { type Control, controlsFor } from '@/hints'
+import type { Button as Pusher } from '@/machine/gestures'
+import type { LogEntry } from '@/machine/log'
 import { secondsLeft } from '@/machine/machine'
 import { controller, relayUrl, startSecureElement, transport } from '@/services'
-import { KEY_FOR, useWatch } from '@/useWatch'
+import { cn } from '@/lib/utils'
+import { KEYS, useWatch } from '@/useWatch'
 
-function Section({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h2>
-        {aside}
-      </div>
-      {children}
-    </section>
-  )
+const COMPANION_URL = `http://127.0.0.1:${COMPANION_PORT}`
+const PUSHER_LABELS: Record<Pusher, string> = {
+  A: 'Button A, previous',
+  B: 'Button B, next',
+  C: 'Button C, back',
+  D: 'Button D, select',
+}
+/** Mobile shows the legend as a 2 × 2 grid in the pushers' physical layout. */
+const MOBILE_ORDER: Record<Control, string> = {
+  A: 'order-1',
+  C: 'order-2',
+  B: 'order-3',
+  D: 'order-4',
+  'C+D': 'order-5 col-span-2 lg:col-span-1',
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-border px-1 font-mono text-xs text-foreground">
-      {children}
-    </kbd>
+function useReducedMotion(): boolean {
+  const query = '(prefers-reduced-motion: reduce)'
+  return useSyncExternalStore(
+    (fn) => {
+      const m = window.matchMedia(query)
+      m.addEventListener('change', fn)
+      return () => m.removeEventListener('change', fn)
+    },
+    () => window.matchMedia(query).matches,
   )
-}
-
-function Code({ children }: { children: React.ReactNode }) {
-  return <code className="font-mono text-foreground">{children}</code>
 }
 
 function useLink(): { state: TransportState; peer: boolean } {
@@ -47,32 +54,88 @@ function useLink(): { state: TransportState; peer: boolean } {
   return { state, peer }
 }
 
+function Section({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex min-h-(--sk-chip-h) items-center justify-between gap-3">
+        <h2 className="text-base font-semibold">{title}</h2>
+        {aside}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Mono({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <code className={cn('font-mono tabular', className)}>{children}</code>
+}
+
+const clock = (at: number) => new Date(at).toTimeString().slice(0, 8)
+const grouped = (address: string) => address.match(/.{1,4}/g)?.join(' ') ?? address
+
+function Legend({ controls, normal }: { controls: Record<Control, string | null>; normal: boolean }) {
+  const rows: { id: Control; key: string; caps: string[] }[] = [
+    { id: 'A', key: KEYS.A, caps: ['A'] },
+    { id: 'B', key: KEYS.B, caps: ['B'] },
+    { id: 'C', key: KEYS.C, caps: ['C'] },
+    { id: 'D', key: KEYS.D, caps: ['D'] },
+    { id: 'C+D', key: 'Space', caps: ['C', 'D'] },
+  ]
+  return (
+    <Section title="Buttons">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-1 lg:gap-y-2">
+        {rows.map((r) => {
+          const action = controls[r.id]
+          return (
+            <li key={r.id} className={cn('flex items-center gap-3 text-sm lg:order-none', MOBILE_ORDER[r.id])}>
+              <span className="flex w-14 shrink-0 items-center gap-1">
+                {r.caps.map((c, i) => (
+                  <span key={c} className="flex items-center gap-1">
+                    {i > 0 && <span className="text-graphite">+</span>}
+                    <span className="sk-keycap">{c}</span>
+                  </span>
+                ))}
+              </span>
+              <span className="hidden w-12 shrink-0 font-mono text-xs text-graphite lg:inline">{r.key}</span>
+              <span className={action ? 'text-ink' : 'text-graphite'}>{action ?? 'Not used'}</span>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="text-sm text-graphite">
+        {normal
+          ? 'Normal shows only the time. Secure Mode opens with a hidden combination: hold A and D together.'
+          : 'Click the pushers or use the keys. Hold two keys for a combination; shift-click holds a pusher. W toggles the wrist.'}
+      </p>
+    </Section>
+  )
+}
+
 function CompanionLink() {
   const link = useLink()
   const relayUp = link.state === 'open'
-  const badge = !relayUp ? 'Relay offline' : link.peer ? 'Paired' : 'Waiting'
   return (
     <Section
       title="Companion link"
       aside={
-        <Badge variant="outline" className={link.peer ? 'text-sk-ok' : relayUp ? '' : 'text-sk-warn'}>
-          {badge}
-        </Badge>
+        <Badge variant={link.peer ? 'ink' : 'idle'}>{!relayUp ? 'No relay' : link.peer ? 'Connected' : 'No app'}</Badge>
       }
     >
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        {relayUp ? (
-          link.peer ? (
-            <>The companion is connected. Sign requests appear on the watch once Secure Mode is unlocked.</>
-          ) : (
-            <>
-              Connected to the local relay. Open the companion on port <Code>{COMPANION_PORT}</Code> to pair.
-            </>
-          )
+      <p className="text-sm text-graphite">
+        {!relayUp ? (
+          <>
+            The local relay stands in for Bluetooth. Run <Mono className="text-ink">pnpm relay</Mono>; the watch connects to{' '}
+            <Mono className="text-ink">{relayUrl}</Mono> on its own.
+          </>
+        ) : link.peer ? (
+          'The companion is connected. Its requests appear on the watch once Secure Mode is unlocked.'
         ) : (
           <>
-            Stands in for Bluetooth. Run <Code>pnpm relay</Code> in the repo; the watch reconnects to{' '}
-            <Code>{relayUrl}</Code> on its own.
+            Relay running. Open the companion at{' '}
+            <a className="text-ink underline underline-offset-4" href={COMPANION_URL}>
+              {COMPANION_URL.replace('http://', '')}
+            </a>{' '}
+            to send a transfer.
           </>
         )}
       </p>
@@ -80,125 +143,183 @@ function CompanionLink() {
   )
 }
 
+function ResetSimulator() {
+  const [confirming, setConfirming] = useState(false)
+  if (!confirming) {
+    return (
+      <Button variant="destructive" className="self-start" onClick={() => setConfirming(true)}>
+        Reset simulator
+      </Button>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-3 border-l-2 border-spot pl-3">
+      <p className="text-sm">
+        <span className="font-semibold">The key is already erased.</span> Reset returns the watch to first-use setup with a
+        new PIN and a new key.
+      </p>
+      <div className="flex gap-3">
+        <Button
+          variant="destructive"
+          onClick={() => {
+            controller.reset()
+            setConfirming(false)
+          }}
+        >
+          Reset
+        </Button>
+        <Button variant="secondary" onClick={() => setConfirming(false)}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function EventLog({ entries }: { entries: readonly LogEntry[] }) {
+  return (
+    <Section title="Event log">
+      {entries.length === 0 ? (
+        <p className="text-sm text-graphite">Nothing yet. Events appear here newest first.</p>
+      ) : (
+        <ol className="flex max-h-72 flex-col overflow-y-auto font-mono text-sm tabular">
+          {entries.map((e, i) => {
+            const prev = entries[i - 1]
+            const newGroup = prev !== undefined && (prev.requestId ?? '') !== (e.requestId ?? '')
+            return (
+              <li key={e.id} className={cn('flex gap-4 py-0.5', newGroup && 'mt-1.5 border-t border-rule pt-2')}>
+                <span className="shrink-0 text-graphite">{clock(e.at)}</span>
+                <span>{e.text}</span>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+    </Section>
+  )
+}
+
 export default function App() {
   const watch = useWatch(controller)
   const { state } = watch
-  const face = useMemo(() => renderFace(state), [state])
-  const hints = hintsFor(state)
+  const reducedMotion = useReducedMotion()
+  const face = useMemo(() => renderFace(state, { reducedMotion }), [state, reducedMotion])
+  const controls = controlsFor(state)
+  const log = useSyncExternalStore(controller.subscribe, controller.getLog)
   const [bootError, setBootError] = useState<string | null>(null)
 
   useEffect(() => {
     startSecureElement().catch((err: unknown) => setBootError(err instanceof Error ? err.message : String(err)))
   }, [])
 
-  const se = controller.secureElement
   const wiped = state.screen.kind === 'wiped'
-  const wallet = !state.ready ? 'Starting…' : wiped ? 'Key wiped' : state.address ? 'Ready' : 'Not set up'
   const pending = state.request ? secondsLeft(state) : null
 
   return (
     <div className="min-h-dvh">
-      <main className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 py-6 lg:flex-row lg:items-start lg:justify-center lg:gap-12 lg:py-10">
-        <div className="flex w-full flex-1 flex-col items-center gap-3 lg:sticky lg:top-10">
-          <Watch
-            face={face}
-            pressed={watch.pressed}
-            keyFor={KEY_FOR}
-            onPress={watch.onPress}
-            onRelease={watch.onRelease}
-          />
-          <div className="flex gap-2 lg:hidden">
-            <Button variant="outline" size="sm" onClick={() => watch.chord('C', 'D')}>
+      <nav className="border-b border-rule">
+        <div className="mx-auto flex h-(--sk-nav-h) max-w-(--sk-content-max) items-center justify-between px-(--sk-margin)">
+          <svg className="w-24 fill-ink" viewBox={WORDMARK_VIEWBOX} role="img" aria-label="SEKUND">
+            <path d={WORDMARK_PATH} />
+          </svg>
+          <div className="flex gap-6 text-sm">
+            <a href="/" aria-current="page" className="font-semibold underline underline-offset-4">
+              Simulator
+            </a>
+            <a href={COMPANION_URL} className="hover:underline hover:underline-offset-4">
+              Companion
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <main className="mx-auto grid max-w-(--sk-content-max) grid-cols-1 gap-(--sk-gutter) px-(--sk-margin) py-6 lg:grid-cols-12 lg:items-start">
+        <div className="flex flex-col gap-3 lg:sticky lg:top-6 lg:col-span-7">
+          <div className="flex justify-center rounded-sm bg-paper-2 px-4 py-6 md:px-12 md:py-8">
+            <Watch
+              face={face}
+              pressed={watch.pressed}
+              labels={PUSHER_LABELS}
+              onPress={watch.onPress}
+              onRelease={watch.onRelease}
+            />
+          </div>
+          <p className="sr-only" aria-live="polite">
+            {face.spoken}
+          </p>
+          <div className="flex flex-wrap gap-3 md:hidden">
+            <Button variant="secondary" size="sm" onClick={() => watch.chord('C', 'D')}>
               Press C + D
             </Button>
-            <Button variant="outline" size="sm" onClick={() => watch.chord('A', 'D')}>
+            <Button variant="secondary" size="sm" onClick={() => watch.chord('A', 'D')}>
               Press A + D
             </Button>
           </div>
+          <p className="text-sm text-graphite">The secure element in this simulator is software. The signatures are real.</p>
         </div>
 
-        <aside className="flex w-full max-w-(--sk-panel-width) flex-col gap-6 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-col gap-8 lg:col-span-5">
           <header className="flex flex-col gap-1">
-            <h1 className="text-base font-semibold">Watch simulator</h1>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Solana devnet proof of concept. The secure element is simulated in software; the hardware is the
-              roadmap.
-            </p>
+            <h1 className="text-xl font-semibold">Watch simulator</h1>
+            <p className="text-sm text-graphite">Solana devnet. Requests come from the companion; approval happens only here.</p>
           </header>
 
           {bootError && (
-            <p className="rounded-md border border-sk-danger/40 p-3 text-xs text-sk-danger">
-              The simulated secure element could not start: {bootError}. This browser may lack WebCrypto Ed25519
-              (Chrome 137+, Firefox, Safari) or IndexedDB.
+            <p className="border-l-2 border-spot pl-3 text-sm text-spot">
+              <span className="font-semibold">The simulated secure element did not start.</span> {bootError}. Use a browser
+              with WebCrypto Ed25519 and IndexedDB (Chrome 137+, Firefox, Safari), then reload.
             </p>
           )}
 
+          <Legend controls={controls} normal={state.screen.kind === 'normal'} />
+
           <Section title="Wrist">
-            <label className="flex items-center justify-between gap-4">
+            <label className="flex min-h-(--sk-control-h) cursor-pointer items-center justify-between gap-4">
               <span className="flex flex-col">
-                <span className="text-sm">{state.onWrist ? 'On wrist' : 'Off wrist'}</span>
-                <span className="text-xs text-muted-foreground">Taking the watch off ends the session.</span>
+                <span className="text-sm font-medium">On wrist</span>
+                <span className="text-sm text-graphite">Off ends the session</span>
               </span>
               <Switch checked={state.onWrist} onCheckedChange={(on) => controller.setWrist(on)} />
             </label>
           </Section>
 
-          <Separator />
-
-          <Section title="Buttons">
-            <ul className="flex min-h-21 flex-col gap-2 text-sm">
-              {hints.map((h) => (
-                <li key={h.keys + h.action} className="flex items-center justify-between gap-3">
-                  <span className="flex gap-1">
-                    {h.keys.split(/\s*([+/])\s*/).map((part, i) =>
-                      part === '+' || part === '/' ? (
-                        <span key={i} className="text-sk-faint">
-                          {part}
-                        </span>
-                      ) : (
-                        <Kbd key={i}>{part}</Kbd>
-                      ),
-                    )}
-                  </span>
-                  <span className="text-right text-muted-foreground">{h.action}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs leading-relaxed text-sk-faint">
-              Keys <Kbd>A</Kbd> <Kbd>B</Kbd> <Kbd>C</Kbd> <Kbd>D</Kbd> press the buttons; hold two together for a
-              combination. Shift-click holds a button. <Kbd>W</Kbd> toggles the wrist.
-            </p>
-          </Section>
-
-          <Separator />
-
           <CompanionLink />
 
-          <Separator />
-
-          <Section title="Secure element" aside={<Badge variant="outline">{se?.profile ?? 'TROPIC01'} · simulated</Badge>}>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-              <dt className="text-muted-foreground">Wallet</dt>
-              <dd className={wiped ? 'text-sk-danger' : ''}>{wallet}</dd>
-              <dt className="text-muted-foreground">Session</dt>
+          <Section
+            title="Secure element"
+            aside={wiped ? <Badge variant="stop">Locked</Badge> : pending !== null ? <Badge variant="waiting">Waiting</Badge> : null}
+          >
+            <dl className="grid grid-cols-[var(--sk-dt-width)_1fr] gap-x-4 gap-y-1.5 text-sm">
+              <dt className="text-graphite">Profile</dt>
+              <dd>{state.profile ? `${state.profile}, simulated` : 'Starting'}</dd>
+              <dt className="text-graphite">Wallet</dt>
+              <dd>{!state.ready ? 'Starting' : wiped ? 'Key erased' : state.address ? 'Key present' : 'Not set up'}</dd>
+              <dt className="text-graphite">Session</dt>
               <dd>{state.session ? 'Open' : 'Closed'}</dd>
-              <dt className="text-muted-foreground">PIN tries left</dt>
-              <dd>{state.hasPin ? state.attemptsLeft : '—'}</dd>
-              <dt className="text-muted-foreground">Max message</dt>
-              <dd>{se ? `${se.maxMessageBytes} bytes` : '—'}</dd>
-              <dt className="text-muted-foreground">Request</dt>
-              <dd>{pending === null ? 'None' : `${pending} s left`}</dd>
+              <dt className="text-graphite">PIN tries</dt>
+              <dd className="font-mono tabular">{state.hasPin ? `${state.attemptsLeft} left` : 'No PIN set'}</dd>
+              <dt className="text-graphite">Max size</dt>
+              <dd className="font-mono tabular">{state.maxMessageBytes ? `${state.maxMessageBytes} bytes` : 'Starting'}</dd>
+              <dt className="text-graphite">Request</dt>
+              <dd className="font-mono tabular">{pending === null ? 'None' : `${pending} s left on the watch`}</dd>
+              {state.address && (
+                <>
+                  <dt className="text-graphite">Address</dt>
+                  <dd className="font-mono break-words">{grouped(state.address)}</dd>
+                </>
+              )}
             </dl>
-            {state.address && <p className="font-mono text-xs break-all text-muted-foreground">{state.address}</p>}
-            {state.ready && !state.hasPin && (
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {wiped ? 'The key was wiped after 3 wrong PINs. ' : 'First use. '}
-                Press <Kbd>A</Kbd> + <Kbd>D</Kbd> on the watch and choose a 4-digit PIN to create a new devnet key. It
-                stays in this browser (Web Worker + IndexedDB) and never leaves the simulated chip.
+            {state.ready && !state.hasPin && !wiped && (
+              <p className="text-sm text-graphite">
+                First use. Hold A and D, then choose a four-digit PIN and enter it again. The secure element creates a devnet
+                key that stays in this browser.
               </p>
             )}
+            {wiped && <ResetSimulator />}
           </Section>
-        </aside>
+
+          <EventLog entries={log} />
+        </div>
       </main>
     </div>
   )
