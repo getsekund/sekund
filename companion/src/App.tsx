@@ -1,114 +1,121 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { address as toAddress, type Address } from "@solana/kit";
-import { ShieldCheck } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ConnectionStatus } from "@/components/connection-status";
-import { History, type HistoryEntry } from "@/components/history";
-import { RequestStatus, type Activity } from "@/components/request-status";
-import { SendCard } from "@/components/send-card";
-import { WalletCard } from "@/components/wallet-card";
+import { RequestList } from "@/components/request-list";
+import { StatusChip } from "@/components/status-chip";
+import { TransferForm } from "@/components/transfer-form";
+import { WatchPanel } from "@/components/watch-panel";
 import { useSekund } from "@/hooks/use-sekund";
+import { parseReviewCap, type RequestEntry } from "@/lib/request-view";
 import { broadcastAndConfirm, createDevnetRpc, fetchLifetime, getBalance } from "@/lib/solana";
-import { sendTransfer } from "@/lib/transfer-flow";
+import { sendTransfer, type FlowStage } from "@/lib/transfer-flow";
 
 const WATCH_URL = "http://localhost:4318";
 
 export default function App() {
   const rpc = useMemo(() => createDevnetRpc(), []);
+  const reviewCapMs = useMemo(() => parseReviewCap(window.location.search), []);
   const { client, relay, watchConnected, watchStatus, wallet } = useSekund();
   const [balance, setBalance] = useState<bigint | null>(null);
-  const [activity, setActivity] = useState<Activity>({ kind: "idle" });
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [last, setLast] = useState<{ to: Address; lamports: bigint } | null>(null);
+  const [entries, setEntries] = useState<RequestEntry[]>([]);
+  const nextId = useRef(1);
+  const toInput = useRef<HTMLInputElement>(null);
 
   const from = wallet?.status === "OK" ? wallet.address! : null;
-  const busy = activity.kind === "running";
+  const busy = entries.length > 0 && !entries[0]!.outcome;
+
+  const update = useCallback((id: number, patch: (entry: RequestEntry) => Partial<RequestEntry>) => {
+    setEntries((list) => list.map((entry) => (entry.id === id ? { ...entry, ...patch(entry) } : entry)));
+  }, []);
 
   const send = useCallback(
     async (to: Address, lamports: bigint) => {
       if (!client || !from) return;
-      setLast({ to, lamports });
-      setActivity({ kind: "running", stage: { stage: "fetching-blockhash" } });
+      const id = nextId.current++;
+      setEntries((list) => [{ id, to, lamports, createdAt: Date.now() }, ...list].slice(0, 20));
+      const onStage = (stage: FlowStage) =>
+        update(id, (entry) => ({
+          stage,
+          ...(stage.stage === "awaiting-approval" ? { sentAt: Date.now() } : {}),
+          ...(entry.stage?.stage === "awaiting-approval" && stage.stage !== "awaiting-approval" ? { answeredAt: Date.now() } : {}),
+        }));
       const outcome = await sendTransfer(
         {
           client,
           fetchLifetime: () => fetchLifetime(rpc),
-          broadcast: (wire, lvbh) => broadcastAndConfirm(rpc, wire, lvbh, { onSent: (signature) => setActivity({ kind: "running", stage: { stage: "confirming", signature } }) }),
-          onStage: (stage) => setActivity({ kind: "running", stage }),
+          broadcast: (wire, lvbh) => broadcastAndConfirm(rpc, wire, lvbh, { onSent: (signature) => onStage({ stage: "confirming", signature }) }),
+          onStage,
+          ...(reviewCapMs ? { maxExpiresInMs: reviewCapMs } : {}),
         },
         { from: toAddress(from), to, lamports },
       );
-      setActivity({ kind: "done", outcome });
-      setHistory((h) => [{ at: Date.now(), to, lamports, outcome }, ...h].slice(0, 20));
+      update(id, (entry) => ({ outcome, ...(entry.answeredAt === undefined && entry.sentAt !== undefined ? { answeredAt: Date.now() } : {}) }));
       if (outcome.kind === "confirmed") setBalance(await getBalance(rpc, toAddress(from)).catch(() => null));
     },
-    [client, from, rpc],
+    [client, from, rpc, reviewCapMs, update],
   );
 
   const blockedReason =
     relay !== "open"
-      ? "The local link is down."
+      ? "The local link is not running."
       : !watchConnected
-        ? "Open the watch simulator to connect."
+        ? "No watch connected. Open the watch simulator."
         : !from
           ? "Unlock the watch to share its address."
           : null;
 
   return (
-    <div className="min-h-svh bg-gradient-to-b from-muted/60 to-background">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-mono text-2xl font-semibold tracking-[0.3em]">SEKUND</h1>
-            <p className="text-sm text-muted-foreground">Companion · devnet signing requests to your watch</p>
-          </div>
-          <ConnectionStatus relay={relay} watchConnected={watchConnected} watchStatus={watchStatus} />
-        </header>
-
-        {relay !== "open" && (
-          <Alert className="mb-6">
-            <AlertTitle>Local link not running</AlertTitle>
-            <AlertDescription>
-              <p>
-                Start it with <code className="font-mono">pnpm relay</code> (or <code className="font-mono">pnpm dev</code>). It stands in for Bluetooth between this app and the watch. Reconnecting automatically.
-              </p>
-            </AlertDescription>
-          </Alert>
-        )}
-        {relay === "open" && !watchConnected && (
-          <Alert className="mb-6">
-            <AlertTitle>Watch not connected</AlertTitle>
-            <AlertDescription>
-              <p>
-                Open the watch simulator at{" "}
-                <a className="underline" href={WATCH_URL} target="_blank" rel="noreferrer">
-                  {WATCH_URL}
-                </a>{" "}
-                in another window.
-              </p>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <WalletCard rpc={rpc} wallet={wallet} balance={balance} onBalance={setBalance} />
-            <SendCard from={from} balance={balance} busy={busy} blockedReason={blockedReason} onSend={send} />
-          </div>
-          <div className="space-y-6">
-            <RequestStatus activity={activity} onRetry={() => last && void send(last.to, last.lamports)} />
-            <History entries={history} />
+    <div className="min-h-svh">
+      <header className="border-b border-rule">
+        <div className="mx-auto flex h-14 max-w-(--sk-content-max) items-center justify-between gap-4 px-(--sk-margin)">
+          <a href="/" className="shrink-0" aria-label="SEKUND companion">
+            <img src="/sekund-logo-v2.svg" alt="SEKUND" width={96} height={24} className="h-6 w-24" />
+          </a>
+          <div className="flex items-center gap-3">
+            <StatusChip word={relay === "open" && watchConnected ? "CONNECTED" : "NO WATCH"} />
+            <span className="font-mono text-14">Devnet</span>
+            <a className="hidden text-14 underline-offset-4 hover:underline sm:inline" href={WATCH_URL} target="_blank" rel="noopener">
+              Simulator
+            </a>
           </div>
         </div>
+      </header>
 
-        <footer className="mt-10 flex items-start gap-2 text-xs text-muted-foreground">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-          <p>
-            Proof of concept on Solana devnet only. The secure element is simulated in software in the watch simulator; the hardware is the roadmap. This app never sees a private key: it
-            sends the exact message bytes, verifies the returned signature, and broadcasts.
-          </p>
-        </footer>
-      </div>
+      <main className="mx-auto max-w-(--sk-content-max) px-(--sk-margin) py-(--sk-space-6)">
+        <div className="mb-(--sk-space-6) max-w-[72ch] space-y-2">
+          <h1 className="text-32 leading-tight font-semibold tracking-display">Send devnet SOL from the watch</h1>
+          <p className="text-16 text-graphite">This page builds the transfer and broadcasts it. Only the watch can approve and sign it.</p>
+        </div>
+
+        <div className="grid gap-x-(--sk-gutter) gap-y-(--sk-space-7) lg:grid-cols-12">
+          <div className="space-y-(--sk-space-6) lg:col-span-5">
+            <WatchPanel
+              rpc={rpc}
+              relay={relay}
+              watchConnected={watchConnected}
+              watchStatus={watchStatus}
+              wallet={wallet}
+              watchUrl={WATCH_URL}
+              balance={balance}
+              onBalance={setBalance}
+            />
+            <TransferForm from={from} balance={balance} busy={busy} blockedReason={blockedReason} onSend={send} toRef={toInput} />
+          </div>
+          <div className="lg:col-span-7">
+            <RequestList
+              entries={entries}
+              onAgain={(entry) => void send(toAddress(entry.to), entry.lamports)}
+              onNew={() => toInput.current?.focus()}
+            />
+          </div>
+        </div>
+      </main>
+
+      <footer className="mx-auto max-w-(--sk-content-max) px-(--sk-margin) pb-(--sk-space-7)">
+        <p className="max-w-[72ch] border-t border-rule pt-4 text-14 text-graphite">
+          The secure element in this demo is simulated in software. The signatures are real, on Solana devnet only. This page never sees a private key: it sends the exact
+          message bytes, verifies the returned signature, then broadcasts.
+        </p>
+      </footer>
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
 
 export type FlowStage =
   | { stage: "fetching-blockhash" }
-  | { stage: "awaiting-approval"; requestId: string; deadline: number; messageLength: number }
+  | { stage: "awaiting-approval"; requestId: string; deadline: number; expiresInMs: number; messageLength: number }
   | { stage: "verifying" }
   | { stage: "broadcasting" }
   | { stage: "confirming"; signature: string };
@@ -33,6 +33,8 @@ export interface TransferDeps {
   fetchLifetime: () => Promise<Lifetime>;
   broadcast: (wire: Base64EncodedWireTransaction, lastValidBlockHeight: bigint) => Promise<ConfirmOutcome>;
   now?: () => number;
+  /** Optional cap on the review window. It can only shorten what the blockhash allows. */
+  maxExpiresInMs?: number;
   onStage?: (stage: FlowStage) => void;
 }
 
@@ -50,7 +52,7 @@ export async function sendTransfer(deps: TransferDeps, params: { from: Address; 
     for (let i = 0; i < MAX_REFETCH && expiresInMs <= 0; i++) {
       deps.onStage?.({ stage: "fetching-blockhash" });
       lifetime = await deps.fetchLifetime();
-      expiresInMs = computeExpiresInMs(lifetime.fetchedAt, now());
+      expiresInMs = Math.min(computeExpiresInMs(lifetime.fetchedAt, now()), deps.maxExpiresInMs ?? Number.POSITIVE_INFINITY);
     }
     if (!lifetime || expiresInMs <= 0) return { kind: "error", message: "Could not get a fresh blockhash in time." };
 
@@ -60,7 +62,7 @@ export async function sendTransfer(deps: TransferDeps, params: { from: Address; 
       expiresInMs,
       lastValidBlockHeight: lifetime.lastValidBlockHeight,
     });
-    deps.onStage?.({ stage: "awaiting-approval", requestId: handle.requestId, deadline: now() + expiresInMs, messageLength: built.messageBytes.length });
+    deps.onStage?.({ stage: "awaiting-approval", requestId: handle.requestId, deadline: now() + expiresInMs, expiresInMs, messageLength: built.messageBytes.length });
 
     const result = await handle.result;
     const requestId = handle.requestId;
