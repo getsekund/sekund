@@ -57,7 +57,14 @@ export class WatchController {
 
   getSnapshot = (): WatchState => this.stateValue
 
-  async boot(): Promise<void> {
+  private booting: Promise<void> | null = null
+
+  boot(): Promise<void> {
+    this.booting ??= this.doBoot()
+    return this.booting
+  }
+
+  private async doBoot(): Promise<void> {
     this.transport.start({
       onSignRequest: (envelope) => this.dispatch({ type: 'REQUEST', envelope, now: this.clock() }),
       getAddress: () => this.addressText,

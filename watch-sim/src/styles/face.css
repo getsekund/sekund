@@ -1,0 +1,72 @@
+/* Watch face styling. Values come from tokens.css only. */
+
+.sk-watch {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: var(--sk-watch-max-height);
+  max-width: var(--sk-watch-max-width);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sk-strap { fill: var(--sk-strap); }
+.sk-strap-rib { fill: var(--sk-strap-rib); }
+.sk-case-shadow { fill: var(--sk-case-shadow); }
+.sk-case { fill: var(--sk-case); stroke: var(--sk-case-edge); stroke-width: 1.5; }
+.sk-lug { fill: var(--sk-case); }
+.sk-bezel { fill: var(--sk-bezel); stroke: var(--sk-bezel-line); stroke-width: 1; }
+.sk-bezel-tick { fill: var(--sk-bezel-line); }
+.sk-accent-tick { fill: var(--sk-accent); }
+
+.sk-brand {
+  fill: var(--sk-brand-ink);
+  font-family: var(--sk-font-brand);
+  font-size: var(--sk-brand-size);
+  font-weight: var(--sk-brand-weight);
+  letter-spacing: var(--sk-brand-tracking);
+}
+
+.sk-lcd-frame { fill: var(--sk-lcd-frame); }
+.sk-lcd {
+  fill: var(--sk-lcd-bg);
+  transition: fill var(--sk-lcd-fade-ms) var(--sk-ease);
+}
+.sk-lit .sk-lcd { fill: var(--sk-lcd-bg-lit); }
+
+.sk-ink { fill: var(--sk-lcd-ink); }
+.sk-ink-stroke { stroke: var(--sk-lcd-ink); fill: none; }
+.sk-ghost {
+  fill: var(--sk-lcd-ghost);
+  transition: fill var(--sk-lcd-fade-ms) var(--sk-ease);
+}
+.sk-ghost-stroke { stroke: var(--sk-lcd-ghost); fill: none; }
+.sk-lit .sk-ghost { fill: var(--sk-lcd-ghost-lit); }
+.sk-lit .sk-ghost-stroke { stroke: var(--sk-lcd-ghost-lit); }
+
+.sk-pusher {
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+.sk-pusher-body {
+  fill: var(--sk-pusher);
+  transition: transform var(--sk-press-ms) var(--sk-ease), fill var(--sk-press-ms) var(--sk-ease);
+}
+.sk-pusher-ridge { fill: var(--sk-pusher-ridge); pointer-events: none; }
+.sk-pusher-hit { fill: transparent; }
+.sk-pusher[data-pressed='true'] .sk-pusher-body { fill: var(--sk-pusher-pressed); }
+.sk-pusher[data-side='left'][data-pressed='true'] .sk-pusher-move { transform: translateX(var(--sk-press-travel)); }
+.sk-pusher[data-side='right'][data-pressed='true'] .sk-pusher-move { transform: translateX(calc(-1 * var(--sk-press-travel))); }
+.sk-pusher-move { transition: transform var(--sk-press-ms) var(--sk-ease); }
+.sk-pusher:focus-visible .sk-pusher-body { stroke: var(--sk-text-muted); stroke-width: 1.5; }
+
+.sk-keycap { fill: none; stroke: var(--sk-keycap-line); stroke-width: 1; }
+.sk-keycap-text {
+  fill: var(--sk-keycap-text);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-keycap-size);
+}
+.sk-keyhint[data-pressed='true'] .sk-keycap { stroke: var(--sk-keycap-active); }
+.sk-keyhint[data-pressed='true'] .sk-keycap-text { fill: var(--sk-keycap-active); }

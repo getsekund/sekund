@@ -1,0 +1,103 @@
+/*
+ * SEKUND watch-simulator tokens. Every color, font, spacing, radius and motion
+ * value used by the app lives here; components reference only var(--…).
+ * Visual language is flat: no gradients, glow or translucency effects.
+ */
+
+:root {
+  /* Page and panel */
+  --sk-page: #141516;
+  --sk-surface: #1b1c1e;
+  --sk-surface-2: #222326;
+  --sk-line: #2c2e31;
+  --sk-text: #e8e6e1;
+  --sk-text-muted: #9a9b97;
+  --sk-text-faint: #63655f;
+  --sk-accent: #e4662f;
+  --sk-accent-ink: #141516;
+  --sk-ok: #5fae6c;
+  --sk-warn: #d9a441;
+  --sk-danger: #e0574f;
+
+  /* Watch body */
+  --sk-strap: #1e1f21;
+  --sk-strap-rib: #18191b;
+  --sk-case: #26272a;
+  --sk-case-edge: #303135;
+  --sk-case-shadow: #0e0f10;
+  --sk-bezel: #1c1d1f;
+  --sk-bezel-line: #34363a;
+  --sk-brand-ink: #cfccc4;
+  --sk-pusher: #3a3b3f;
+  --sk-pusher-ridge: #2b2c2f;
+  --sk-pusher-pressed: #2f3033;
+
+  /* LCD */
+  --sk-lcd-frame: #111213;
+  --sk-lcd-bg: #c3c8b4;
+  --sk-lcd-bg-lit: #a7d5c8;
+  --sk-lcd-ink: #1b231f;
+  --sk-lcd-ghost: #bbc0ac;
+  --sk-lcd-ghost-lit: #9fcdc0;
+
+  /* Key hints outside the watch */
+  --sk-keycap-line: #3b3d40;
+  --sk-keycap-text: #7d7f7a;
+  --sk-keycap-active: #e8e6e1;
+
+  /* Type */
+  --sk-font-ui: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --sk-font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --sk-font-brand: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --sk-brand-size: 11px;
+  --sk-brand-weight: 600;
+  --sk-brand-tracking: 0.38em;
+  --sk-keycap-size: 9px;
+  --sk-text-xs: 11px;
+  --sk-text-sm: 13px;
+  --sk-text-md: 15px;
+
+  /* Spacing */
+  --sk-space-1: 4px;
+  --sk-space-2: 8px;
+  --sk-space-3: 12px;
+  --sk-space-4: 16px;
+  --sk-space-5: 24px;
+  --sk-space-6: 32px;
+  --sk-space-7: 48px;
+  --sk-panel-width: 340px;
+  --sk-watch-max-height: 82vh;
+  --sk-watch-max-width: 640px;
+
+  /* Radius */
+  --sk-radius-sm: 6px;
+  --sk-radius-md: 10px;
+  --sk-radius-lg: 14px;
+
+  /* Motion */
+  --sk-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --sk-press-ms: 70ms;
+  --sk-press-travel: 4px;
+  --sk-lcd-fade-ms: 140ms;
+
+  /* shadcn/ui theme, mapped onto the tokens above */
+  --background: var(--sk-page);
+  --foreground: var(--sk-text);
+  --card: var(--sk-surface);
+  --card-foreground: var(--sk-text);
+  --popover: var(--sk-surface-2);
+  --popover-foreground: var(--sk-text);
+  --primary: var(--sk-text);
+  --primary-foreground: var(--sk-page);
+  --secondary: var(--sk-surface-2);
+  --secondary-foreground: var(--sk-text);
+  --muted: var(--sk-surface-2);
+  --muted-foreground: var(--sk-text-muted);
+  --accent: var(--sk-surface-2);
+  --accent-foreground: var(--sk-text);
+  --destructive: var(--sk-danger);
+  --border: var(--sk-line);
+  --input: var(--sk-line);
+  --ring: var(--sk-text-faint);
+  --radius: var(--sk-radius-md);
+}

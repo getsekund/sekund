@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { base64Encode } from '@/adapters/base58'
 import { buildSystemMessage } from '@/adapters/messageBuilder'
 import { gesture, type Button } from './gestures'
 import {
@@ -187,7 +188,7 @@ describe('review, approve and reject', () => {
     expect(sign).toBeDefined()
     expect(sign).toMatchObject({ requestId: env.requestId })
     expect(sign!.type === 'sign' && sign!.message).toBe(message)
-    expect(Buffer.from(message).toString('base64')).toBe(env.message)
+    expect(base64Encode(message)).toBe(env.message)
     expect(h.state.screen.kind).toBe('signing')
     expect(h.state.request).toBeNull()
 
