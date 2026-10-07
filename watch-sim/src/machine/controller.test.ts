@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import { signRequest, transferBytes } from "@/testing/fixtures";
 import { WatchController } from "./controller";
 import { type Button, gesture } from "./gestures";
-import { REVIEW_PAGES } from "./machine";
+import { DEFAULT_CONFIG, REVIEW_PAGES } from "./machine";
 
 const PIN = "2580";
 const flush = () => new Promise((r) => setTimeout(r, 0));
@@ -31,6 +31,11 @@ async function setup(profile: SeProfile = "TROPIC01") {
   await watch.boot(se);
 
   const press = (...b: Button[]) => watch.press(gesture(...b));
+  const openSecure = () => {
+    press("A", "D");
+    now += DEFAULT_CONFIG.entryMs;
+    watch.tick();
+  };
   const enterPin = async (pin: string) => {
     for (const ch of pin) {
       for (let i = 0; i < Number(ch); i++) press("B");
@@ -39,12 +44,12 @@ async function setup(profile: SeProfile = "TROPIC01") {
     await watch.settle();
   };
   const createWallet = async () => {
-    press("A", "D");
+    openSecure();
     await enterPin(PIN);
     await enterPin(PIN);
   };
   const unlock = async (pin = PIN) => {
-    press("A", "D");
+    openSecure();
     await enterPin(pin);
   };
   const ask = async (frame: object, link: Transport = companion) => {
@@ -88,6 +93,8 @@ describe("WatchController with the simulated secure element", () => {
     const key = await crypto.subtle.importKey("raw", fromBase58(t.watch.state.address!) as BufferSource, "Ed25519", false, ["verify"]);
     const sig = fromBase58((res as { signature: string }).signature);
     expect(await crypto.subtle.verify("Ed25519", key, sig as BufferSource, message as BufferSource)).toBe(true);
+    const events = t.watch.log.filter((e) => e.requestId === req.requestId).map((e) => e.text);
+    expect(events).toEqual(["Approved on watch", "Request received, 0.025 SOL"]);
   });
 
   it("reject produces no signature", async () => {

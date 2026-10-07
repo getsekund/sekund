@@ -1,50 +1,58 @@
-import { REVIEW_PAGES, type WatchState } from '@/machine/machine'
+import type { Button } from '@/machine/gestures'
+import { ADDRESS_PAGES, REVIEW_PAGES, type WatchState } from '@/machine/machine'
 
-export interface Hint {
-  keys: string
-  action: string
-}
+export type Control = Button | 'C+D'
+export type Controls = Record<Control, string | null>
 
-/** What each button does on the current screen, for the panel outside the watch. */
-export function hintsFor(state: WatchState): Hint[] {
+const NONE: Controls = { A: null, B: null, C: null, D: null, 'C+D': null }
+
+/**
+ * What each pusher does in the current state; null when it does nothing. Drives the
+ * legend beside the watch and the LCD annunciators (lit only while a pusher acts).
+ */
+export function controlsFor(state: WatchState): Controls {
   const s = state.screen
   switch (s.kind) {
-    case 'normal':
-      return [
-        { keys: 'A', action: 'Light' },
-        { keys: 'B', action: '12 / 24 hour' },
-        { keys: 'A + D', action: 'Secure Mode (hidden)' },
-      ]
     case 'pin': {
       const lastDigit = s.digits.length === state.config.pinLength - 1
-      const finish = s.mode === 'unlock' ? 'Unlock' : s.mode === 'create' ? 'Set PIN' : 'Confirm PIN'
-      return [
-        { keys: 'A / B', action: 'Digit down / up' },
-        { keys: 'C + D', action: lastDigit ? finish : 'Next digit' },
-        { keys: 'C', action: s.digits.length === 0 ? 'Leave Secure Mode' : 'Previous digit' },
-      ]
+      const finish = s.mode === 'unlock' ? 'Check PIN' : s.mode === 'create' ? 'Set PIN' : 'Confirm PIN'
+      return {
+        A: 'Decrease digit',
+        B: 'Increase digit',
+        C: s.digits.length === 0 ? 'Leave' : 'Previous digit',
+        D: 'With C, confirm',
+        'C+D': lastDigit ? finish : 'Confirm digit',
+      }
     }
     case 'menu':
-      return [
-        { keys: 'A / B', action: 'Move' },
-        { keys: 'D', action: 'Select' },
-        { keys: 'C', action: 'Lock and leave' },
-      ]
+      return { ...NONE, A: 'Move up', B: 'Move down', C: 'Lock, back to time', D: 'Select' }
     case 'address':
-      return [{ keys: 'C / D', action: 'Back to menu' }]
-    case 'review':
-      return [
-        { keys: 'A / B', action: 'Previous / next field' },
-        { keys: 'D', action: s.page === REVIEW_PAGES.length - 1 ? 'Approve' : 'Approve (on the last field)' },
-        { keys: 'C', action: 'Reject' },
-      ]
+      return {
+        ...NONE,
+        A: s.page > 0 ? 'Previous page' : null,
+        B: s.page < ADDRESS_PAGES - 1 ? 'Next page' : null,
+        C: 'Back',
+      }
+    case 'settings':
+      return { ...NONE, C: 'Back' }
+    case 'review': {
+      const last = s.page === REVIEW_PAGES.length - 1
+      return {
+        ...NONE,
+        A: s.page > 0 ? 'Previous field' : null,
+        B: last ? null : 'Next field',
+        C: 'Reject',
+        D: last ? 'Approve' : null,
+      }
+    }
     case 'result':
-      return [{ keys: 'Any', action: 'Continue' }]
-    case 'wiped':
-      return [{ keys: 'C', action: 'Back to the time' }]
+      return { ...NONE, D: 'OK' }
+    case 'normal':
+    case 'entry':
     case 'verifying':
     case 'creating':
     case 'signing':
-      return [{ keys: '—', action: 'Secure element working' }]
+    case 'wiped':
+      return NONE
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { makeReview, OWN_ADDRESS } from "@/testing/fixtures";
 import { type Button, gesture } from "./gestures";
-import { type Effect, initialState, REVIEW_PAGES, secondsLeft, transition, type WatchEvent, type WatchState } from "./machine";
+import { DEFAULT_CONFIG, type Effect, initialState, REVIEW_PAGES, secondsLeft, transition, type WatchEvent, type WatchState } from "./machine";
 
 /** Small driver: feeds events and collects effects. */
 class Harness {
@@ -12,7 +12,7 @@ class Harness {
   constructor(opts: { hasPin?: boolean } = {}) {
     this.state = initialState({}, this.now);
     const hasPin = opts.hasPin ?? true;
-    this.send({ type: "SE_READY", hasPin, address: hasPin ? OWN_ADDRESS : null, attemptsLeft: 3 });
+    this.send({ type: "SE_READY", hasPin, address: hasPin ? OWN_ADDRESS : null, attemptsLeft: 3, profile: "TROPIC01", maxMessageBytes: 4096 });
   }
 
   send(event: WatchEvent): Effect[] {
@@ -31,6 +31,12 @@ class Harness {
     return this.send({ type: "TICK", now: this.now });
   }
 
+  /** Hidden combination, then the one-second SECURE screen. */
+  openSecure(): void {
+    this.press("A", "D");
+    this.advance(DEFAULT_CONFIG.entryMs);
+  }
+
   enterPin(pin: string): Effect[] {
     const out: Effect[] = [];
     for (const ch of pin) {
@@ -41,7 +47,7 @@ class Harness {
   }
 
   unlock(): void {
-    this.press("A", "D");
+    this.openSecure();
     this.enterPin("1234");
     this.send({ type: "PIN_RESULT", result: { status: "OK" }, now: this.now });
   }
@@ -62,23 +68,25 @@ class Harness {
 }
 
 describe("hidden combination", () => {
-  it("enters Secure Mode (PIN) only with the configured combination", () => {
+  it("only the configured combination leaves Normal; single buttons do nothing there", () => {
     const h = new Harness();
-    h.press("A");
-    h.press("B");
-    h.press("C", "D");
-    h.press("A", "B");
-    expect(h.state.screen.kind).toBe("normal");
+    const before = h.state;
+    for (const g of [["A"], ["B"], ["C"], ["D"], ["C", "D"], ["A", "B"]] as Button[][]) h.press(...g);
+    expect(h.state.screen).toEqual({ kind: "normal" });
+    expect(h.effects).toEqual([]);
+    expect({ ...h.state, now: 0 }).toEqual({ ...before, now: 0 });
     h.press("A", "D");
-    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", digits: [], current: 0 });
+    expect(h.state.screen).toMatchObject({ kind: "entry", mode: "unlock" });
   });
 
-  it("single buttons keep normal watch behaviour", () => {
+  it("shows SECURE for one second, ignoring buttons, then asks for the PIN", () => {
     const h = new Harness();
-    h.press("A");
-    expect(h.state.lightUntil).toBeGreaterThan(h.now);
+    h.press("A", "D");
     h.press("B");
-    expect(h.state.hour12).toBe(true);
+    h.advance(DEFAULT_CONFIG.entryMs - 1);
+    expect(h.state.screen.kind).toBe("entry");
+    h.advance(1);
+    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", digits: [], current: 0 });
   });
 
   it("is ignored off the wrist and before the secure element is ready", () => {
@@ -93,9 +101,9 @@ describe("hidden combination", () => {
 });
 
 describe("PIN entry", () => {
-  it("A/B change the digit with wrap-around, C+D confirms, C steps back", () => {
+  it("A decreases and B increases with wrap-around, C+D confirms, C steps back", () => {
     const h = new Harness();
-    h.press("A", "D");
+    h.openSecure();
     h.press("A");
     expect(h.state.screen).toMatchObject({ current: 9 });
     h.press("B");
@@ -103,15 +111,17 @@ describe("PIN entry", () => {
     expect(h.state.screen).toMatchObject({ current: 1 });
     h.press("C", "D");
     expect(h.state.screen).toMatchObject({ digits: [1], current: 0 });
+    h.press("D");
+    expect(h.state.screen).toMatchObject({ digits: [1], current: 0 });
     h.press("C");
     expect(h.state.screen).toMatchObject({ digits: [], current: 1 });
     h.press("C");
     expect(h.state.screen.kind).toBe("normal");
   });
 
-  it("submits the PIN to the SE after the last digit and opens the menu on success", () => {
+  it("submits the PIN to the SE after the last digit and opens Secure on success", () => {
     const h = new Harness();
-    h.press("A", "D");
+    h.openSecure();
     const effects = h.enterPin("1234");
     expect(effects).toContainEqual({ type: "verifyPin", pin: "1234" });
     expect(h.state.screen.kind).toBe("verifying");
@@ -122,9 +132,9 @@ describe("PIN entry", () => {
     expect(h.state.screen).toMatchObject({ kind: "menu", index: 0 });
   });
 
-  it("shows the attempts left and wipes on the third wrong PIN", () => {
+  it("shows the tries left and goes to Locked on the third wrong PIN", () => {
     const h = new Harness();
-    h.press("A", "D");
+    h.openSecure();
     h.enterPin("0000");
     h.send({ type: "PIN_RESULT", result: { status: "WRONG_PIN", attemptsRemaining: 2 }, now: h.now });
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", notice: "wrong", digits: [] });
@@ -139,20 +149,24 @@ describe("PIN entry", () => {
     expect(h.state.session).toBe(false);
   });
 
-  it("after a wipe, Secure Mode offers a fresh wallet setup", () => {
+  it("Locked stays put through buttons and wrist changes; only a simulator reset leaves it", () => {
     const h = new Harness();
-    h.press("A", "D");
+    h.openSecure();
     h.enterPin("0000");
     h.send({ type: "PIN_RESULT", result: { status: "WIPED" }, now: h.now });
-    h.press("C");
+    for (const g of [["A"], ["B"], ["C"], ["D"], ["C", "D"], ["A", "D"]] as Button[][]) h.press(...g);
+    h.send({ type: "WRIST", on: false, now: h.now });
+    h.send({ type: "WRIST", on: true, now: h.now });
+    expect(h.state.screen.kind).toBe("wiped");
+    h.send({ type: "RESET", now: h.now });
     expect(h.state.screen.kind).toBe("normal");
-    h.press("A", "D");
+    h.openSecure();
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
   });
 
-  it("first run: choose a PIN, confirm it, then the SE sets it and generates the key", () => {
+  it("first use: choose a PIN, repeat it, then the SE sets it and generates the key", () => {
     const h = new Harness({ hasPin: false });
-    h.press("A", "D");
+    h.openSecure();
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
     h.enterPin("2580");
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "confirm", first: [2, 5, 8, 0] });
@@ -162,14 +176,37 @@ describe("PIN entry", () => {
     const effects = h.enterPin("2580");
     expect(effects).toContainEqual({ type: "createWallet", pin: "2580" });
     expect(h.state.screen.kind).toBe("creating");
-    h.send({ type: "WALLET_CREATED", address: OWN_ADDRESS });
+    h.send({ type: "WALLET_CREATED", address: OWN_ADDRESS, now: h.now });
     expect(h.state.session).toBe(true);
     expect(h.state.screen.kind).toBe("menu");
   });
 });
 
+describe("Secure menu", () => {
+  it("D opens Address, Sign request and Settings; C locks and returns to Normal", () => {
+    const h = new Harness();
+    h.unlock();
+    h.press("D");
+    expect(h.state.screen).toEqual({ kind: "address", page: 0 });
+    h.press("B");
+    expect(h.state.screen).toEqual({ kind: "address", page: 1 });
+    h.press("C");
+    h.press("B");
+    h.press("D");
+    expect(h.state.screen).toMatchObject({ kind: "menu", index: 1, notice: "no-request" });
+    h.press("B");
+    h.press("D");
+    expect(h.state.screen).toEqual({ kind: "settings" });
+    h.press("C");
+    const effects = h.press("C");
+    expect(effects).toContainEqual({ type: "endSession" });
+    expect(h.state.screen.kind).toBe("normal");
+    expect(h.state.session).toBe(false);
+  });
+});
+
 describe("review, approve and reject", () => {
-  it("shows the review screen when a request arrives in a live session", () => {
+  it("opens Review when a request arrives in a live session", () => {
     const h = new Harness();
     h.unlock();
     h.review();
@@ -190,20 +227,22 @@ describe("review, approve and reject", () => {
     expect(h.state.request).toBe(first);
   });
 
-  it("approve is only possible from the last page and hands the exact bytes to the SE", () => {
+  it("pages forward one at a time; APPROVE is reachable only after every field, and D signs the exact bytes", () => {
     const h = new Harness();
     h.unlock();
     const review = h.review();
-    h.press("D");
-    expect(h.state.screen.kind).toBe("review");
-    h.toApprovePage();
+    for (let page = 0; page < REVIEW_PAGES.length - 1; page++) {
+      expect(h.state.screen).toEqual({ kind: "review", page });
+      expect(h.press("D").some((e) => e.type === "approve")).toBe(false);
+      h.press("B");
+    }
+    expect(h.state.screen).toEqual({ kind: "review", page: REVIEW_PAGES.length - 1 });
     const effects = h.press("D");
-    const approve = effects.find((e) => e.type === "approve");
-    expect(approve).toEqual({ type: "approve", requestId: review.request.requestId, message: review.messageBytes });
+    expect(effects).toContainEqual({ type: "approve", requestId: review.request.requestId, message: review.messageBytes });
     expect(h.state.screen.kind).toBe("signing");
     expect(h.state.request).toBeNull();
 
-    h.send({ type: "SIGNED", requestId: review.request.requestId, signature: new Uint8Array(64).fill(1) });
+    h.send({ type: "SIGNED", requestId: review.request.requestId, signature: new Uint8Array(64).fill(1), now: h.now });
     const res = h.responses().at(-1)!;
     expect(res.status).toBe("APPROVED");
     expect(res.signature).toBeTypeOf("string");
@@ -221,7 +260,24 @@ describe("review, approve and reject", () => {
     expect(res.signature).toBeUndefined();
     expect(h.effects.some((e) => e.type === "approve")).toBe(false);
     expect(h.state.screen).toMatchObject({ kind: "result", status: "REJECTED" });
+  });
+
+  it("SIGNED and REJECTED return to Secure on D or after 3 s; other buttons do nothing", () => {
+    const h = new Harness();
+    h.unlock();
+    h.review();
+    h.press("C");
+    h.press("A");
+    h.press("C");
+    expect(h.state.screen).toMatchObject({ kind: "result", status: "REJECTED" });
     h.press("D");
+    expect(h.state.screen.kind).toBe("menu");
+
+    h.review();
+    h.press("C");
+    h.advance(DEFAULT_CONFIG.resultMs - 1);
+    expect(h.state.screen.kind).toBe("result");
+    h.advance(1);
     expect(h.state.screen.kind).toBe("menu");
   });
 
@@ -229,13 +285,13 @@ describe("review, approve and reject", () => {
     const h = new Harness();
     h.unlock();
     h.review();
-    h.send({ type: "SIGNED", requestId: crypto.randomUUID(), signature: new Uint8Array(64) });
+    h.send({ type: "SIGNED", requestId: crypto.randomUUID(), signature: new Uint8Array(64), now: h.now });
     expect(h.responses()).toHaveLength(0);
   });
 });
 
 describe("expiry", () => {
-  it("auto-rejects at zero with EXPIRED and no signature", () => {
+  it("auto-rejects at zero with EXPIRED and no signature, and waits for D", () => {
     const h = new Harness();
     h.unlock();
     h.review({ expiresInMs: 10_000 });
@@ -248,6 +304,10 @@ describe("expiry", () => {
     expect(res.signature).toBeUndefined();
     expect(h.state.request).toBeNull();
     expect(h.state.screen).toMatchObject({ kind: "result", status: "EXPIRED" });
+    h.advance(60_000);
+    expect(h.state.screen).toMatchObject({ kind: "result", status: "EXPIRED" });
+    h.press("D");
+    expect(h.state.screen.kind).toBe("menu");
   });
 
   it("approve at the deadline does not sign, even without a tick in between", () => {
@@ -282,13 +342,13 @@ describe("wrist toggle", () => {
     h.toApprovePage();
     h.press("D");
     h.send({ type: "WRIST", on: false, now: h.now });
-    h.send({ type: "SIGNED", requestId: review.request.requestId, signature: new Uint8Array(64) });
+    h.send({ type: "SIGNED", requestId: review.request.requestId, signature: new Uint8Array(64), now: h.now });
     expect(h.responses().map((r) => r.status)).toEqual(["LOCKED"]);
   });
 
   it("a PIN result that lands after wrist-off does not open the session", () => {
     const h = new Harness();
-    h.press("A", "D");
+    h.openSecure();
     h.enterPin("1234");
     h.send({ type: "WRIST", on: false, now: h.now });
     const effects = h.send({ type: "PIN_RESULT", result: { status: "OK" }, now: h.now });
@@ -296,13 +356,17 @@ describe("wrist toggle", () => {
     expect(effects).toContainEqual({ type: "endSession" });
   });
 
-  it("off-wrist during PIN entry discards the digits; the PIN is required again", () => {
+  it("off-wrist during entry or PIN discards everything; the PIN is required again", () => {
     const h = new Harness();
+    h.press("A", "D");
+    h.send({ type: "WRIST", on: false, now: h.now });
+    expect(h.state.screen.kind).toBe("normal");
+    h.send({ type: "WRIST", on: true, now: h.now });
     h.unlock();
     h.send({ type: "WRIST", on: false, now: h.now });
     h.send({ type: "WRIST", on: true, now: h.now });
     expect(h.state.screen.kind).toBe("normal");
-    h.press("A", "D");
+    h.openSecure();
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", digits: [] });
   });
 });

@@ -1,174 +1,158 @@
-import { useMemo, type PointerEvent } from 'react'
+import type { CSSProperties, PointerEvent } from 'react'
 import type { Button } from '@/machine/gestures'
 import { DotMatrix } from './DotMatrix'
-import { composeLines, drawText, emptyGrid } from './matrix'
 import type { FaceContent } from './screens'
-import { SegmentDisplay } from './SegmentDisplay'
+import { WORDMARK_PATH, WORDMARK_VIEWBOX } from './wordmark'
 
 interface Props {
   face: FaceContent
   pressed: ReadonlySet<Button>
-  keyFor: Record<Button, string>
+  /** Accessible names, e.g. "Button A, previous". */
+  labels: Record<Button, string>
   onPress(button: Button, latch: boolean): void
   onRelease(button: Button): void
 }
 
-const OFFSET_X = 40
-const LCD = { x: 80, y: 182, w: 280, h: 252, r: 16 }
-
-const PUSHERS: { id: Button; side: 'left' | 'right'; y: number; label: string }[] = [
-  { id: 'A', side: 'left', y: 184, label: 'Button A (upper left)' },
-  { id: 'C', side: 'left', y: 376, label: 'Button C (lower left)' },
-  { id: 'B', side: 'right', y: 184, label: 'Button B (upper right)' },
-  { id: 'D', side: 'right', y: 376, label: 'Button D (lower right)' },
+/* Geometry from DESIGN.md §5, in viewBox units. */
+const VIEW = { w: 360, h: 470 }
+const CASE = { x: 32, y: 52, w: 296, h: 366, r: 40 }
+const LCD = { x: 70, y: 116, w: 220, h: 236 }
+const PUSHER = { w: 20, h: 36 }
+const PUSHERS: { id: Button; side: 'left' | 'right'; y: number }[] = [
+  { id: 'A', side: 'left', y: 147 },
+  { id: 'B', side: 'left', y: 287 },
+  { id: 'C', side: 'right', y: 147 },
+  { id: 'D', side: 'right', y: 287 },
 ]
+const pusherX = (side: 'left' | 'right') => (side === 'left' ? 16 : 324)
 
-function Pusher({
-  id,
-  side,
-  y,
-  label,
-  pressed,
-  onPress,
-  onRelease,
-}: (typeof PUSHERS)[number] & { pressed: boolean } & Pick<Props, 'onPress' | 'onRelease'>) {
-  const x = side === 'left' ? 28 : 396
-  const hitX = side === 'left' ? 0 : 384
-  const down = (e: PointerEvent<SVGGElement>) => {
+const pct = (v: number, of: number) => `${(v / of) * 100}%`
+
+function Annunciator({ x, y, dir, on }: { x: number; y: number; dir: 'r' | 'l'; on: boolean }) {
+  const s = 4
+  const points = dir === 'r' ? `${x},${y - s} ${x + s},${y} ${x},${y + s}` : `${x},${y - s} ${x - s},${y} ${x},${y + s}`
+  return <polygon className={on ? 'sk-seg sk-ann' : 'sk-ghost sk-ann'} points={points} />
+}
+
+function Lcd({ face }: { face: FaceContent }) {
+  const { x, y, w, h } = LCD
+  const a = face.annunciators
+  return (
+    <g>
+      <rect className="sk-lcd" x={x} y={y} width={w} height={h} rx={6} />
+      <text className="sk-lcd14 sk-ghost" x={x + 18} y={y + 44} fontSize={21}>
+        ~~~~~~~~
+      </text>
+      <text className="sk-lcd14 sk-seg" x={x + 18} y={y + 44} fontSize={21}>
+        {face.top}
+      </text>
+      <text className="sk-lcd7 sk-ghost" x={x + 166} y={y + 128} fontSize={46} textAnchor="end">
+        88:88
+      </text>
+      <text className="sk-lcd7 sk-seg" x={x + 166} y={y + 128} fontSize={46} textAnchor="end">
+        {face.main}
+      </text>
+      <text className="sk-lcd7 sk-ghost" x={x + 208} y={y + 128} fontSize={22} textAnchor="end">
+        88
+      </text>
+      <text className="sk-lcd7 sk-seg" x={x + 208} y={y + 128} fontSize={22} textAnchor="end">
+        {face.sec}
+      </text>
+      <DotMatrix lines={face.strip} x={x + 15} y={y + 168} pitch={2} dot={1.6} />
+      <Annunciator x={x + 5} y={y + 53} dir="r" on={a.A} />
+      <Annunciator x={x + 5} y={y + 193} dir="r" on={a.B} />
+      <Annunciator x={x + w - 5} y={y + 53} dir="l" on={a.C} />
+      <Annunciator x={x + w - 5} y={y + 193} dir="l" on={a.D} />
+    </g>
+  )
+}
+
+export function Watch({ face, pressed, labels, onPress, onRelease }: Props) {
+  const down = (id: Button) => (e: PointerEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     onPress(id, e.shiftKey)
   }
-  const up = (e: PointerEvent<SVGGElement>) => {
+  const up = (id: Button) => (e: PointerEvent<HTMLButtonElement>) => {
     e.preventDefault()
     onRelease(id)
   }
-  return (
-    <g
-      className="sk-pusher"
-      data-side={side}
-      data-pressed={pressed}
-      role="button"
-      aria-label={label}
-      aria-pressed={pressed}
-      onPointerDown={down}
-      onPointerUp={up}
-      onPointerCancel={up}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <rect className="sk-pusher-hit" x={hitX} y={y - 14} width={56} height={68} />
-      <g className="sk-pusher-move">
-        <rect className="sk-pusher-body" x={x} y={y} width={16} height={40} rx={5} />
-        {[12, 18, 24].map((dy) => (
-          <rect key={dy} className="sk-pusher-ridge" x={x + 3} y={y + dy} width={10} height={2} rx={1} />
-        ))}
-      </g>
-    </g>
-  )
-}
 
-function KeyHint({ x, y, k, pressed }: { x: number; y: number; k: string; pressed: boolean }) {
-  return (
-    <g className="sk-keyhint" data-pressed={pressed} aria-hidden="true">
-      <rect className="sk-keycap" x={x} y={y} width={18} height={18} rx={4} />
-      <text className="sk-keycap-text" x={x + 9} y={y + 12.5} textAnchor="middle">
-        {k}
-      </text>
-    </g>
-  )
-}
-
-function Indicators({ face }: { face: FaceContent }) {
-  const cls = (on: boolean) => (on ? 'sk-ink' : 'sk-ghost')
-  const stroke = (on: boolean) => (on ? 'sk-ink-stroke' : 'sk-ghost-stroke')
-  const { session, request, wrist } = face.indicators
-  return (
-    <g>
-      <g aria-label={session ? 'Secure session open' : undefined}>
-        <path className={stroke(session)} strokeWidth={1.6} d="M15 19v-3a3.5 3.5 0 0 1 7 0v3" />
-        <rect className={cls(session)} x={13} y={19} width={11} height={8} rx={1.5} />
-      </g>
-      <g aria-label={request ? 'Sign request pending' : undefined}>
-        <rect className={stroke(request)} strokeWidth={1.4} x={31} y={16.5} width={13} height={10} rx={1.2} />
-        <path className={stroke(request)} strokeWidth={1.4} d="M31.5 17.5l6 4.6 6-4.6" />
-      </g>
-      <g aria-label={wrist ? 'On wrist' : undefined}>
-        <rect className={cls(wrist)} x={239} y={14} width={6} height={4} />
-        <rect className={stroke(wrist)} strokeWidth={1.4} x={236.5} y={18.5} width={11} height={7} rx={1.5} />
-        <rect className={cls(wrist)} x={239} y={26} width={6} height={4} />
-      </g>
-      <g>
-        <rect className="sk-ink-stroke" strokeWidth={1.4} x={253.5} y={17.5} width={16} height={9} rx={1.2} />
-        <rect className="sk-ink" x={270} y={20} width={2} height={4} />
-        {[0, 1, 2].map((i) => (
-          <rect key={i} className="sk-ink" x={255.5 + i * 4.3} y={19.5} width={3.4} height={5} />
-        ))}
-      </g>
-    </g>
-  )
-}
-
-export function Watch({ face, pressed, keyFor, onPress, onRelease }: Props) {
-  const grid = useMemo(() => composeLines(face.lines), [face.lines])
-  const tagGrid = useMemo(() => {
-    const g = emptyGrid(8, 11)
-    if (face.tag) drawText(g, face.tag, 0, 0)
-    return g
-  }, [face.tag])
+  const shadow: CSSProperties = {
+    left: pct(CASE.x, VIEW.w),
+    top: pct(CASE.y, VIEW.h),
+    width: pct(CASE.w, VIEW.w),
+    height: pct(CASE.h, VIEW.h),
+    borderRadius: `${pct(CASE.r, CASE.w)} / ${pct(CASE.r, CASE.h)}`,
+  }
 
   return (
-    <svg
-      className={`sk-watch${face.lit ? ' sk-lit' : ''}`}
-      viewBox="0 0 520 600"
-      role="img"
-      aria-label="SEKUND watch"
-    >
-      <g transform={`translate(${OFFSET_X} 0)`}>
-        {/* Strap */}
-        <rect className="sk-strap" x={124} y={0} width={192} height={140} />
-        <rect className="sk-strap" x={124} y={460} width={192} height={140} />
-        {Array.from({ length: 6 }, (_, i) => (
-          <g key={i}>
-            <rect className="sk-strap-rib" x={124} y={8 + i * 15} width={192} height={5} />
-            <rect className="sk-strap-rib" x={124} y={500 + i * 15} width={192} height={5} />
+    <div className="sk-watch">
+      <div className="sk-watch-shadow" style={shadow} aria-hidden="true" />
+      <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
+        <rect className="sk-strap" x={96} y={0} width={168} height={70} />
+        <rect className="sk-strap" x={96} y={400} width={168} height={70} />
+        {[10, 24, 38].map((gy) => (
+          <g key={gy}>
+            <rect className="sk-strap-groove" x={96} y={gy} width={168} height={2} />
+            <rect className="sk-strap-groove" x={96} y={468 - gy} width={168} height={2} />
           </g>
         ))}
 
-        {/* Case */}
-        <rect className="sk-lug" x={104} y={94} width={232} height={50} rx={14} />
-        <rect className="sk-lug" x={104} y={456} width={232} height={50} rx={14} />
-        <rect className="sk-case" x={44} y={116} width={352} height={368} rx={62} />
-        <rect className="sk-bezel" x={60} y={132} width={320} height={336} rx={48} />
-        <text className="sk-brand" x={220 + 2} y={161} textAnchor="middle">
-          SEKUND
-        </text>
-        <rect className="sk-accent-tick" x={370} y={392} width={6} height={8} rx={1} />
-
-        {/* LCD */}
-        <rect className="sk-lcd-frame" x={LCD.x - 6} y={LCD.y - 6} width={LCD.w + 12} height={LCD.h + 12} rx={LCD.r + 5} />
-        <g transform={`translate(${LCD.x} ${LCD.y})`}>
-          <rect className="sk-lcd" width={LCD.w} height={LCD.h} rx={LCD.r} />
-          <Indicators face={face} />
-          <DotMatrix grid={grid} x={8} y={36} pitch={2.75} />
-          <rect className="sk-ghost" x={10} y={148} width={LCD.w - 20} height={1.5} />
-          {face.tag && <DotMatrix grid={tagGrid} x={229} y={160} pitch={2} />}
-          <SegmentDisplay {...face.segment} x={7} y={160} />
-        </g>
-
         {PUSHERS.map((p) => (
-          <Pusher key={p.id} {...p} pressed={pressed.has(p.id)} onPress={onPress} onRelease={onRelease} />
+          <g
+            key={p.id}
+            className="sk-pusher"
+            data-side={p.side}
+            data-pressed={pressed.has(p.id)}
+          >
+            <rect className="sk-steel" x={pusherX(p.side)} y={p.y} width={PUSHER.w} height={PUSHER.h} rx={3} />
+            <rect className="sk-steel-edge" x={pusherX(p.side)} y={p.y + 30} width={PUSHER.w} height={6} rx={2} />
+          </g>
         ))}
-      </g>
+
+        <path className="sk-resin" d="M80 58 L104 34 H256 L280 58 Z" />
+        <path className="sk-resin" d="M80 412 L104 436 H256 L280 412 Z" />
+        <rect className="sk-resin" x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx={CASE.r} />
+        <rect className="sk-bezel" x={46} y={66} width={268} height={338} rx={28} />
+        <svg x={132} y={77} width={96} height={22} viewBox={WORDMARK_VIEWBOX}>
+          <path className="sk-wordmark" d={WORDMARK_PATH} />
+        </svg>
+        <rect className="sk-glass" x={62} y={108} width={236} height={252} rx={10} />
+        <Lcd face={face} />
+      </svg>
 
       {PUSHERS.map((p) => (
-        <KeyHint
+        <button
           key={p.id}
-          x={p.side === 'left' ? 10 : 492}
-          y={p.y + 11}
-          k={keyFor[p.id]}
-          pressed={pressed.has(p.id)}
+          type="button"
+          className="sk-pusher-hit"
+          data-button={p.id}
+          aria-label={labels[p.id]}
+          aria-pressed={pressed.has(p.id)}
+          style={{
+            left: pct(pusherX(p.side) + PUSHER.w / 2, VIEW.w),
+            top: pct(p.y + PUSHER.h / 2, VIEW.h),
+          }}
+          onPointerDown={down(p.id)}
+          onPointerUp={up(p.id)}
+          onPointerCancel={up(p.id)}
+          onContextMenu={(e) => e.preventDefault()}
         />
       ))}
-    </svg>
+
+      {PUSHERS.map((p) => (
+        <span
+          key={p.id}
+          className="sk-keyhint"
+          data-side={p.side}
+          data-pressed={pressed.has(p.id)}
+          style={{ top: pct(p.y + PUSHER.h / 2, VIEW.h) }}
+          aria-hidden="true"
+        >
+          {p.id}
+        </span>
+      ))}
+    </div>
   )
 }

@@ -1,188 +1,178 @@
-import { MAX_PIN_ATTEMPTS } from '@sekund/protocol'
-import { MENU_ITEMS, REVIEW_PAGES, secondsLeft, type WatchState } from '@/machine/machine'
-import { chunk, type MatrixLine } from './matrix'
-import type { SegmentContent } from './SegmentDisplay'
+import { formatLamports, type Review } from '@sekund/protocol'
+import { controlsFor } from '@/hints'
+import type { Button } from '@/machine/gestures'
+import { MENU_ITEMS, REVIEW_PAGES, type WatchState } from '@/machine/machine'
+import { addressPages, right, type StripText, wrap } from './strip'
 
-export interface Indicators {
-  session: boolean
-  request: boolean
-  wrist: boolean
+/**
+ * What the LCD shows (DESIGN.md §2 on-watch copy, §5 states). Strings are in DSEG terms:
+ * `!` is a digit-width blank, a space in the colon position blanks the colon.
+ */
+export interface FaceContent {
+  /** 14-segment top line, exactly 8 characters. */
+  top: string
+  /** 7-segment main digits, `88:88` positions. */
+  main: string
+  /** 7-segment seconds, 2 characters. */
+  sec: string
+  strip: StripText
+  annunciators: Record<Button, boolean>
+  /** Top line and strip as plain words, for the screen-reader live region. */
+  spoken: string
 }
 
-export interface FaceContent {
-  lines: (MatrixLine | null)[]
-  segment: SegmentContent
-  /** Two-character tag above the seconds (AM/PM). */
-  tag: string
-  indicators: Indicators
-  lit: boolean
+export interface FaceOptions {
+  reducedMotion?: boolean
 }
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+const BLANK_STRIP: StripText = ['', '']
+/** Solana's base fee per signature; the signer count comes from the message header. */
+const LAMPORTS_PER_SIGNATURE = 5_000n
+
 const pad2 = (n: number) => n.toString().padStart(2, '0')
+const blankOut = (s: string) => s.replace(/ /g, '!')
 
-function header(text: string, right?: string): MatrixLine {
-  return { text, right, rule: true }
+function top(label: string, tail = ''): string {
+  return blankOut(label.padEnd(8 - tail.length, ' ') + tail).slice(0, 8)
 }
 
-function center(text: string, size: 1 | 2 = 1): MatrixLine {
-  return { text, align: 'center', size }
+const blinkOn = (now: number) => now % 1000 < 500
+
+function time(now: number): { main: string; sec: string } {
+  const d = new Date(now)
+  return { main: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`, sec: pad2(d.getSeconds()) }
 }
 
-function addressLines(address: string | null): MatrixLine[] {
-  if (!address) return [center('NO KEY')]
-  return chunk(address).map((text) => ({ text }))
+function countdown(seconds: number, now: number, steady: boolean): string {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '!')
+  const colon = seconds <= 10 && !steady && !blinkOn(now) ? ' ' : ':'
+  return `${m}${colon}${pad2(seconds % 60)}`
 }
 
-const PIN_HEADERS = { unlock: 'ENTER PIN', create: 'NEW PIN', confirm: 'CONFIRM PIN' } as const
+function signatureCount(review: Review): number {
+  return review.messageBytes[0] ?? 1
+}
 
-function clock(state: WatchState): { segment: SegmentContent; tag: string } {
-  const d = new Date(state.now)
-  let h = d.getHours()
-  let tag = ''
-  if (state.hour12) {
-    tag = h < 12 ? 'AM' : 'PM'
-    h = h % 12 || 12
+function reviewPage(review: Review, page: (typeof REVIEW_PAGES)[number]): { top: string; strip: StripText } {
+  const to = addressPages(review.transfer.to)
+  switch (page) {
+    case 'AMOUNT': {
+      const lines = wrap(`${review.transfer.sol} SOL`)
+      return { top: top('AMOUNT'), strip: [lines[0] ?? '', lines[1] ?? ''] }
+    }
+    case 'TO1':
+      return { top: top('TO', '1/2'), strip: to[0] }
+    case 'TO2':
+      return { top: top('TO', '2/2'), strip: to[1] }
+    case 'NETWORK':
+      return { top: top('NETWORK'), strip: ['SOLANA', 'DEVNET'] }
+    case 'FEE': {
+      const n = signatureCount(review)
+      const fee = formatLamports(LAMPORTS_PER_SIGNATURE * BigInt(n))
+      return { top: top('FEE'), strip: [`${fee} SOL`, `${n} SIGNATURE${n === 1 ? '' : 'S'}`] }
+    }
+    case 'APPROVE':
+      return { top: top('APPROVE?'), strip: [right('REJECT'), right('APPROVE')] }
   }
-  const hh = state.hour12 ? h.toString().padStart(2, ' ') : pad2(h)
-  return {
-    segment: { big: `${hh}${pad2(d.getMinutes())}`, colon: d.getMilliseconds() < 500, small: pad2(d.getSeconds()) },
-    tag,
-  }
 }
 
-function countdown(state: WatchState): SegmentContent {
-  const s = secondsLeft(state)
-  const blinkOff = s <= 10 && new Date(state.now).getMilliseconds() >= 500
-  if (blinkOff) return { big: '    ', colon: false, small: '  ' }
-  const m = Math.floor(s / 60)
-  return { big: ` ${m}${pad2(s % 60)}`, colon: true, small: '  ' }
+function menuStrip(state: WatchState, index: number, notice: 'no-request' | null): StripText {
+  const first = Math.min(index, MENU_ITEMS.length - 2)
+  const row = (i: number) => {
+    const selected = i === index
+    const label = selected && notice === 'no-request' ? 'NO REQUEST' : MENU_ITEMS[i] ?? ''
+    const waiting = MENU_ITEMS[i] === 'SIGN REQUEST' && state.request ? ' 1' : ''
+    return `${selected ? '>' : ' '} ${label}${selected && notice ? '' : waiting}`
+  }
+  return [row(first), row(first + 1)]
 }
 
-export function renderFace(state: WatchState): FaceContent {
-  const { screen } = state
-  const indicators: Indicators = {
-    session: state.session,
-    request: state.request !== null,
-    wrist: state.onWrist,
-  }
-  const lit = state.now < state.lightUntil
-  const time = clock(state)
-  const base = { indicators, lit, tag: '', segment: time.segment }
+function pinMain(state: WatchState, digits: number[], current: number, steady: boolean): string {
+  const n = state.config.pinLength
+  const chars = Array.from({ length: n }, (_, i) => {
+    if (i < digits.length) return '-'
+    if (i > digits.length) return '_'
+    return steady || blinkOn(state.now) ? String(current) : '!'
+  })
+  return `${chars.slice(0, 2).join('')} ${chars.slice(2).join('')}`
+}
 
-  switch (screen.kind) {
+interface Layout {
+  top: string
+  main: string
+  sec: string
+  strip: StripText
+}
+
+function layout(state: WatchState, steady: boolean): Layout {
+  const s = state.screen
+  const clock = time(state.now)
+  const secure = (strip: StripText, label = 'SECURE'): Layout => ({ top: top(label), ...clock, strip })
+
+  switch (s.kind) {
     case 'normal': {
       const d = new Date(state.now)
-      return {
-        ...base,
-        tag: time.tag,
-        lines: [
-          null,
-          center(`${DAYS[d.getDay()]} ${pad2(d.getDate())}`, 2),
-          center(`${MONTHS[d.getMonth()]} ${d.getFullYear()}`),
-        ],
-      }
+      return { top: top(DAYS[d.getDay()] ?? '', String(d.getDate())), ...clock, strip: BLANK_STRIP }
     }
-
+    case 'entry':
+      return secure(BLANK_STRIP)
     case 'pin': {
-      const n = state.config.pinLength
-      const big = Array.from({ length: n }, (_, i) =>
-        i < screen.digits.length ? '-' : i === screen.digits.length ? String(screen.current) : '_',
-      ).join('')
-      let status = ''
-      if (screen.notice === 'wrong') status = `WRONG PIN ${state.attemptsLeft} LEFT`
-      else if (screen.notice === 'mismatch') status = 'PINS DIFFER'
-      else if (screen.mode === 'unlock' && state.attemptsLeft < MAX_PIN_ATTEMPTS) status = `${state.attemptsLeft} TRIES LEFT`
-      else if (screen.mode === 'create') status = 'FIRST USE'
-      else if (screen.mode === 'confirm') status = 'ONCE MORE'
-      return {
-        ...base,
-        segment: { big, colon: false, small: '  ' },
-        lines: [header(PIN_HEADERS[screen.mode], `${screen.digits.length + 1}/${n}`), null, center(status)],
-      }
+      const main = pinMain(state, s.digits, s.current, steady)
+      const tries = `TRIES LEFT ${state.attemptsLeft}`
+      let strip: StripText
+      if (s.mode === 'unlock') strip = [s.notice === 'wrong' ? 'WRONG PIN' : 'ENTER PIN', tries]
+      else if (s.mode === 'create') strip = s.notice === 'mismatch' ? ['PINS DIFFER', 'NEW PIN AGAIN'] : ['NEW PIN', 'FOUR DIGITS']
+      else strip = ['REPEAT PIN', '']
+      return { top: top('PIN'), main, sec: '!!', strip }
     }
-
     case 'verifying':
-      return {
-        ...base,
-        segment: { big: '----', colon: false, small: '  ' },
-        lines: [header('ENTER PIN'), null, center('CHECKING…')],
-      }
-
+      return { top: top('PIN'), main: '-- --', sec: '!!', strip: ['CHECKING PIN', ''] }
     case 'creating':
-      return {
-        ...base,
-        segment: { big: '----', colon: false, small: '  ' },
-        lines: [header('NEW WALLET'), null, center('CREATING KEY…')],
-      }
-
+      return { top: top('PIN'), main: '-- --', sec: '!!', strip: ['CREATING KEY', ''] }
     case 'menu':
-      return {
-        ...base,
-        lines: [
-          header('WALLET', `${screen.index + 1}/${MENU_ITEMS.length}`),
-          ...MENU_ITEMS.map((item, i): MatrixLine => {
-            const selected = i === screen.index
-            let label: string = item
-            if (item === 'SIGN REQUEST' && state.request) label = 'SIGN REQUEST 1'
-            if (selected && screen.notice === 'no-request') label = 'NONE PENDING'
-            return { text: `${selected ? '▸' : ' '}${label}` }
-          }),
-        ],
-      }
-
-    case 'address':
-      return { ...base, lines: [header('ADDRESS'), ...addressLines(state.address)] }
-
+      return secure(menuStrip(state, s.index, s.notice))
+    case 'address': {
+      const pages = state.address ? addressPages(state.address) : null
+      return { top: top('ADDR', `${s.page + 1}/2`), ...clock, strip: pages?.[s.page] ?? ['NO KEY', ''] }
+    }
+    case 'settings':
+      return secure([state.profile ?? '', `MAX ${state.maxMessageBytes} BYTES`], 'SETTINGS')
     case 'review': {
       const req = state.request
-      if (!req) return { ...base, lines: [header('REVIEW'), null, center('NO REQUEST')] }
-      const page = REVIEW_PAGES[screen.page] ?? 'AMOUNT'
-      const amount = req.transfer.sol
-      const pageTag = `${screen.page + 1}/${REVIEW_PAGES.length}`
-      const seg = countdown(state)
-      const body = (): (MatrixLine | null)[] => {
-        switch (page) {
-          case 'AMOUNT': {
-            const text = `${amount} SOL`
-            return text.length <= 8 ? [center('SEND'), center(text, 2)] : [center('SEND'), center(amount), center('SOL')]
-          }
-          case 'TO':
-            return addressLines(req.transfer.to)
-          case 'NETWORK':
-            return [center('SOLANA'), center('DEVNET', 2)]
-          case 'FROM':
-            return addressLines(req.transfer.from)
-          case 'APPROVE':
-            return [center('SIGN TRANSFER'), center(`${amount} SOL?`), { text: '◂REJECT APPROVE▸' }]
-        }
-      }
-      return { ...base, segment: seg, lines: [header(page, pageTag), ...body()] }
+      if (!req) return secure(['NO REQUEST', ''])
+      const seconds = Math.max(0, Math.ceil((req.deadline - state.now) / 1000))
+      const page = reviewPage(req, REVIEW_PAGES[s.page] ?? 'AMOUNT')
+      return { ...page, main: countdown(seconds, state.now, steady), sec: '!!' }
     }
-
     case 'signing':
-      return { ...base, lines: [header('SIGNING'), null, center('SECURE ELEMENT'), center('SIGNING…')] }
-
-    case 'result': {
-      switch (screen.status) {
-        case 'APPROVED': {
-          const sig = screen.signature ?? ''
-          return {
-            ...base,
-            lines: [header('SIGNED ✓'), center('SIGNATURE SENT'), center(`${sig.slice(0, 6)}…${sig.slice(-6)}`)],
-          }
-        }
-        case 'EXPIRED':
-          return { ...base, lines: [header('EXPIRED'), center('TIME RAN OUT'), center('NOTHING SIGNED')] }
+      return secure(['SECURE ELEMENT', 'SIGNING'], 'SIGNING')
+    case 'result':
+      switch (s.status) {
+        case 'APPROVED':
+          return secure(['SENT TO APP', right('OK')], 'SIGNED')
+        case 'REJECTED':
+          return secure(['NOT SIGNED', right('OK')], 'REJECTED')
         case 'FAILED':
-          return { ...base, lines: [header('FAILED'), center('SECURE ELEMENT'), center('NOTHING SIGNED')] }
-        default:
-          return { ...base, lines: [header('REJECTED'), center('NOTHING SIGNED')] }
+          return secure(['NOT SIGNED', right('OK')], 'FAILED')
+        case 'SETUP_FAILED':
+          return secure(['NO KEY MADE', right('OK')], 'FAILED')
+        case 'EXPIRED':
+          return { top: top('EXPIRED'), main: '!0:00', sec: '!!', strip: ['NOT SIGNED', 'ASK APP AGAIN'] }
       }
-    }
-
+      break
     case 'wiped':
-      return { ...base, lines: [header('LOCKED'), center('3 WRONG PINS'), center('KEY WIPED')] }
+      return { top: top('LOCKED'), main: '--:--', sec: '!!', strip: ['KEY ERASED', 'SET UP AGAIN'] }
   }
+  return secure(BLANK_STRIP)
+}
+
+const words = (s: string) => s.replace(/!/g, ' ').replace(/\s+/g, ' ').trim()
+
+export function renderFace(state: WatchState, options: FaceOptions = {}): FaceContent {
+  const l = layout(state, options.reducedMotion ?? false)
+  const c = controlsFor(state)
+  const annunciators = { A: c.A !== null, B: c.B !== null, C: c.C !== null, D: c.D !== null }
+  const spoken = [l.top, ...l.strip].map(words).filter(Boolean).join('. ')
+  return { ...l, annunciators, spoken }
 }

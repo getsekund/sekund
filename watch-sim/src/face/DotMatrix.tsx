@@ -1,41 +1,27 @@
-import { useId, useMemo } from 'react'
-import type { Grid } from './matrix'
+import { useMemo } from 'react'
+import { type Dot, STRIP_CELLS, stripDots, type StripText } from './strip'
 
 interface Props {
-  grid: Grid
+  lines: StripText
   x: number
   y: number
   pitch: number
-  /** Dot size as a fraction of the pitch. */
-  fill?: number
+  dot: number
 }
 
-/** Renders a dot grid as one ghost pattern plus a single path for lit dots. */
-export function DotMatrix({ grid, x, y, pitch, fill = 0.84 }: Props) {
-  const id = useId().replace(/:/g, '')
-  const dot = pitch * fill
-  const rows = grid.length
-  const cols = grid[0]?.length ?? 0
+function path(dots: readonly Dot[], pitch: number, dot: number): string {
+  const s = dot.toFixed(2)
+  return dots.map((d) => `M${(d.col * pitch).toFixed(2)} ${(d.row * pitch).toFixed(2)}h${s}v${s}h-${s}z`).join('')
+}
 
-  const path = useMemo(() => {
-    let d = ''
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (grid[r]?.[c]) d += `M${(c * pitch).toFixed(2)} ${(r * pitch).toFixed(2)}h${dot.toFixed(2)}v${dot.toFixed(2)}h${(-dot).toFixed(2)}z`
-      }
-    }
-    return d
-  }, [grid, rows, cols, pitch, dot])
-
+/** The 5×7 review strip: every cell faintly visible, lit dots in segment ink. */
+export function DotMatrix({ lines, x, y, pitch, dot }: Props) {
+  const ghost = useMemo(() => path(STRIP_CELLS, pitch, dot), [pitch, dot])
+  const lit = useMemo(() => path(stripDots(lines), pitch, dot), [lines, pitch, dot])
   return (
     <g transform={`translate(${x} ${y})`}>
-      <defs>
-        <pattern id={`dots-${id}`} width={pitch} height={pitch} patternUnits="userSpaceOnUse">
-          <rect className="sk-ghost" width={dot} height={dot} />
-        </pattern>
-      </defs>
-      <rect width={cols * pitch} height={rows * pitch} fill={`url(#dots-${id})`} />
-      <path className="sk-ink" d={path} />
+      <path className="sk-ghost" d={ghost} />
+      <path className="sk-seg" d={lit} />
     </g>
   )
 }

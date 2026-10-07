@@ -10,7 +10,10 @@ import {
   type WatchStatus,
 } from "@sekund/protocol";
 import type { Gesture } from "./gestures";
+import { answerLine, describe, type LogEntry, type LogLine } from "./log";
 import { type Effect, initialState, type MachineConfig, transition, type WatchEvent, type WatchState } from "./machine";
+
+const LOG_LIMIT = 60;
 
 export interface ControllerOptions {
   transport: Transport;
@@ -28,6 +31,8 @@ export class WatchController {
   private se: SecureElement | null = null;
   private booting: Promise<void> | null = null;
   private lastStatus = "";
+  private logValue: readonly LogEntry[] = [];
+  private logSeq = 0;
   private readonly listeners = new Set<() => void>();
   private readonly inflight = new Set<Promise<unknown>>();
   private readonly transport: Transport;
@@ -41,9 +46,18 @@ export class WatchController {
     this.stateValue = initialState(opts.config, this.clock());
     this.transport.onFrame((text) => this.onFrame(text));
     this.transport.onPeer((connected) => {
+      this.record([{ text: connected ? "App connected" : "App disconnected" }]);
+      this.notify();
       if (connected) this.sendStatus(true);
     });
   }
+
+  /** Newest first. */
+  get log(): readonly LogEntry[] {
+    return this.logValue;
+  }
+
+  getLog = (): readonly LogEntry[] => this.logValue;
 
   get state(): WatchState {
     return this.stateValue;
@@ -65,7 +79,14 @@ export class WatchController {
       this.se = se;
       const s = await se.getState();
       const address = s.hasKey ? toBase58(await se.getPublicKey(WALLET_SLOT)) : null;
-      this.dispatch({ type: "SE_READY", hasPin: s.hasPin, address, attemptsLeft: s.attemptsRemaining });
+      this.dispatch({
+        type: "SE_READY",
+        hasPin: s.hasPin,
+        address,
+        attemptsLeft: s.attemptsRemaining,
+        profile: s.profile,
+        maxMessageBytes: s.maxMessageBytes,
+      });
     })();
     return this.booting;
   }
@@ -82,13 +103,31 @@ export class WatchController {
     this.dispatch({ type: "WRIST", on, now: this.clock() });
   }
 
+  /** Simulator reset: leaves the Locked screen once the key has been erased. */
+  reset(): void {
+    this.dispatch({ type: "RESET", now: this.clock() });
+  }
+
   dispatch(event: WatchEvent): void {
-    const { state, effects } = transition(this.stateValue, event);
-    const changed = state !== this.stateValue;
+    const prev = this.stateValue;
+    const { state, effects } = transition(prev, event);
     this.stateValue = state;
-    if (changed) for (const fn of this.listeners) fn();
+    const logged = this.record(describe(prev, event, state, effects));
+    if (state !== prev || logged) this.notify();
     for (const effect of effects) this.run(effect);
     this.sendStatus(false);
+  }
+
+  private notify(): void {
+    for (const fn of this.listeners) fn();
+  }
+
+  private record(lines: readonly LogLine[]): boolean {
+    if (lines.length === 0) return false;
+    const at = this.clock();
+    const entries = lines.map((l) => ({ ...l, at, id: ++this.logSeq }));
+    this.logValue = [...entries.reverse(), ...this.logValue].slice(0, LOG_LIMIT);
+    return true;
   }
 
   /** Resolves once every effect started so far (and any it triggered) has finished. */
@@ -110,6 +149,8 @@ export class WatchController {
         return;
       case "respond":
         this.transport.send(encodeFrame(outcome.response));
+        this.record([answerLine(outcome.response.requestId, outcome.response.status)]);
+        this.notify();
         return;
       case "address": {
         const status = !s.address ? "NO_WALLET" : s.session ? "OK" : "LOCKED";
@@ -174,8 +215,8 @@ export class WatchController {
             await se.generateKey(WALLET_SLOT);
             return toBase58(await se.getPublicKey(WALLET_SLOT));
           })().then(
-            (address) => this.dispatch({ type: "WALLET_CREATED", address }),
-            () => this.dispatch({ type: "WALLET_FAILED" }),
+            (address) => this.dispatch({ type: "WALLET_CREATED", address, now: this.clock() }),
+            () => this.dispatch({ type: "WALLET_FAILED", now: this.clock() }),
           ),
         );
         return;
@@ -186,8 +227,8 @@ export class WatchController {
             const token = await se.issueApproveToken(WALLET_SLOT, effect.message);
             return se.eddsaSign(WALLET_SLOT, effect.message, token);
           })().then(
-            (signature) => this.dispatch({ type: "SIGNED", requestId: effect.requestId, signature }),
-            () => this.dispatch({ type: "SIGN_FAILED", requestId: effect.requestId }),
+            (signature) => this.dispatch({ type: "SIGNED", requestId: effect.requestId, signature, now: this.clock() }),
+            () => this.dispatch({ type: "SIGN_FAILED", requestId: effect.requestId, now: this.clock() }),
           ),
         );
         return;
