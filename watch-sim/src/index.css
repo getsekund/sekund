@@ -1,11 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 @import "./styles/tokens.css";
 @import "./styles/face.css";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: var(--sk-font-ui);
@@ -29,30 +26,49 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-paper: var(--sk-paper);
+  --color-paper-2: var(--sk-paper-2);
+  --color-ink: var(--sk-ink);
+  --color-graphite: var(--sk-graphite);
+  --color-line: var(--sk-line);
+  --color-rule: var(--sk-rule);
+  --color-spot: var(--sk-spot);
   --spacing: var(--sk-space-1);
-  --text-xs: var(--sk-text-xs);
-  --text-sm: var(--sk-text-sm);
-  --text-base: var(--sk-text-md);
-  --color-sk-accent: var(--sk-accent);
-  --color-sk-ok: var(--sk-ok);
-  --color-sk-warn: var(--sk-warn);
-  --color-sk-danger: var(--sk-danger);
-  --color-sk-faint: var(--sk-text-faint);
-  --color-sk-surface-2: var(--sk-surface-2);
-  --radius-sm: var(--sk-radius-sm);
-  --radius-md: var(--sk-radius-md);
-  --radius-lg: var(--sk-radius-lg);
+  --text-xs: var(--sk-text-12);
+  --text-sm: var(--sk-text-14);
+  --text-base: var(--sk-text-16);
+  --text-lg: var(--sk-text-20);
+  --text-xl: var(--sk-text-24);
+  --text-2xl: var(--sk-text-32);
+  --radius-xs: var(--sk-radius);
+  --radius-sm: var(--sk-radius);
+  --radius-md: var(--sk-radius);
+  --radius-lg: var(--sk-radius);
+  --radius-xl: var(--sk-radius);
+  --radius-full: var(--sk-radius);
+  --shadow-key: var(--sk-shadow-key);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   html {
     @apply font-sans;
+    font-size: 100%;
   }
   body {
     @apply bg-background text-foreground;
+    font-size: var(--sk-text-16);
+    line-height: var(--sk-leading-body);
     -webkit-font-smoothing: antialiased;
   }
+  :focus-visible {
+    outline: var(--sk-focus-ring);
+    outline-offset: var(--sk-focus-offset);
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
 }

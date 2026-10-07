@@ -1,63 +1,65 @@
 /*
- * SEKUND watch-simulator tokens. Every color, font, spacing, radius and motion
- * value used by the app lives here; components reference only var(--…).
- * Visual language is flat: no gradients, glow or translucency effects.
+ * SEKUND watch-simulator tokens: every color, font, spacing, radius and motion value
+ * the app uses. The first block is DESIGN.md §6 as published; the watch block adds the
+ * case-only values from DESIGN.md §5. Components reference only var(--sk-…).
  */
 
+@font-face { font-family: "Archivo"; src: url("/fonts/Archivo-VF.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/IBMPlexMono-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DSEG7 Classic"; src: url("/fonts/DSEG7Classic-BoldItalic.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "DSEG14 Classic"; src: url("/fonts/DSEG14Classic-BoldItalic.woff2") format("woff2"); font-display: block; }
+
 :root {
-  /* Page and panel */
-  --sk-page: #141516;
-  --sk-surface: #1b1c1e;
-  --sk-surface-2: #222326;
-  --sk-line: #2c2e31;
-  --sk-text: #e8e6e1;
-  --sk-text-muted: #9a9b97;
-  --sk-text-faint: #63655f;
-  --sk-accent: #e4662f;
-  --sk-accent-ink: #141516;
-  --sk-ok: #5fae6c;
-  --sk-warn: #d9a441;
-  --sk-danger: #e0574f;
+  /* Color: surfaces */
+  --sk-paper: #E9EAE4;        /* page, cards, inputs */
+  --sk-paper-2: #DCDDD5;      /* inset panels, code, skeletons, the simulator bench */
+  --sk-resin: #1C1D1F;        /* watch case, video title cards */
+  --sk-resin-2: #2A2B2E;      /* watch bezel, raised parts on resin */
 
-  /* Watch body */
-  --sk-strap: #1e1f21;
-  --sk-strap-rib: #18191b;
-  --sk-case: #26272a;
-  --sk-case-edge: #303135;
-  --sk-case-shadow: #0e0f10;
-  --sk-bezel: #1c1d1f;
-  --sk-bezel-line: #34363a;
-  --sk-brand-ink: #cfccc4;
-  --sk-pusher: #3a3b3f;
-  --sk-pusher-ridge: #2b2c2f;
-  --sk-pusher-pressed: #2f3033;
+  /* Color: text and lines */
+  --sk-ink: #141517;          /* text, primary buttons, filled chips */
+  --sk-graphite: #4B4E52;     /* secondary text */
+  --sk-line: #6E7173;         /* input and control borders (3:1 on both papers) */
+  --sk-rule: #BFC1B9;         /* decorative dividers only, never a control edge */
 
-  /* LCD */
-  --sk-lcd-frame: #111213;
-  --sk-lcd-bg: #c3c8b4;
-  --sk-lcd-bg-lit: #a7d5c8;
-  --sk-lcd-ink: #1b231f;
-  --sk-lcd-ghost: #bbc0ac;
-  --sk-lcd-ghost-lit: #9fcdc0;
+  /* Color: the display */
+  --sk-lcd: #B4BCA6;          /* LCD background, positive reflective TN */
+  --sk-segment: #1D221C;      /* lit segments and dots */
+  --sk-ghost: #A9B19B;        /* unlit segments and dots */
 
-  /* Key hints outside the watch */
-  --sk-keycap-line: #3b3d40;
-  --sk-keycap-text: #7d7f7a;
-  --sk-keycap-active: #e8e6e1;
+  /* Color: the one accent */
+  --sk-spot: #AE3410;         /* a human must read this: waiting, rejected, expired, error, destructive */
+
+  --sk-focus: var(--sk-ink);
 
   /* Type */
-  --sk-font-ui: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --sk-font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --sk-font-brand: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --sk-brand-size: 11px;
-  --sk-brand-weight: 600;
-  --sk-brand-tracking: 0.38em;
-  --sk-keycap-size: 9px;
-  --sk-text-xs: 11px;
-  --sk-text-sm: 13px;
-  --sk-text-md: 15px;
+  --sk-font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --sk-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --sk-font-lcd7: "DSEG7 Classic", monospace;
+  --sk-font-lcd14: "DSEG14 Classic", monospace;
 
-  /* Spacing */
+  --sk-text-12: 0.75rem;      /* chips, captions, legal */
+  --sk-text-14: 0.875rem;     /* labels, helper text, table cells */
+  --sk-text-16: 1rem;         /* body */
+  --sk-text-20: 1.25rem;      /* card titles */
+  --sk-text-24: 1.5rem;       /* section headings */
+  --sk-text-32: 2rem;         /* page title */
+  --sk-text-44: 2.75rem;      /* hero, mobile */
+  --sk-text-64: 4rem;         /* hero, desktop */
+
+  --sk-leading-tight: 1.1;
+  --sk-leading-snug: 1.3;
+  --sk-leading-body: 1.5;
+
+  --sk-weight-regular: 400;
+  --sk-weight-medium: 500;
+  --sk-weight-semibold: 600;
+
+  --sk-tracking-display: -0.015em;
+  --sk-tracking-caps: 0.04em;
+
+  /* Spacing: 4 px base */
   --sk-space-1: 4px;
   --sk-space-2: 8px;
   --sk-space-3: 12px;
@@ -65,39 +67,91 @@
   --sk-space-5: 24px;
   --sk-space-6: 32px;
   --sk-space-7: 48px;
-  --sk-panel-width: 340px;
-  --sk-watch-max-height: 82vh;
-  --sk-watch-max-width: 640px;
+  --sk-space-8: 64px;
+  --sk-space-9: 96px;
 
-  /* Radius */
-  --sk-radius-sm: 6px;
-  --sk-radius-md: 10px;
-  --sk-radius-lg: 14px;
+  /* Shape: one radius for every UI element */
+  --sk-radius: 2px;
+  --sk-radius-lcd: 6px;       /* the LCD window only */
+
+  /* Borders */
+  --sk-border: 1px solid var(--sk-line);
+  --sk-border-strong: 2px solid var(--sk-ink);
+  --sk-border-rule: 1px solid var(--sk-rule);
+  --sk-focus-ring: 2px solid var(--sk-focus);
+  --sk-focus-offset: 2px;
+
+  /* Shadows: a keycap edge and the watch on the bench. Nothing else. */
+  --sk-shadow-none: none;
+  --sk-shadow-key: 0 2px 0 0 var(--sk-ink);
+  --sk-shadow-object: 0 28px 36px -24px rgb(20 21 23 / 0.45);
 
   /* Motion */
-  --sk-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --sk-press-ms: 70ms;
-  --sk-press-travel: 4px;
-  --sk-lcd-fade-ms: 140ms;
+  --sk-dur-press: 80ms;       /* button down/up */
+  --sk-dur-segment: 90ms;     /* LCD segment on/off, roughly liquid-crystal response */
+  --sk-dur-state: 160ms;      /* chip and panel state change */
+  --sk-dur-blink: 1000ms;     /* cursor and waiting blink, 1 Hz */
+  --sk-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --sk-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --sk-ease-step: steps(1, end);
+
+  /* Layout */
+  --sk-content-max: 1200px;
+  --sk-gutter: 24px;
+  --sk-margin: 24px;
+  --sk-control-h: 44px;
+  --sk-control-h-sm: 32px;
+
+  /* Watch case (DESIGN.md §5), drawn in viewBox units */
+  --sk-strap: #19191B;
+  --sk-strap-groove: #121314;
+  --sk-glass: #111214;
+  --sk-steel: #8E9092;
+  --sk-steel-edge: #5E6163;
+  --sk-bezel-edge: rgb(255 255 255 / 0.05);
+  --sk-pusher-travel: 2px;
+  /* The simulator shows the face at up to 1.75× (360 × 470 viewBox). */
+  --sk-watch-max: 630px;
+  --sk-watch-max-mobile: 360px;
+  /* Nav, bench padding and the caption under it, so the whole watch fits a laptop screen. */
+  --sk-bench-chrome: 200px;
+  --sk-nav-h: 56px;
+  --sk-chip-h: 24px;
+  --sk-chip-mark: 6px;
+  --sk-button-text: 0.9375rem;
+  --sk-disabled-opacity: 0.4;
+  --sk-dt-width: 76px;
 
   /* shadcn/ui theme, mapped onto the tokens above */
-  --background: var(--sk-page);
-  --foreground: var(--sk-text);
-  --card: var(--sk-surface);
-  --card-foreground: var(--sk-text);
-  --popover: var(--sk-surface-2);
-  --popover-foreground: var(--sk-text);
-  --primary: var(--sk-text);
-  --primary-foreground: var(--sk-page);
-  --secondary: var(--sk-surface-2);
-  --secondary-foreground: var(--sk-text);
-  --muted: var(--sk-surface-2);
-  --muted-foreground: var(--sk-text-muted);
-  --accent: var(--sk-surface-2);
-  --accent-foreground: var(--sk-text);
-  --destructive: var(--sk-danger);
+  --background: var(--sk-paper);
+  --foreground: var(--sk-ink);
+  --card: var(--sk-paper);
+  --card-foreground: var(--sk-ink);
+  --popover: var(--sk-paper);
+  --popover-foreground: var(--sk-ink);
+  --primary: var(--sk-ink);
+  --primary-foreground: var(--sk-paper);
+  --secondary: var(--sk-paper);
+  --secondary-foreground: var(--sk-ink);
+  --muted: var(--sk-paper-2);
+  --muted-foreground: var(--sk-graphite);
+  --accent: var(--sk-paper-2);
+  --accent-foreground: var(--sk-ink);
+  --destructive: var(--sk-spot);
   --border: var(--sk-line);
   --input: var(--sk-line);
-  --ring: var(--sk-text-faint);
-  --radius: var(--sk-radius-md);
+  --ring: var(--sk-focus);
+  --radius: var(--sk-radius);
+}
+
+@media (max-width: 767px) {
+  :root { --sk-gutter: 16px; --sk-margin: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sk-dur-press: 0ms;
+    --sk-dur-segment: 0ms;
+    --sk-dur-state: 0ms;
+  }
 }
