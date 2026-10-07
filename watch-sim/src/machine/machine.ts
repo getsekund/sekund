@@ -41,15 +41,15 @@ export const MENU_ITEMS = ["ADDRESS", "SIGN REQUEST", "SETTINGS"] as const;
 export const REVIEW_PAGES = ["AMOUNT", "TO1", "TO2", "NETWORK", "FEE", "APPROVE"] as const;
 export const ADDRESS_PAGES = 2;
 
-/** unlock: verify the PIN. create / confirm: first-run PIN setup on a factory-state SE. */
-export type PinMode = "unlock" | "create" | "confirm";
+/** unlock: verify the PIN. create: first-run PIN setup on a factory-state SE. */
+export type PinMode = "unlock" | "create";
 
 export type ResultStatus = "APPROVED" | "REJECTED" | "EXPIRED" | "FAILED" | "SETUP_FAILED";
 
 export type Screen =
   | { kind: "normal" }
   | { kind: "entry"; mode: PinMode; until: number }
-  | { kind: "pin"; mode: PinMode; digits: number[]; current: number; notice: "wrong" | "mismatch" | null; first?: number[] }
+  | { kind: "pin"; mode: PinMode; digits: number[]; current: number; notice: "wrong" | null }
   | { kind: "verifying" }
   | { kind: "creating" }
   | { kind: "menu"; index: number; notice: "no-request" | null }
@@ -124,13 +124,12 @@ export function initialState(config: Partial<MachineConfig> = {}, now = 0): Watc
   };
 }
 
-const pinScreen = (mode: PinMode, notice: "wrong" | "mismatch" | null = null, first?: number[]): Screen => ({
+const pinScreen = (mode: PinMode, notice: "wrong" | null = null): Screen => ({
   kind: "pin",
   mode,
   digits: [],
   current: 0,
   notice,
-  ...(first ? { first } : {}),
 });
 
 const MENU: Screen = { kind: "menu", index: 0, notice: null };
@@ -271,8 +270,6 @@ function onGesture(state: WatchState, buttons: Gesture): Transition {
         if (digits.length < state.config.pinLength) return go({ ...s, digits, current: 0, notice: null });
         const pin = digits.join("");
         if (s.mode === "unlock") return go({ kind: "verifying" }, {}, [{ type: "verifyPin", pin }]);
-        if (s.mode === "create") return go(pinScreen("confirm", null, digits));
-        if (s.first?.join("") !== pin) return go(pinScreen("create", "mismatch"));
         return go({ kind: "creating" }, {}, [{ type: "createWallet", pin }]);
       }
       if (is("C")) {
@@ -334,6 +331,8 @@ function onGesture(state: WatchState, buttons: Gesture): Transition {
       return go(state.session ? MENU : { kind: "normal" });
 
     case "entry":
+      return onGesture({ ...state, screen: pinScreen(s.mode) }, buttons);
+
     case "verifying":
     case "creating":
     case "signing":

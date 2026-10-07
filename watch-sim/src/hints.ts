@@ -15,7 +15,7 @@ export function controlsFor(state: WatchState): Controls {
   switch (s.kind) {
     case 'pin': {
       const lastDigit = s.digits.length === state.config.pinLength - 1
-      const finish = s.mode === 'unlock' ? 'Check PIN' : s.mode === 'create' ? 'Set PIN' : 'Confirm PIN'
+      const finish = s.mode === 'unlock' ? 'Check PIN' : 'Set PIN'
       return {
         A: 'Decrease digit',
         B: 'Increase digit',

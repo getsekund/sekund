@@ -122,8 +122,7 @@ function layout(state: WatchState, steady: boolean): Layout {
       const tries = `TRIES LEFT ${state.attemptsLeft}`
       let strip: StripText
       if (s.mode === 'unlock') strip = [s.notice === 'wrong' ? 'WRONG PIN' : 'ENTER PIN', tries]
-      else if (s.mode === 'create') strip = s.notice === 'mismatch' ? ['PINS DIFFER', 'NEW PIN AGAIN'] : ['NEW PIN', 'FOUR DIGITS']
-      else strip = ['REPEAT PIN', '']
+      else strip = ['NEW PIN', 'FOUR DIGITS']
       return { top: top('PIN'), main, sec: '!!', strip }
     }
     case 'verifying':

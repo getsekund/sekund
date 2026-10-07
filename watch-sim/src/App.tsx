@@ -311,7 +311,7 @@ export default function App() {
             </dl>
             {state.ready && !state.hasPin && !wiped && (
               <p className="text-sm text-graphite">
-                First use. Hold A and D, then choose a four-digit PIN and enter it again. The secure element creates a devnet
+                First use. Hold A and D, then choose a four-digit PIN. The secure element creates a devnet
                 key that stays in this browser.
               </p>
             )}

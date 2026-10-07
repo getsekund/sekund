@@ -79,14 +79,20 @@ describe("hidden combination", () => {
     expect(h.state.screen).toMatchObject({ kind: "entry", mode: "unlock" });
   });
 
-  it("shows SECURE for one second, ignoring buttons, then asks for the PIN", () => {
+  it("shows SECURE for one second, then asks for the PIN", () => {
     const h = new Harness();
     h.press("A", "D");
-    h.press("B");
     h.advance(DEFAULT_CONFIG.entryMs - 1);
     expect(h.state.screen.kind).toBe("entry");
     h.advance(1);
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", digits: [], current: 0 });
+  });
+
+  it("a press during SECURE goes to the PIN screen and counts there", () => {
+    const h = new Harness();
+    h.press("A", "D");
+    h.press("B");
+    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "unlock", digits: [], current: 1 });
   });
 
   it("is ignored off the wrist and before the secure element is ready", () => {
@@ -164,15 +170,10 @@ describe("PIN entry", () => {
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
   });
 
-  it("first use: choose a PIN, repeat it, then the SE sets it and generates the key", () => {
+  it("first use: choose a PIN, then the SE sets it and generates the key", () => {
     const h = new Harness({ hasPin: false });
     h.openSecure();
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
-    h.enterPin("2580");
-    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "confirm", first: [2, 5, 8, 0] });
-    h.enterPin("2581");
-    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create", notice: "mismatch" });
-    h.enterPin("2580");
     const effects = h.enterPin("2580");
     expect(effects).toContainEqual({ type: "createWallet", pin: "2580" });
     expect(h.state.screen.kind).toBe("creating");

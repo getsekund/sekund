@@ -27,7 +27,7 @@ WebCrypto Ed25519 is required (Chrome 137+, Firefox, Safari).
 
 ## First run
 
-The SE starts in factory state. Press A+D, wait for `SECURE`, choose a 4-digit PIN (`NEW PIN`), then enter it again (`REPEAT PIN`). The SE sets the PIN and creates the devnet key inside the chip. The address appears under Menu → Address and in the side panel. The key persists in this browser's IndexedDB. After that, A+D asks for the PIN.
+The SE starts in factory state. Press A+D and choose a 4-digit PIN (`NEW PIN`). A press during the one-second `SECURE` screen already counts on the PIN screen. The SE sets the PIN and creates the devnet key inside the chip. The address appears under Menu → Address and in the side panel. The key persists in this browser's IndexedDB. After that, A+D asks for the PIN.
 
 ## Controls
 
