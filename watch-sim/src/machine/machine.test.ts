@@ -59,7 +59,9 @@ class Harness {
   }
 
   responses() {
-    return this.effects.flatMap((e) => (e.type === "respond" ? [e.response] : []));
+    return this.effects.flatMap((e) =>
+      e.type === "respond" ? [{ requestId: e.requestId, status: e.status, signature: e.signature, reason: e.reason }] : [],
+    );
   }
 
   toApprovePage(): void {
@@ -170,16 +172,26 @@ describe("PIN entry", () => {
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
   });
 
-  it("first use: choose a PIN, then the SE sets it and generates the key", () => {
+  it("first use: NEW PIN then REPEAT PIN before the SE creates the key", () => {
     const h = new Harness({ hasPin: false });
     h.openSecure();
     expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create" });
+    expect(h.enterPin("2580")).toEqual([]);
+    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "confirm", pendingPin: "2580" });
     const effects = h.enterPin("2580");
     expect(effects).toContainEqual({ type: "createWallet", pin: "2580" });
     expect(h.state.screen.kind).toBe("creating");
     h.send({ type: "WALLET_CREATED", address: OWN_ADDRESS, now: h.now });
     expect(h.state.session).toBe(true);
     expect(h.state.screen.kind).toBe("menu");
+  });
+
+  it("first use: mismatched REPEAT PIN returns to NEW PIN", () => {
+    const h = new Harness({ hasPin: false });
+    h.openSecure();
+    h.enterPin("2580");
+    h.enterPin("2581");
+    expect(h.state.screen).toMatchObject({ kind: "pin", mode: "create", notice: "wrong" });
   });
 });
 

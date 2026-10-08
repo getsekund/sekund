@@ -2,12 +2,17 @@ import {
   encodeFrame,
   type GetAddressResult,
   PROTOCOL_VERSION,
+  REPLAY_TTL_MS,
   RequestGuard,
+  type ReplayJournal,
   type SecureElement,
+  signResult,
+  stampIdentity,
   toBase58,
   type Transport,
   WALLET_SLOT,
   type WatchStatus,
+  createMemoryReplayJournal,
 } from "@sekund/protocol";
 import type { Gesture } from "./gestures";
 import { answerLine, describe, type LogEntry, type LogLine } from "./log";
@@ -19,6 +24,8 @@ export interface ControllerOptions {
   transport: Transport;
   config?: Partial<MachineConfig>;
   clock?: () => number;
+  /** Persisted requestId/nonce tombstones. Defaults to in-memory (tests). */
+  replay?: ReplayJournal;
 }
 
 /**
@@ -37,18 +44,38 @@ export class WatchController {
   private readonly inflight = new Set<Promise<unknown>>();
   private readonly transport: Transport;
   private readonly clock: () => number;
-  private readonly guard: RequestGuard;
+  private guard: RequestGuard;
+  private readonly replay: ReplayJournal;
+  private guardReady: Promise<void>;
 
   constructor(opts: ControllerOptions) {
     this.transport = opts.transport;
     this.clock = opts.clock ?? Date.now;
-    this.guard = new RequestGuard({ now: this.clock });
+    this.replay = opts.replay ?? createMemoryReplayJournal();
+    this.guard = new RequestGuard({
+      now: this.clock,
+      identity: this.transport.identity,
+    });
+    this.guardReady = this.seedGuard();
     this.stateValue = initialState(opts.config, this.clock());
-    this.transport.onFrame((text) => this.onFrame(text));
+    this.transport.onFrame((text) => void this.onFrame(text));
     this.transport.onPeer((connected) => {
       this.record([{ text: connected ? "App connected" : "App disconnected" }]);
       this.notify();
       if (connected) this.sendStatus(true);
+    });
+  }
+
+  private async seedGuard(): Promise<void> {
+    const seen = await this.replay.list();
+    this.guard = new RequestGuard({
+      now: this.clock,
+      identity: this.transport.identity,
+      seen,
+      onSeen: (value) => {
+        // Wall-clock TTL: journals prune with Date.now(), not the sim clock.
+        this.track(this.replay.remember(value, Date.now() + REPLAY_TTL_MS));
+      },
     });
   }
 
@@ -76,6 +103,7 @@ export class WatchController {
 
   boot(se: SecureElement): Promise<void> {
     this.booting ??= (async () => {
+      await this.guardReady;
       this.se = se;
       const s = await se.getState();
       const address = s.hasKey ? toBase58(await se.getPublicKey(WALLET_SLOT)) : null;
@@ -103,39 +131,40 @@ export class WatchController {
     this.dispatch({ type: "WRIST", on, now: this.clock() });
   }
 
-  /** Simulator reset: leaves the Locked screen once the key has been erased. */
   reset(): void {
     this.dispatch({ type: "RESET", now: this.clock() });
   }
 
-  dispatch(event: WatchEvent): void {
-    const prev = this.stateValue;
-    const { state, effects } = transition(prev, event);
-    this.stateValue = state;
-    const logged = this.record(describe(prev, event, state, effects));
-    if (state !== prev || logged) this.notify();
-    for (const effect of effects) this.run(effect);
-    this.sendStatus(false);
+  /** Test helper: wait for SE and in-flight effects. */
+  async settle(): Promise<void> {
+    await this.booting;
+    await this.guardReady;
+    while (this.inflight.size > 0) await Promise.all([...this.inflight]);
   }
 
   private notify(): void {
     for (const fn of this.listeners) fn();
   }
 
-  private record(lines: readonly LogLine[]): boolean {
-    if (lines.length === 0) return false;
+  private record(lines: LogLine[]): void {
     const at = this.clock();
-    const entries = lines.map((l) => ({ ...l, at, id: ++this.logSeq }));
-    this.logValue = [...entries.reverse(), ...this.logValue].slice(0, LOG_LIMIT);
-    return true;
+    const entries = lines.map((line) => ({ id: ++this.logSeq, at, ...line }));
+    this.logValue = [...entries, ...this.logValue].slice(0, LOG_LIMIT);
   }
 
-  /** Resolves once every effect started so far (and any it triggered) has finished. */
-  async settle(): Promise<void> {
-    while (this.inflight.size > 0) await Promise.allSettled([...this.inflight]);
+  private dispatch(event: WatchEvent): void {
+    const before = this.stateValue;
+    const { state, effects } = transition(before, event);
+    this.stateValue = state;
+    const lines = describe(before, event, state, effects);
+    if (lines.length) this.record(lines);
+    for (const effect of effects) this.run(effect);
+    this.sendStatus(false);
+    this.notify();
   }
 
-  private onFrame(text: string): void {
+  private async onFrame(text: string): Promise<void> {
+    await this.guardReady;
     const s = this.stateValue;
     const outcome = this.guard.check(text, {
       sessionOpen: s.session,
@@ -143,9 +172,15 @@ export class WatchController {
       busy: s.request !== null || s.signing !== null,
       address: s.address,
       maxMessageBytes: this.se?.maxMessageBytes ?? 0,
+      roomId: this.transport.identity.roomId,
     });
     switch (outcome.kind) {
       case "drop":
+        return;
+      case "cancel":
+        if (s.request?.request.requestId === outcome.requestId) {
+          this.dispatch({ type: "CANCEL", requestId: outcome.requestId, now: this.clock() });
+        }
         return;
       case "respond":
         this.transport.send(encodeFrame(outcome.response));
@@ -154,12 +189,15 @@ export class WatchController {
         return;
       case "address": {
         const status = !s.address ? "NO_WALLET" : s.session ? "OK" : "LOCKED";
-        const result: GetAddressResult = {
-          version: PROTOCOL_VERSION,
-          type: "GET_ADDRESS_RESULT",
-          requestId: outcome.request.requestId,
-          status,
-        };
+        const result = stampIdentity(
+          {
+            version: PROTOCOL_VERSION,
+            type: "GET_ADDRESS_RESULT" as const,
+            requestId: outcome.request.requestId,
+            status,
+          },
+          this.transport.identity,
+        ) as GetAddressResult;
         if (status === "OK" && this.se && s.address) {
           Object.assign(result, { address: s.address, profile: this.se.profile, maxMessageBytes: this.se.maxMessageBytes });
         }
@@ -174,13 +212,16 @@ export class WatchController {
 
   private sendStatus(force: boolean): void {
     const s = this.stateValue;
-    const status: WatchStatus = {
-      version: PROTOCOL_VERSION,
-      type: "WATCH_STATUS",
-      wallet: s.address !== null,
-      session: s.session ? "OPEN" : "CLOSED",
-      reviewing: s.request !== null,
-    };
+    const status = stampIdentity(
+      {
+        version: PROTOCOL_VERSION,
+        type: "WATCH_STATUS" as const,
+        wallet: s.address !== null,
+        session: s.session ? ("OPEN" as const) : ("CLOSED" as const),
+        reviewing: s.request !== null,
+      },
+      this.transport.identity,
+    ) as WatchStatus;
     const key = `${status.wallet}|${status.session}|${status.reviewing}`;
     if (!force && key === this.lastStatus) return;
     this.lastStatus = key;
@@ -195,15 +236,25 @@ export class WatchController {
   private run(effect: Effect): void {
     const se = this.se;
     switch (effect.type) {
-      case "respond":
-        this.transport.send(encodeFrame(effect.response));
+      case "respond": {
+        const response = signResult(this.transport.identity, effect.requestId, effect.status, {
+          ...(effect.signature ? { signature: effect.signature } : {}),
+          ...(effect.reason ? { reason: effect.reason } : {}),
+        });
+        this.transport.send(encodeFrame(response));
         return;
+      }
       case "verifyPin":
         if (!se) return;
         this.track(
           se.verifyPin(effect.pin).then(
             (result) => this.dispatch({ type: "PIN_RESULT", result, now: this.clock() }),
-            () => this.dispatch({ type: "PIN_RESULT", result: { status: "WRONG_PIN", attemptsRemaining: this.stateValue.attemptsLeft }, now: this.clock() }),
+            () =>
+              this.dispatch({
+                type: "PIN_RESULT",
+                result: { status: "WRONG_PIN", attemptsRemaining: this.stateValue.attemptsLeft },
+                now: this.clock(),
+              }),
           ),
         );
         return;

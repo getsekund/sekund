@@ -7,19 +7,22 @@ import {
   SIGNATURE_BYTES,
 } from "./constants.ts";
 import { fromBase58, fromBase64 } from "./encoding.ts";
+import { isIdentityId, isPeerIdentity, isRoomId, type PeerIdentity } from "./identity.ts";
 import type { SeProfile } from "./secure-element.ts";
 
 // ---------------------------------------------------------------------------
 // Companion -> watch
 // ---------------------------------------------------------------------------
 
-export interface GetAddressRequest {
+export interface FrameIdentity extends PeerIdentity {}
+
+export interface GetAddressRequest extends FrameIdentity {
   version: typeof PROTOCOL_VERSION;
   type: "GET_ADDRESS";
   requestId: string;
 }
 
-export interface SignTransactionRequest {
+export interface SignTransactionRequest extends FrameIdentity {
   version: typeof PROTOCOL_VERSION;
   type: "SIGN_TRANSACTION";
   requestId: string;
@@ -34,7 +37,14 @@ export interface SignTransactionRequest {
   lastValidBlockHeight: number;
 }
 
-export type CompanionRequest = GetAddressRequest | SignTransactionRequest;
+/** Companion abandons a pending request (tombstone already recorded on first receipt). */
+export interface CancelRequest extends FrameIdentity {
+  version: typeof PROTOCOL_VERSION;
+  type: "CANCEL_REQUEST";
+  requestId: string;
+}
+
+export type CompanionRequest = GetAddressRequest | SignTransactionRequest | CancelRequest;
 
 // ---------------------------------------------------------------------------
 // Watch -> companion
@@ -42,7 +52,7 @@ export type CompanionRequest = GetAddressRequest | SignTransactionRequest;
 
 export type AddressStatus = "OK" | "LOCKED" | "NO_WALLET";
 
-export interface GetAddressResult {
+export interface GetAddressResult extends FrameIdentity {
   version: typeof PROTOCOL_VERSION;
   type: "GET_ADDRESS_RESULT";
   requestId: string;
@@ -67,7 +77,7 @@ export const SIGN_STATUSES = [
 
 export type SignStatus = (typeof SIGN_STATUSES)[number];
 
-export interface SignTransactionResult {
+export interface SignTransactionResult extends FrameIdentity {
   version: typeof PROTOCOL_VERSION;
   type: "SIGN_TRANSACTION_RESULT";
   requestId: string;
@@ -78,7 +88,7 @@ export interface SignTransactionResult {
   reason?: string;
 }
 
-export interface WatchStatus {
+export interface WatchStatus extends FrameIdentity {
   version: typeof PROTOCOL_VERSION;
   type: "WATCH_STATUS";
   wallet: boolean;
@@ -89,6 +99,10 @@ export interface WatchStatus {
 export type WatchFrame = GetAddressResult | SignTransactionResult | WatchStatus;
 
 export type SekundFrame = CompanionRequest | WatchFrame;
+
+export function stampIdentity<T extends object>(frame: T, identity: PeerIdentity): T & PeerIdentity {
+  return { ...frame, roomId: identity.roomId, deviceId: identity.deviceId, sessionId: identity.sessionId };
+}
 
 // ---------------------------------------------------------------------------
 // Decoding. Every frame from the transport is untrusted input.
@@ -123,6 +137,11 @@ function isNonNegativeSafeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
+function readIdentity(obj: Record<string, unknown>): PeerIdentity | null {
+  const identity = { roomId: obj.roomId, deviceId: obj.deviceId, sessionId: obj.sessionId };
+  return isPeerIdentity(identity) ? identity : null;
+}
+
 /**
  * Decodes a frame received by the watch. The result is structurally valid; the watch
  * still applies replay, session, size and allowlist checks (see `guard.ts`).
@@ -134,9 +153,14 @@ export function decodeCompanionRequest(text: string): Decoded<CompanionRequest> 
   const requestId = isRequestId(obj.requestId) ? obj.requestId : null;
   if (!requestId) return fail(null, "requestId must be a lowercase UUID v4");
   if (obj.version !== PROTOCOL_VERSION) return fail(requestId, "unsupported protocol version");
+  const identity = readIdentity(obj);
+  if (!identity) return fail(requestId, "roomId, deviceId and sessionId required");
 
   if (obj.type === "GET_ADDRESS") {
-    return { ok: true, value: { version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId } };
+    return { ok: true, value: { version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId, ...identity } };
+  }
+  if (obj.type === "CANCEL_REQUEST") {
+    return { ok: true, value: { version: PROTOCOL_VERSION, type: "CANCEL_REQUEST", requestId, ...identity } };
   }
   if (obj.type !== "SIGN_TRANSACTION") return fail(requestId, "unknown request type");
 
@@ -169,6 +193,7 @@ export function decodeCompanionRequest(text: string): Decoded<CompanionRequest> 
       message: obj.message,
       expiresInMs: obj.expiresInMs,
       lastValidBlockHeight: obj.lastValidBlockHeight,
+      ...identity,
     },
   };
 }
@@ -178,6 +203,8 @@ export function decodeWatchFrame(text: string): Decoded<WatchFrame> {
   const obj = parseJsonObject(text);
   if (!obj) return fail(null, "frame is not a JSON object");
   if (obj.version !== PROTOCOL_VERSION) return fail(null, "unsupported protocol version");
+  const identity = readIdentity(obj);
+  if (!identity) return fail(null, "roomId, deviceId and sessionId required");
 
   if (obj.type === "WATCH_STATUS") {
     if (typeof obj.wallet !== "boolean" || (obj.session !== "OPEN" && obj.session !== "CLOSED") || typeof obj.reviewing !== "boolean") {
@@ -185,7 +212,14 @@ export function decodeWatchFrame(text: string): Decoded<WatchFrame> {
     }
     return {
       ok: true,
-      value: { version: PROTOCOL_VERSION, type: "WATCH_STATUS", wallet: obj.wallet, session: obj.session, reviewing: obj.reviewing },
+      value: {
+        version: PROTOCOL_VERSION,
+        type: "WATCH_STATUS",
+        wallet: obj.wallet,
+        session: obj.session,
+        reviewing: obj.reviewing,
+        ...identity,
+      },
     };
   }
 
@@ -194,7 +228,13 @@ export function decodeWatchFrame(text: string): Decoded<WatchFrame> {
 
   if (obj.type === "GET_ADDRESS_RESULT") {
     if (obj.status !== "OK" && obj.status !== "LOCKED" && obj.status !== "NO_WALLET") return fail(requestId, "bad status");
-    const result: GetAddressResult = { version: PROTOCOL_VERSION, type: "GET_ADDRESS_RESULT", requestId, status: obj.status };
+    const result: GetAddressResult = {
+      version: PROTOCOL_VERSION,
+      type: "GET_ADDRESS_RESULT",
+      requestId,
+      status: obj.status,
+      ...identity,
+    };
     if (obj.status === "OK") {
       if (typeof obj.address !== "string") return fail(requestId, "address missing");
       try {
@@ -212,7 +252,13 @@ export function decodeWatchFrame(text: string): Decoded<WatchFrame> {
   if (obj.type === "SIGN_TRANSACTION_RESULT") {
     if (!SIGN_STATUSES.includes(obj.status as SignStatus)) return fail(requestId, "bad status");
     const status = obj.status as SignStatus;
-    const result: SignTransactionResult = { version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId, status };
+    const result: SignTransactionResult = {
+      version: PROTOCOL_VERSION,
+      type: "SIGN_TRANSACTION_RESULT",
+      requestId,
+      status,
+      ...identity,
+    };
     if (status === "APPROVED") {
       if (typeof obj.signature !== "string") return fail(requestId, "APPROVED without signature");
       try {
@@ -232,5 +278,8 @@ export function decodeWatchFrame(text: string): Decoded<WatchFrame> {
 }
 
 export function encodeFrame(frame: SekundFrame): string {
+  if (!isRoomId(frame.roomId) || !isIdentityId(frame.deviceId) || !isIdentityId(frame.sessionId)) {
+    throw new Error("frame missing roomId, deviceId or sessionId");
+  }
   return JSON.stringify(frame);
 }

@@ -19,17 +19,18 @@ test.afterEach(() => {
 
 const latestCard = (page: Page) => page.getByTestId("request-card").first();
 
-async function openWithWatch(page: Page, path = "/") {
+async function openWithWatch(page: Page, path = "/?room=sekund-demo") {
   const devnet = await mockDevnet(page);
   watch = await connectHeadlessWatch();
-  await page.goto(path);
+  const url = path.includes("room=") ? path : `${path}${path.includes("?") ? "&" : "?"}room=sekund-demo`;
+  await page.goto(url);
   await expect(page.getByTestId("watch-address")).toHaveAttribute("data-address", watch.address);
   return devnet;
 }
 
 test("watch not connected: NO WATCH, send disabled with a reason, empty request list", async ({ page }) => {
   await mockDevnet(page);
-  await page.goto("/");
+  await page.goto("/?room=sekund-demo");
   await expect(page.getByTestId("no-watch")).toBeVisible();
   await expect(page.locator('header [data-chip="NO WATCH"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "Send to watch" })).toBeDisabled();
@@ -109,7 +110,7 @@ test("expire: countdown runs out, EXPIRED with no signature, Send again uses a n
 test("error: devnet down shows FAILED with cause, fix and Retry", async ({ page }) => {
   watch = await connectHeadlessWatch();
   await page.route("https://api.devnet.solana.com/**", (route) => route.abort("connectionrefused"));
-  await page.goto("/");
+  await page.goto("/?room=sekund-demo");
   await expect(page.getByTestId("watch-address")).toHaveAttribute("data-address", watch.address);
   await page.getByRole("button", { name: "Send to watch" }).click();
   await expect(latestCard(page)).toHaveAttribute("data-chip", "FAILED");

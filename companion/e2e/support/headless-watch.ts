@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION, createRelayTransport, encodeFrame, randomBytes, toBase58, type Review, type Transport } from "@sekund/protocol";
+import { PROTOCOL_VERSION, createPeerIdentity, createRelayTransport, encodeFrame, randomBytes, stampIdentity, toBase58, type Review, type Transport } from "@sekund/protocol";
 import { createInProcessSecureElement } from "@sekund/se-sim";
 import { HeadlessWatch, type Decision } from "../../src/testing/headless-watch.ts";
 
@@ -24,8 +24,8 @@ export async function connectHeadlessWatch(): Promise<E2eWatch> {
   await se.setPin(Array.from(randomBytes(4), (b) => (b % 10).toString()).join(""));
   await se.generateKey(0);
   const address = toBase58(await se.getPublicKey(0));
-  const transport: Transport = createRelayTransport({ role: "watch" });
-  const status = () => transport.send(encodeFrame({ version: PROTOCOL_VERSION, type: "WATCH_STATUS", wallet: true, session: "OPEN", reviewing: false }));
+  const transport: Transport = createRelayTransport({ role: "watch", identity: createPeerIdentity("sekund-demo") });
+  const status = () => transport.send(encodeFrame(stampIdentity({ version: PROTOCOL_VERSION, type: "WATCH_STATUS", wallet: true, session: "OPEN", reviewing: false }, transport.identity)));
   transport.onPeer((connected) => connected && status());
 
   let queue: E2eDecision[] = ["approve"];

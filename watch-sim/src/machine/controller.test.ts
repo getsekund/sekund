@@ -1,9 +1,11 @@
 import {
   createMemoryTransportPair,
   decodeWatchFrame,
+  demoIdentity,
   encodeFrame,
   fromBase58,
   PROTOCOL_VERSION,
+  stampIdentity,
   type SeProfile,
   type Transport,
   type WatchFrame,
@@ -103,8 +105,15 @@ describe("WatchController with the simulated secure element", () => {
     const { req } = await t.sendTransfer();
     t.press("C");
     await flush();
-    expect(t.results()).toEqual([
-      { version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId: req.requestId, status: "REJECTED", reason: "rejected on the watch" },
+    expect(t.results()).toMatchObject([
+      {
+        version: PROTOCOL_VERSION,
+        type: "SIGN_TRANSACTION_RESULT",
+        requestId: req.requestId,
+        status: "REJECTED",
+        reason: "rejected on the watch",
+        ...demoIdentity("watch"),
+      },
     ]);
   });
 
@@ -169,7 +178,13 @@ describe("WatchController with the simulated secure element", () => {
 
   it("answers GET_ADDRESS by session state and reports WATCH_STATUS changes", async () => {
     const t = await setup();
-    const ask = () => t.ask({ version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId: crypto.randomUUID() });
+    const ask = () =>
+      t.ask(
+        stampIdentity(
+          { version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId: crypto.randomUUID() },
+          demoIdentity("companion"),
+        ),
+      );
     await ask();
     expect(t.frames.at(-1)).toMatchObject({ type: "GET_ADDRESS_RESULT", status: "NO_WALLET" });
     await t.createWallet();

@@ -1,6 +1,7 @@
 import { WebSocketServer, type WebSocket } from "ws";
 import { COMPANION_PORT, MAX_FRAME_BYTES, RELAY_HOST, RELAY_PORT, WATCH_SIM_PORT } from "../constants.ts";
-import { oppositeRole, type RelayPeerEvent, type Role } from "../transport/types.ts";
+import { isPeerIdentity, isRoomId, type PeerIdentity } from "../identity.ts";
+import { oppositeRole, type RelayControlEvent, type Role } from "../transport/types.ts";
 
 export interface RelayOptions {
   host?: string;
@@ -21,15 +22,26 @@ export const DEFAULT_ALLOWED_ORIGINS = [COMPANION_PORT, WATCH_SIM_PORT].flatMap(
   `http://127.0.0.1:${port}`,
 ]);
 
+interface Seat {
+  ws: WebSocket;
+  identity: PeerIdentity;
+}
+
+interface Room {
+  companion: Seat | null;
+  watch: Seat | null;
+}
+
 /**
- * The local stand-in for the BLE link. It forwards each text frame from one role to every
- * client of the other role, verbatim. It does not parse, store or log frame contents.
+ * Local stand-in for BLE. Rooms isolate demos: exactly one companion and one watch per room.
+ * A second peer of the same role is rejected. Frames are forwarded only to the bound opposite
+ * seat. The relay remains untrusted for payload content.
  */
 export function startRelay(options: RelayOptions = {}): Promise<RelayServer> {
   const host = options.host ?? RELAY_HOST;
   const allowed = new Set(options.allowedOrigins ?? DEFAULT_ALLOWED_ORIGINS);
   const log = options.log ?? (() => {});
-  const clients: Record<Role, Set<WebSocket>> = { companion: new Set(), watch: new Set() };
+  const rooms = new Map<string, Room>();
 
   const wss = new WebSocketServer({
     host,
@@ -38,35 +50,102 @@ export function startRelay(options: RelayOptions = {}): Promise<RelayServer> {
     verifyClient: (info: { origin?: string }) => !info.origin || allowed.has(info.origin),
   });
 
-  const announce = (role: Role, connected: boolean) => {
-    const event: RelayPeerEvent = { relay: 1, event: "peer", role, connected, count: clients[role].size };
-    const text = JSON.stringify(event);
-    for (const peer of clients[oppositeRole(role)]) peer.send(text);
+  const getRoom = (roomId: string): Room => {
+    let room = rooms.get(roomId);
+    if (!room) {
+      room = { companion: null, watch: null };
+      rooms.set(roomId, room);
+    }
+    return room;
+  };
+
+  const sendControl = (ws: WebSocket, event: RelayControlEvent) => {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(event));
+  };
+
+  const announce = (room: Room, roomId: string, role: Role, connected: boolean, peer?: PeerIdentity) => {
+    const event: RelayControlEvent = {
+      relay: 1,
+      event: "peer",
+      role,
+      connected,
+      count: connected ? 1 : 0,
+      roomId,
+      ...(peer ? { peer } : {}),
+    };
+    const other = room[oppositeRole(role)];
+    if (other) sendControl(other.ws, event);
   };
 
   wss.on("connection", (ws, req) => {
-    const role = new URL(req.url ?? "/", "http://relay").searchParams.get("role");
+    const url = new URL(req.url ?? "/", "http://relay");
+    const role = url.searchParams.get("role");
+    const roomId = url.searchParams.get("room") ?? url.searchParams.get("roomId");
+    const deviceId = url.searchParams.get("deviceId");
+    const sessionId = url.searchParams.get("sessionId");
+    const identityCandidate = { roomId, deviceId, sessionId };
+
     if (role !== "companion" && role !== "watch") {
       ws.close(1008, "role must be companion or watch");
       return;
     }
-    clients[role].add(ws);
-    log(`${role} connected (${clients[role].size})`);
+    if (!isRoomId(roomId) || !isPeerIdentity(identityCandidate)) {
+      ws.close(1008, "room, deviceId and sessionId required");
+      return;
+    }
+    const identity = identityCandidate as PeerIdentity;
+    if (identity.roomId !== roomId) {
+      ws.close(1008, "room mismatch");
+      return;
+    }
 
-    const other = oppositeRole(role);
-    const initial: RelayPeerEvent = { relay: 1, event: "peer", role: other, connected: clients[other].size > 0, count: clients[other].size };
-    ws.send(JSON.stringify(initial));
-    announce(role, true);
+    const room = getRoom(roomId);
+    if (room[role]) {
+      const rejected: RelayControlEvent = {
+        relay: 1,
+        event: "rejected",
+        role,
+        roomId,
+        reason: `room already has a ${role}`,
+      };
+      sendControl(ws, rejected);
+      ws.close(1008, `room already has a ${role}`);
+      log(`${role} rejected from room ${roomId}`);
+      return;
+    }
+
+    const seat: Seat = { ws, identity };
+    room[role] = seat;
+    log(`${role} joined room ${roomId}`);
+
+    const otherRole = oppositeRole(role);
+    const other = room[otherRole];
+    sendControl(ws, {
+      relay: 1,
+      event: "peer",
+      role: otherRole,
+      connected: !!other,
+      count: other ? 1 : 0,
+      roomId,
+      ...(other ? { peer: other.identity } : {}),
+    });
+    announce(room, roomId, role, true, identity);
 
     ws.on("message", (data, isBinary) => {
       if (isBinary) return;
       const text = data.toString();
-      for (const peer of clients[other]) peer.send(text);
+      if (text.length > MAX_FRAME_BYTES) return;
+      const peer = room[otherRole];
+      if (peer && peer.ws.readyState === peer.ws.OPEN) peer.ws.send(text);
     });
+
     ws.on("close", () => {
-      clients[role].delete(ws);
-      log(`${role} disconnected (${clients[role].size})`);
-      announce(role, false);
+      if (room[role]?.ws === ws) {
+        room[role] = null;
+        announce(room, roomId, role, false);
+        log(`${role} left room ${roomId}`);
+        if (!room.companion && !room.watch) rooms.delete(roomId);
+      }
     });
   });
 
@@ -79,7 +158,11 @@ export function startRelay(options: RelayOptions = {}): Promise<RelayServer> {
         port,
         close: () =>
           new Promise<void>((done) => {
-            for (const set of Object.values(clients)) for (const ws of set) ws.terminate();
+            for (const room of rooms.values()) {
+              room.companion?.ws.terminate();
+              room.watch?.ws.terminate();
+            }
+            rooms.clear();
             wss.close(() => done());
           }),
       });

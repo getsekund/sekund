@@ -4,6 +4,7 @@ import {
   WALLET_SLOT,
   encodeFrame,
   signResult,
+  stampIdentity,
   toBase58,
   type GetAddressResult,
   type Review,
@@ -37,7 +38,10 @@ export class HeadlessWatch {
   private readonly unsubscribe: () => void;
 
   constructor(private readonly options: HeadlessWatchOptions) {
-    this.guard = new RequestGuard(options.now ? { now: options.now } : {});
+    this.guard = new RequestGuard({
+      identity: options.transport.identity,
+      ...(options.now ? { now: options.now } : {}),
+    });
     this.unsubscribe = options.transport.onFrame((text) => void this.onFrame(text));
   }
 
@@ -61,13 +65,29 @@ export class HeadlessWatch {
       busy: this.current !== null,
       address: this.address,
       maxMessageBytes: this.options.se.maxMessageBytes,
+      roomId: this.options.transport.identity.roomId,
     });
 
     if (outcome.kind === "drop") return;
+    if (outcome.kind === "cancel") {
+      if (this.current?.review.request.requestId === outcome.requestId) {
+        clearTimeout(this.current.timer);
+        this.current = null;
+      }
+      return;
+    }
     if (outcome.kind === "respond") return this.send(outcome.response);
     if (outcome.kind === "address") {
       const status = !state.hasKey ? "NO_WALLET" : state.sessionOpen ? "OK" : "LOCKED";
-      const result: GetAddressResult = { version: PROTOCOL_VERSION, type: "GET_ADDRESS_RESULT", requestId: outcome.request.requestId, status };
+      const result = stampIdentity(
+        {
+          version: PROTOCOL_VERSION,
+          type: "GET_ADDRESS_RESULT" as const,
+          requestId: outcome.request.requestId,
+          status,
+        },
+        this.options.transport.identity,
+      ) as GetAddressResult;
       if (status === "OK") Object.assign(result, { address: this.address, profile: this.options.se.profile, maxMessageBytes: this.options.se.maxMessageBytes });
       return this.send(result);
     }
@@ -86,7 +106,7 @@ export class HeadlessWatch {
     if (this.current?.review !== review) return;
     clearTimeout(this.current.timer);
     this.current = null;
-    this.send(signResult(review.request.requestId, status, reason ? { reason } : {}));
+    this.send(signResult(this.options.transport.identity, review.request.requestId, status, reason ? { reason } : {}));
   }
 
   /** Physical APPROVE. Disabled once the countdown has run out. */
@@ -99,7 +119,7 @@ export class HeadlessWatch {
     if (this.current?.review !== review) return;
     clearTimeout(current.timer);
     this.current = null;
-    this.send(signResult(review.request.requestId, "APPROVED", { signature: toBase58(signature) }));
+    this.send(signResult(this.options.transport.identity, review.request.requestId, "APPROVED", { signature: toBase58(signature) }));
   }
 
   reject(): void {

@@ -5,7 +5,7 @@ Scope: the hackathon software proof of concept on Solana devnet. Based on spec v
 ## Ground truth
 
 - **The secure element is simulated.** It is a Web Worker holding a non-extractable WebCrypto Ed25519 key in IndexedDB. It shows the interface, limits and rules of the hardware SE. It does not resist an attacker who controls the browser, the OS or the machine. The PoC makes no hardware-security claim and is not for real funds.
-- **The relay is untrusted.** It stands in for BLE and is treated like a hostile radio link: it can drop, delay, replay, reorder or inject frames. It binds to `127.0.0.1` and accepts only the two app origins, but security does not depend on that.
+- **The relay is untrusted.** It stands in for BLE and is treated like a hostile radio link: it can drop, delay, replay, reorder or inject frames. Rooms isolate demos (one companion and one watch each) but are not authentication. It binds to `127.0.0.1` and accepts only the two app origins, but security does not depend on that.
 - **Approval is enforced in the watch state machine** (`watch-sim/`), helped by two SE checks: an open PIN session and a single-use approve token bound to the exact message bytes. The companion cannot approve. The SE does not know what was displayed, which is why the display path is security-critical code. Until `watch-sim/` is merged and wired to `se-sim`, the same enforcement runs in the headless test watch (`companion/src/testing/headless-watch.ts`), where APPROVE is scripted.
 
 ## Threats

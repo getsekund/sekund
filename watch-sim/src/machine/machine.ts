@@ -4,9 +4,7 @@ import {
   type PinResult,
   type Review,
   type SeProfile,
-  signResult,
   type SignStatus,
-  type SignTransactionResult,
   toBase58,
 } from "@sekund/protocol";
 import { type Gesture, gesture, sameGesture } from "./gestures";
@@ -41,15 +39,15 @@ export const MENU_ITEMS = ["ADDRESS", "SIGN REQUEST", "SETTINGS"] as const;
 export const REVIEW_PAGES = ["AMOUNT", "TO1", "TO2", "NETWORK", "FEE", "APPROVE"] as const;
 export const ADDRESS_PAGES = 2;
 
-/** unlock: verify the PIN. create: first-run PIN setup on a factory-state SE. */
-export type PinMode = "unlock" | "create";
+/** unlock: verify the PIN. create: first entry. confirm: re-enter before key generation. */
+export type PinMode = "unlock" | "create" | "confirm";
 
 export type ResultStatus = "APPROVED" | "REJECTED" | "EXPIRED" | "FAILED" | "SETUP_FAILED";
 
 export type Screen =
   | { kind: "normal" }
   | { kind: "entry"; mode: PinMode; until: number }
-  | { kind: "pin"; mode: PinMode; digits: number[]; current: number; notice: "wrong" | null }
+  | { kind: "pin"; mode: PinMode; digits: number[]; current: number; notice: "wrong" | null; pendingPin?: string }
   | { kind: "verifying" }
   | { kind: "creating" }
   | { kind: "menu"; index: number; notice: "no-request" | null }
@@ -91,14 +89,15 @@ export type WatchEvent =
   | { type: "SIGNED"; requestId: string; signature: Uint8Array; now: number }
   | { type: "SIGN_FAILED"; requestId: string; now: number }
   /** Simulator reset: the only way out of Locked (the SE is already back in factory state). */
-  | { type: "RESET"; now: number };
+  | { type: "RESET"; now: number }
+  | { type: "CANCEL"; requestId: string; now: number };
 
 export type Effect =
   | { type: "verifyPin"; pin: string }
   | { type: "createWallet"; pin: string }
   /** Physical APPROVE: issue an approve token for these bytes, then sign the same bytes. */
   | { type: "approve"; requestId: string; message: Uint8Array }
-  | { type: "respond"; response: SignTransactionResult }
+  | { type: "respond"; requestId: string; status: SignStatus; signature?: string; reason?: string }
   | { type: "endSession" };
 
 export interface Transition {
@@ -124,18 +123,19 @@ export function initialState(config: Partial<MachineConfig> = {}, now = 0): Watc
   };
 }
 
-const pinScreen = (mode: PinMode, notice: "wrong" | null = null): Screen => ({
+const pinScreen = (mode: PinMode, notice: "wrong" | null = null, pendingPin?: string): Screen => ({
   kind: "pin",
   mode,
   digits: [],
   current: 0,
   notice,
+  ...(pendingPin !== undefined ? { pendingPin } : {}),
 });
 
 const MENU: Screen = { kind: "menu", index: 0, notice: null };
 
 function respond(requestId: string, status: SignStatus, extra: { signature?: string; reason?: string } = {}): Effect {
-  return { type: "respond", response: signResult(requestId, status, extra) };
+  return { type: "respond", requestId, status, ...extra };
 }
 
 /** Seconds left on the request under review, rounded up; 0 once expired. */
@@ -199,6 +199,15 @@ export function transition(state: WatchState, event: WatchEvent): Transition {
     case "RESET":
       if (state.screen.kind !== "wiped") return { state, effects: [] };
       return { state: { ...state, now: event.now, screen: { kind: "normal" } }, effects: [] };
+    case "CANCEL": {
+      const req = state.request;
+      if (!req || req.request.requestId !== event.requestId) return { state: { ...state, now: event.now }, effects: [] };
+      // Companion abandoned; tombstone already recorded. Clear the review with no signature.
+      return {
+        state: { ...state, now: event.now, request: null, screen: state.session ? MENU : { kind: "normal" } },
+        effects: [],
+      };
+    }
   }
 }
 
@@ -270,6 +279,13 @@ function onGesture(state: WatchState, buttons: Gesture): Transition {
         if (digits.length < state.config.pinLength) return go({ ...s, digits, current: 0, notice: null });
         const pin = digits.join("");
         if (s.mode === "unlock") return go({ kind: "verifying" }, {}, [{ type: "verifyPin", pin }]);
+        if (s.mode === "create") {
+          return go({ kind: "pin", mode: "confirm", digits: [], current: 0, notice: null, pendingPin: pin });
+        }
+        // confirm
+        if (pin !== s.pendingPin) {
+          return go({ kind: "pin", mode: "create", digits: [], current: 0, notice: "wrong", pendingPin: undefined });
+        }
         return go({ kind: "creating" }, {}, [{ type: "createWallet", pin }]);
       }
       if (is("C")) {

@@ -65,12 +65,14 @@ function reviewPage(review: Review, page: (typeof REVIEW_PAGES)[number]): { top:
       return { top: top('TO', '1/2'), strip: to[0] }
     case 'TO2':
       return { top: top('TO', '2/2'), strip: to[1] }
-    case 'NETWORK':
-      return { top: top('NETWORK'), strip: ['SOLANA', 'DEVNET'] }
+    case 'NETWORK': {
+      const net = review.request.network.toUpperCase()
+      return { top: top('NETWORK'), strip: ['SOLANA', net.slice(0, 16)] }
+    }
     case 'FEE': {
       const n = signatureCount(review)
       const fee = formatLamports(LAMPORTS_PER_SIGNATURE * BigInt(n))
-      return { top: top('FEE'), strip: [`${fee} SOL`, `${n} SIGNATURE${n === 1 ? '' : 'S'}`] }
+      return { top: top('EST FEE'), strip: [`${fee} SOL`, `BASE x${n}`] }
     }
     case 'APPROVE':
       return { top: top('APPROVE?'), strip: [right('REJECT'), right('APPROVE')] }
@@ -122,7 +124,8 @@ function layout(state: WatchState, steady: boolean): Layout {
       const tries = `TRIES LEFT ${state.attemptsLeft}`
       let strip: StripText
       if (s.mode === 'unlock') strip = [s.notice === 'wrong' ? 'WRONG PIN' : 'ENTER PIN', tries]
-      else strip = ['NEW PIN', 'FOUR DIGITS']
+      else if (s.mode === 'confirm') strip = [s.notice === 'wrong' ? 'NO MATCH' : 'REPEAT PIN', 'FOUR DIGITS']
+      else strip = [s.notice === 'wrong' ? 'NO MATCH' : 'NEW PIN', 'FOUR DIGITS']
       return { top: top('PIN'), main, sec: '!!', strip }
     }
     case 'verifying':

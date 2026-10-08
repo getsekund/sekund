@@ -1,6 +1,8 @@
 /**
  * Persistent storage for the simulated SE. The private key is stored as a non-extractable
  * CryptoKey object: IndexedDB keeps the structured-clone handle, never key bytes.
+ * “Non-extractable” prevents export of key material; it does not prevent same-origin code
+ * from using the handle for WebCrypto sign.
  */
 
 export interface PinRecord {
@@ -21,6 +23,8 @@ export interface SeStore {
   putPin(record: PinRecord): Promise<void>;
   getFailedAttempts(): Promise<number>;
   putFailedAttempts(count: number): Promise<void>;
+  /** Atomically increment the failure counter and return the new value. */
+  incrementFailedAttempts(): Promise<number>;
   /** Erases keys, PIN and counter. */
   clear(): Promise<void>;
 }
@@ -36,6 +40,10 @@ export function createMemoryStore(): SeStore {
     putPin: async (record) => void (pin = record),
     getFailedAttempts: async () => failed,
     putFailedAttempts: async (count) => void (failed = count),
+    incrementFailedAttempts: async () => {
+      failed += 1;
+      return failed;
+    },
     clear: async () => {
       keys.clear();
       pin = undefined;
@@ -77,6 +85,20 @@ export async function createIndexedDbStore(dbName: string): Promise<SeStore> {
     putPin: (record) => write((s) => s.put(record, "pin")),
     getFailedAttempts: async () => (await get<number>("failedAttempts")) ?? 0,
     putFailedAttempts: (count) => write((s) => s.put(count, "failedAttempts")),
+    incrementFailedAttempts: () =>
+      new Promise<number>((resolve, reject) => {
+        const tx = db.transaction(OBJECT_STORE, "readwrite");
+        const store = tx.objectStore(OBJECT_STORE);
+        const read = store.get("failedAttempts");
+        let next = 0;
+        read.onsuccess = () => {
+          next = ((read.result as number | undefined) ?? 0) + 1;
+          store.put(next, "failedAttempts");
+        };
+        tx.oncomplete = () => resolve(next);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      }),
     clear: () => write((s) => s.clear()),
   };
 }

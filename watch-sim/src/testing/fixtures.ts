@@ -3,6 +3,7 @@ import {
   PROTOCOL_VERSION,
   randomBytes,
   RequestGuard,
+  demoIdentity,
   type Review,
   type SignTransactionRequest,
   toBase58,
@@ -29,13 +30,15 @@ export function signRequest(bytes: Uint8Array, overrides: Partial<SignTransactio
     message: toBase64(bytes),
     expiresInMs: 52_000,
     lastValidBlockHeight: 1,
+    ...demoIdentity("companion"),
     ...overrides,
   };
 }
 
 /** A Review exactly as the shared guard would hand it to the state machine. */
 export function makeReview(now: number, opts: { expiresInMs?: number; bytes?: Uint8Array } = {}): Review {
-  const guard = new RequestGuard({ now: () => now });
+  const identity = demoIdentity("watch");
+  const guard = new RequestGuard({ now: () => now, identity });
   const req = signRequest(opts.bytes ?? transferBytes(), opts.expiresInMs ? { expiresInMs: opts.expiresInMs } : {});
   const outcome = guard.check(encodeFrame(req), {
     sessionOpen: true,
@@ -43,6 +46,7 @@ export function makeReview(now: number, opts: { expiresInMs?: number; bytes?: Ui
     busy: false,
     address: OWN_ADDRESS,
     maxMessageBytes: 4096,
+    roomId: identity.roomId,
   });
   if (outcome.kind !== "review") throw new Error(`fixture refused: ${JSON.stringify(outcome)}`);
   return outcome.review;

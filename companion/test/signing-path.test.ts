@@ -20,7 +20,9 @@ import {
 } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
 import {
+  PROTOCOL_VERSION,
   createMemoryTransportPair,
+  demoIdentity,
   fromBase58,
   parseTransferMessage,
   randomBytes,
@@ -133,7 +135,7 @@ describe("signing path (spec 11.1)", () => {
       if (req.type !== "SIGN_TRANSACTION") return;
       const other = buildTransfer({ from, to: address(toBase58(randomBytes(32))), lamports: 999n, lifetime: fakeLifetime() }).messageBytes;
       const sig = await se.eddsaSign(0, other, await se.issueApproveToken(0, other));
-      pair.watch.send(JSON.stringify({ version: 1, type: "SIGN_TRANSACTION_RESULT", requestId: req.requestId, status: "APPROVED", signature: toBase58(sig) }));
+      pair.watch.send(JSON.stringify({ version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId: req.requestId, status: "APPROVED", signature: toBase58(sig) , ...demoIdentity("watch") }));
     });
     const outcome = await sendTransfer({ client, fetchLifetime, broadcast }, { from, to: destination, lamports: 1n });
     expect(outcome.kind).toBe("verification-failed");
@@ -261,9 +263,9 @@ describe("SekundClient", () => {
     const { companion, watch }: { companion: Transport; watch: Transport } = createMemoryTransportPair();
     const client = new SekundClient(companion, { graceMs: 50 });
     const handle = client.requestSignature({ messageBytes: new Uint8Array(10), expiresInMs: 100, lastValidBlockHeight: 1n });
-    watch.send(JSON.stringify({ version: 1, type: "SIGN_TRANSACTION_RESULT", requestId: crypto.randomUUID(), status: "REJECTED" }));
-    watch.send(JSON.stringify({ version: 1, type: "SIGN_TRANSACTION_RESULT", requestId: handle.requestId, status: "REJECTED" }));
-    watch.send(JSON.stringify({ version: 1, type: "SIGN_TRANSACTION_RESULT", requestId: handle.requestId, status: "EXPIRED" }));
+    watch.send(JSON.stringify({ version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId: crypto.randomUUID(), status: "REJECTED", ...demoIdentity("watch") }));
+    watch.send(JSON.stringify({ version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId: handle.requestId, status: "REJECTED", ...demoIdentity("watch") }));
+    watch.send(JSON.stringify({ version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId: handle.requestId, status: "EXPIRED", ...demoIdentity("watch") }));
     expect(await handle.result).toMatchObject({ status: "REJECTED" });
   });
 

@@ -1,5 +1,5 @@
 import type { Address, Base64EncodedWireTransaction } from "@solana/kit";
-import { fromBase58, type SignStatus } from "@sekund/protocol";
+import { fromBase58, parseTransferMessage, type SignStatus } from "@sekund/protocol";
 import type { SekundClient } from "./sekund-client.ts";
 import {
   SignatureVerificationError,
@@ -36,6 +36,8 @@ export interface TransferDeps {
   /** Optional cap on the review window. It can only shorten what the blockhash allows. */
   maxExpiresInMs?: number;
   onStage?: (stage: FlowStage) => void;
+  /** Parsed from the exact message bytes about to be sent (companion card source of truth). */
+  onBuilt?: (info: { to: string; lamports: bigint; messageBytes: Uint8Array }) => void;
 }
 
 const MAX_REFETCH = 3;
@@ -57,6 +59,9 @@ export async function sendTransfer(deps: TransferDeps, params: { from: Address; 
     if (!lifetime || expiresInMs <= 0) return { kind: "error", message: "Could not get a fresh blockhash in time." };
 
     const built = buildTransfer({ ...params, lifetime });
+    const parsed = parseTransferMessage(built.messageBytes, params.from);
+    if (!parsed.ok) return { kind: "error", message: `Built message failed the allowlist: ${parsed.reason}` };
+    deps.onBuilt?.({ to: parsed.transfer.to, lamports: parsed.transfer.lamports, messageBytes: built.messageBytes });
     const handle = deps.client.requestSignature({
       messageBytes: built.messageBytes,
       expiresInMs,

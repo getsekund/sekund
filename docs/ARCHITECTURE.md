@@ -25,7 +25,7 @@ This describes what is built for the hackathon, mapped to spec v1.1 sections 3 a
 | SE driver wrapper | `se_driver` in firmware | `seDriver` | `se-sim/src/driver.ts` |
 | Secure element | TROPIC01 (recommended) or SE050E | Web Worker with a WebCrypto Ed25519 key | `se-sim/src/chip.ts`, `worker.ts` |
 
-Status: `watch-sim/` is built in parallel and is not on `main` yet. Until it is wired to the relay and `se-sim`, the same watch-side path (relay, `RequestGuard`, `seDriver`, simulated SE) runs in `companion/src/testing/headless-watch.ts`, which the tests, `pnpm devnet:proof` and `watch:headless` use.
+The local relay uses exclusive rooms (default `sekund-demo`): one companion and one watch per room. A second peer of the same role is rejected. Replay tombstones persist in watch-origin IndexedDB across reloads.
 
 ## Trust boundary (spec 3.1, as built)
 

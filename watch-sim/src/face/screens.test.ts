@@ -65,12 +65,12 @@ describe("face content (DESIGN.md §5)", () => {
       faces.push(steady(state));
     }
     faces.forEach(expectDrawable);
-    expect(faces.map((f) => f.top)).toEqual(["AMOUNT!!", "TO!!!1/2", "TO!!!2/2", "NETWORK!", "FEE!!!!!", "APPROVE?"]);
+    expect(faces.map((f) => f.top)).toEqual(["AMOUNT!!", "TO!!!1/2", "TO!!!2/2", "NETWORK!", "EST!FEE!", "APPROVE?"]);
     expect(faces[0]).toMatchObject({ main: "!0:52", sec: "!!", strip: ["0.01 SOL", ""] });
     const shown = [...faces[1]!.strip, ...faces[2]!.strip].join(" ").split(" ").filter(Boolean);
     expect(shown.every((g) => g.length <= 4)).toBe(true);
     expect(shown.join("")).toBe(to);
-    expect(faces[4]!.strip).toEqual(["0.000005 SOL", "1 SIGNATURE"]);
+    expect(faces[4]!.strip).toEqual(["0.000005 SOL", "BASE x1"]);
     expect(faces[5]!.strip).toEqual(["          REJECT", "         APPROVE"]);
     expect(faces[5]!.annunciators).toEqual({ A: true, B: false, C: true, D: true });
     expect(faces[0]!.annunciators).toEqual({ A: false, B: true, C: true, D: false });

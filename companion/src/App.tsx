@@ -9,12 +9,15 @@ import { parseReviewCap, type RequestEntry } from "@/lib/request-view";
 import { broadcastAndConfirm, createDevnetRpc, fetchLifetime, getBalance } from "@/lib/solana";
 import { sendTransfer, type FlowStage } from "@/lib/transfer-flow";
 
-const WATCH_URL = "http://localhost:4318";
+const WATCH_URL = (() => {
+  const room = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("room");
+  return room ? `http://localhost:4318/?room=${encodeURIComponent(room)}` : "http://localhost:4318";
+})();
 
 export default function App() {
   const rpc = useMemo(() => createDevnetRpc(), []);
   const reviewCapMs = useMemo(() => parseReviewCap(window.location.search), []);
-  const { client, relay, watchConnected, watchStatus, wallet } = useSekund();
+  const { client, relay, watchConnected, watchStatus, wallet, roomId } = useSekund();
   const [balance, setBalance] = useState<bigint | null>(null);
   const [entries, setEntries] = useState<RequestEntry[]>([]);
   const nextId = useRef(1);
@@ -44,6 +47,7 @@ export default function App() {
           fetchLifetime: () => fetchLifetime(rpc),
           broadcast: (wire, lvbh) => broadcastAndConfirm(rpc, wire, lvbh, { onSent: (signature) => onStage({ stage: "confirming", signature }) }),
           onStage,
+          onBuilt: (info) => update(id, () => ({ to: info.to, lamports: info.lamports })),
           ...(reviewCapMs ? { maxExpiresInMs: reviewCapMs } : {}),
         },
         { from: toAddress(from), to, lamports },
@@ -73,6 +77,9 @@ export default function App() {
           <div className="flex items-center gap-3">
             <StatusChip word={relay === "open" && watchConnected ? "CONNECTED" : "NO WATCH"} />
             <span className="font-mono text-14">Devnet</span>
+            <span className="hidden font-mono text-12 text-graphite sm:inline" title="Relay room">
+              room {roomId}
+            </span>
             <a className="hidden text-14 underline-offset-4 hover:underline sm:inline" href={WATCH_URL} target="_blank" rel="noopener">
               Simulator
             </a>

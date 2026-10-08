@@ -42,7 +42,7 @@ export function describe(prev: WatchState, event: WatchEvent, next: WatchState, 
   if (event.type === "RESET") out.push({ text: "Simulator reset" });
   if (!prev.session && next.session && event.type === "PIN_RESULT") out.push({ text: "PIN accepted, session open" });
   for (const e of effects) {
-    if (e.type === "respond") out.push(answerLine(e.response.requestId, e.response.status));
+    if (e.type === "respond") out.push(answerLine(e.requestId, e.status));
   }
   if (prev.session && !next.session) out.push({ text: "Session closed" });
   return out;

@@ -10,7 +10,7 @@ import { type Control, controlsFor } from '@/hints'
 import type { Button as Pusher } from '@/machine/gestures'
 import type { LogEntry } from '@/machine/log'
 import { secondsLeft } from '@/machine/machine'
-import { controller, relayUrl, startSecureElement, transport } from '@/services'
+import { bootWatch, controller, identity, relayUrl, startSecureElement, transport } from '@/services'
 import { cn } from '@/lib/utils'
 import { KEYS, useWatch } from '@/useWatch'
 
@@ -44,12 +44,12 @@ function useReducedMotion(): boolean {
 
 function useLink(): { state: TransportState; peer: boolean } {
   const state = useSyncExternalStore(
-    (fn) => transport.onState(fn),
-    () => transport.state,
+    (fn) => (transport ? transport.onState(fn) : () => {}),
+    () => transport?.state ?? 'closed',
   )
   const peer = useSyncExternalStore(
-    (fn) => transport.onPeer(fn),
-    () => transport.peerConnected,
+    (fn) => (transport ? transport.onPeer(() => fn()) : () => {}),
+    () => transport?.peerConnected ?? false,
   )
   return { state, peer }
 }
@@ -162,7 +162,7 @@ function ResetSimulator() {
         <Button
           variant="destructive"
           onClick={() => {
-            controller.reset()
+            controller?.reset()
             setConfirming(false)
           }}
         >
@@ -199,13 +199,28 @@ function EventLog({ entries }: { entries: readonly LogEntry[] }) {
   )
 }
 
-export default function App() {
-  const watch = useWatch(controller)
+function AlreadyOpen() {
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-(--sk-margin) text-center">
+      <svg className="w-24 fill-ink" viewBox={WORDMARK_VIEWBOX} role="img" aria-label="SEKUND">
+        <path d={WORDMARK_PATH} />
+      </svg>
+      <h1 className="font-mono text-20 tracking-caps">WATCH ALREADY OPEN</h1>
+      <p className="max-w-[40ch] text-16 text-graphite">
+        Another tab in this browser owns the watch, the simulated secure element, and the relay seat. Close it, or use that tab.
+      </p>
+      <p className="font-mono text-14 text-graphite">Room {identity.roomId}</p>
+    </div>
+  )
+}
+
+function ActiveWatch() {
+  const watch = useWatch(controller!)
   const { state } = watch
   const reducedMotion = useReducedMotion()
   const face = useMemo(() => renderFace(state, { reducedMotion }), [state, reducedMotion])
   const controls = controlsFor(state)
-  const log = useSyncExternalStore(controller.subscribe, controller.getLog)
+  const log = useSyncExternalStore(controller!.subscribe, controller!.getLog)
   const [bootError, setBootError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -279,11 +294,18 @@ export default function App() {
                 <span className="text-sm font-medium">On wrist</span>
                 <span className="text-sm text-graphite">Off ends the session</span>
               </span>
-              <Switch checked={state.onWrist} onCheckedChange={(on) => controller.setWrist(on)} />
+              <Switch checked={state.onWrist} onCheckedChange={(on) => controller?.setWrist(on)} />
             </label>
           </Section>
 
           <CompanionLink />
+
+          <Section title="Room">
+            <p className="text-sm text-graphite">
+              Demo room <Mono className="text-ink">{identity.roomId}</Mono>. The companion must use the same{' '}
+              <Mono className="text-ink">?room=</Mono> value. Override with the query string; default is sekund-demo.
+            </p>
+          </Section>
 
           <Section
             title="Secure element"
@@ -311,8 +333,8 @@ export default function App() {
             </dl>
             {state.ready && !state.hasPin && !wiped && (
               <p className="text-sm text-graphite">
-                First use. Hold A and D, then choose a four-digit PIN. The secure element creates a devnet
-                key that stays in this browser.
+                First use. Hold A and D, choose a four-digit PIN, then enter it again to confirm. The secure
+                element creates a devnet key that stays in this browser.
               </p>
             )}
             {wiped && <ResetSimulator />}
@@ -323,4 +345,18 @@ export default function App() {
       </main>
     </div>
   )
+}
+
+export default function App() {
+  const [boot, setBoot] = useState<'loading' | 'active' | 'blocked'>('loading')
+  useEffect(() => {
+    void bootWatch().then((r) => setBoot(r.kind))
+  }, [])
+  if (boot === 'loading') {
+    return (
+      <div className="flex min-h-svh items-center justify-center text-14 text-graphite">Starting the watch…</div>
+    )
+  }
+  if (boot === 'blocked') return <AlreadyOpen />
+  return <ActiveWatch />
 }

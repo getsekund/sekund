@@ -1,4 +1,5 @@
-export const PROTOCOL_VERSION = 1 as const;
+/** Wire version 2 adds roomId, deviceId and sessionId on every application frame. */
+export const PROTOCOL_VERSION = 2 as const;
 
 export const NETWORK = "devnet" as const;
 

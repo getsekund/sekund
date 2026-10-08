@@ -45,7 +45,7 @@ pnpm dev
 | Companion | http://localhost:4317 |
 | Watch simulator | http://localhost:4318 |
 
-Open both apps in separate windows. Unlock the watch with its PIN, then send a transfer from the companion and approve it on the watch.
+Open both apps in separate windows (same `?room=` value; default `sekund-demo`). Unlock the watch with its PIN, then send a transfer from the companion and approve it on the watch. A second watch tab shows WATCH ALREADY OPEN and does not connect.
 
 To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`. Until `watch-sim/` is on `main`, pnpm prints "No projects matched" for it and `pnpm dev` starts only the relay and the companion; use the headless watch below.
 
@@ -92,7 +92,7 @@ pnpm e2e
 | Spec | What drives the watch | Covers | Status |
 |---|---|---|---|
 | `companion/e2e/companion.spec.ts` | Headless watch over the real relay (same `RequestGuard` and simulated SE, buttons scripted) | Not connected, waiting with countdown, approve with verified signature and explorer link, reject, expire and send again, devnet error | Passing |
-| `companion/e2e/watch-sim.spec.ts` | The watch simulator page: Secure Mode combination, PIN, review pages, APPROVE / REJECT with keys `a` `b` `c` `d` | Approve with verified signature, reject, expire | Pending (`test.fixme`) until `watch-sim/` is on `main` and uses the relay and `se-sim` |
+| `companion/e2e/watch-sim.spec.ts` | The watch simulator page: Secure Mode combination, NEW/REPEAT PIN, review pages, APPROVE / REJECT with keys `a` `b` `c` `d` | Approve with verified signature, reject, expire | Passing |
 
 `?reviewSeconds=N` on the companion URL caps the review window at N seconds for the expiry tests. It can only shorten the window. `SEKUND_E2E_PIN` (default `1234`) and `SEKUND_E2E_COMBO` (default `a+d`) configure the watch-simulator spec.
 
@@ -128,16 +128,17 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 
 ## Security rules
 
-1. Private keys never leave the secure element (simulated in this proof of concept).
-2. No wallet private key is stored in plaintext; the simulated SE stores a non-extractable `CryptoKey` handle.
+1. Private keys never leave the simulated secure element on the honest path. The PoC SE cannot stop same-origin page code from using the stored non-extractable `CryptoKey` handle: non-extractable prevents export, not use.
+2. No wallet private key is stored in plaintext; the simulated SE stores a non-extractable `CryptoKey` handle in IndexedDB.
 3. No private keys or sensitive cryptographic material are logged.
-4. Nothing is signed without explicit physical approval inside a PIN session, before expiry.
+4. On the honest watch path, nothing is signed without physical approval inside a PIN session, before expiry. A compromised watch UI or same-origin script can still call the simulated SE while a session is open.
 5. Pure Ed25519 over the exact, unhashed message bytes that were displayed.
 6. Messages longer than `maxMessageBytes` are rejected before display.
 7. All secure-element byte-order conversion happens in the `seDriver` wrapper only.
-8. Requests are single-use and replay-protected.
+8. Requests are single-use and replay-protected, including across reloads via IndexedDB tombstones.
 9. No hand-written cryptographic primitives: WebCrypto only.
 10. Approval and display logic is security-critical; changes need review and tests.
+11. The local relay is untrusted and uses exclusive rooms (`?room=`, default `sekund-demo`): one companion and one watch per room.
 
 ## Disclosure
 

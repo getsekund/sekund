@@ -2,11 +2,13 @@ import { PROTOCOL_VERSION } from "./constants.ts";
 import { fromBase64 } from "./encoding.ts";
 import {
   decodeCompanionRequest,
+  stampIdentity,
   type GetAddressRequest,
   type SignStatus,
   type SignTransactionRequest,
   type SignTransactionResult,
 } from "./envelope.ts";
+import type { PeerIdentity } from "./identity.ts";
 import { parseTransferMessage, type ParsedTransfer } from "./parser.ts";
 
 /** What the watch knows at the moment a frame arrives. */
@@ -18,6 +20,8 @@ export interface WatchContext {
   /** The watch's base58 address (fee payer). Required when `hasKey` is true. */
   address: string | null;
   maxMessageBytes: number;
+  /** Expected companion room; frames for other rooms are dropped. */
+  roomId: string;
 }
 
 /** A request that passed every check and may be shown on the review screen. */
@@ -34,6 +38,8 @@ export interface Review {
 export type GuardOutcome =
   | { kind: "review"; review: Review }
   | { kind: "address"; request: GetAddressRequest }
+  /** Companion cancelled the request currently under review. */
+  | { kind: "cancel"; requestId: string }
   /** Answer immediately with this frame. */
   | { kind: "respond"; response: SignTransactionResult }
   /** Frame too broken to answer; drop it. */
@@ -41,6 +47,8 @@ export type GuardOutcome =
 
 export interface RequestGuardOptions {
   now?: () => number;
+  /** Watch identity stamped onto every response. */
+  identity: PeerIdentity;
   /** Previously seen requestIds and nonces, if the watch persists them across reloads. */
   seen?: Iterable<string>;
   /** Called with each newly seen requestId and nonce, so the watch can persist them. */
@@ -50,11 +58,15 @@ export interface RequestGuardOptions {
 }
 
 export function signResult(
+  identity: PeerIdentity,
   requestId: string,
   status: SignStatus,
   extra: { signature?: string; reason?: string } = {},
 ): SignTransactionResult {
-  const result: SignTransactionResult = { version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT", requestId, status };
+  const result: SignTransactionResult = stampIdentity(
+    { version: PROTOCOL_VERSION, type: "SIGN_TRANSACTION_RESULT" as const, requestId, status },
+    identity,
+  );
   if (status === "APPROVED") {
     if (!extra.signature) throw new Error("APPROVED needs a signature");
     result.signature = extra.signature;
@@ -69,15 +81,21 @@ export function signResult(
  */
 export class RequestGuard {
   private readonly now: () => number;
+  private readonly identity: PeerIdentity;
   private readonly seen: Set<string>;
   private readonly onSeen: ((value: string) => void) | undefined;
   private readonly maxRemembered: number;
 
-  constructor(options: RequestGuardOptions = {}) {
+  constructor(options: RequestGuardOptions) {
     this.now = options.now ?? Date.now;
+    this.identity = options.identity;
     this.seen = new Set(options.seen ?? []);
     this.onSeen = options.onSeen;
     this.maxRemembered = options.maxRemembered ?? 10_000;
+  }
+
+  getIdentity(): PeerIdentity {
+    return this.identity;
   }
 
   private remember(value: string): void {
@@ -96,14 +114,29 @@ export class RequestGuard {
       if (decoded.requestId === null) return { kind: "drop", reason: decoded.reason };
       const replayed = this.seen.has(`id:${decoded.requestId}`);
       if (!replayed) this.remember(`id:${decoded.requestId}`);
-      return { kind: "respond", response: signResult(decoded.requestId, replayed ? "REPLAYED" : "INVALID", { reason: decoded.reason }) };
+      return {
+        kind: "respond",
+        response: signResult(this.identity, decoded.requestId, replayed ? "REPLAYED" : "INVALID", { reason: decoded.reason }),
+      };
     }
 
     const request = decoded.value;
+    if (request.roomId !== ctx.roomId || request.roomId !== this.identity.roomId) {
+      return { kind: "drop", reason: "room mismatch" };
+    }
+
     if (request.type === "GET_ADDRESS") return { kind: "address", request };
 
+    if (request.type === "CANCEL_REQUEST") {
+      // Tombstone already recorded when the SIGN arrived; cancel only clears the UI.
+      return { kind: "cancel", requestId: request.requestId };
+    }
+
     const { requestId, nonce } = request;
-    const respond = (status: SignStatus, reason: string): GuardOutcome => ({ kind: "respond", response: signResult(requestId, status, { reason }) });
+    const respond = (status: SignStatus, reason: string): GuardOutcome => ({
+      kind: "respond",
+      response: signResult(this.identity, requestId, status, { reason }),
+    });
 
     if (this.seen.has(`id:${requestId}`) || this.seen.has(`nonce:${nonce}`)) return respond("REPLAYED", "requestId or nonce already used");
     this.remember(`id:${requestId}`);

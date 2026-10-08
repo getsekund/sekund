@@ -2,10 +2,13 @@ import {
   PROTOCOL_VERSION,
   decodeWatchFrame,
   encodeFrame,
+  identitiesEqual,
   randomBytes,
+  stampIdentity,
   toBase64,
   NONCE_BYTES,
   type GetAddressResult,
+  type PeerIdentity,
   type SignTransactionRequest,
   type SignTransactionResult,
   type Transport,
@@ -27,24 +30,36 @@ interface Pending {
 
 /**
  * Companion side of PROTOCOL.md. Accepts each result once, only for a pending requestId of
- * the matching type; everything else from the transport is ignored.
+ * the matching type, and only from the bound watch identity announced by the relay.
  */
 export class SekundClient {
   private readonly pending = new Map<string, Pending>();
   private readonly statusListeners = new Set<(status: WatchStatus) => void>();
   private readonly unsubscribe: () => void;
+  private boundWatch: PeerIdentity | null = null;
 
   constructor(
     readonly transport: Transport,
     private readonly options: { graceMs?: number; addressTimeoutMs?: number } = {},
   ) {
     this.unsubscribe = transport.onFrame((text) => this.onFrame(text));
+    transport.onPeer((_connected, peer) => {
+      this.boundWatch = peer;
+    });
+    this.boundWatch = transport.peerIdentity;
+  }
+
+  private accepts(frame: { deviceId: string; sessionId: string; roomId: string }): boolean {
+    const bound = this.boundWatch ?? this.transport.peerIdentity;
+    if (!bound) return false;
+    return identitiesEqual(bound, frame);
   }
 
   private onFrame(text: string): void {
     const decoded = decodeWatchFrame(text);
     if (!decoded.ok) return;
     const frame = decoded.value;
+    if (!this.accepts(frame)) return;
     if (frame.type === "WATCH_STATUS") {
       for (const listener of this.statusListeners) listener(frame);
       return;
@@ -74,26 +89,39 @@ export class SekundClient {
           resolve(frame as GetAddressResult);
         },
       });
-      this.transport.send(encodeFrame({ version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId }));
+      this.transport.send(
+        encodeFrame(stampIdentity({ version: PROTOCOL_VERSION, type: "GET_ADDRESS", requestId }, this.transport.identity)),
+      );
     });
   }
 
   /** Sends a fresh request (new requestId and nonce). The result promise settles exactly once. */
   requestSignature(params: { messageBytes: Uint8Array; expiresInMs: number; lastValidBlockHeight: bigint }): SignRequestHandle {
     const requestId = crypto.randomUUID();
-    const request: SignTransactionRequest = {
-      version: PROTOCOL_VERSION,
-      type: "SIGN_TRANSACTION",
-      requestId,
-      nonce: toBase64(randomBytes(NONCE_BYTES)),
-      network: "devnet",
-      message: toBase64(params.messageBytes),
-      expiresInMs: params.expiresInMs,
-      lastValidBlockHeight: Number(params.lastValidBlockHeight),
-    };
+    const request: SignTransactionRequest = stampIdentity(
+      {
+        version: PROTOCOL_VERSION,
+        type: "SIGN_TRANSACTION",
+        requestId,
+        nonce: toBase64(randomBytes(NONCE_BYTES)),
+        network: "devnet",
+        message: toBase64(params.messageBytes),
+        expiresInMs: params.expiresInMs,
+        lastValidBlockHeight: Number(params.lastValidBlockHeight),
+      },
+      this.transport.identity,
+    );
     const result = new Promise<SignOutcome>((resolve) => {
       const timer = setTimeout(() => {
         this.pending.delete(requestId);
+        // Best-effort cancel so the watch can clear a stuck review.
+        try {
+          this.transport.send(
+            encodeFrame(stampIdentity({ version: PROTOCOL_VERSION, type: "CANCEL_REQUEST", requestId }, this.transport.identity)),
+          );
+        } catch {
+          /* ignore */
+        }
         resolve({ status: "TIMEOUT", requestId });
       }, Math.max(0, params.expiresInMs) + (this.options.graceMs ?? 5_000));
       this.pending.set(requestId, {

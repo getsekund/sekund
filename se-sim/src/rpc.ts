@@ -8,6 +8,7 @@ export interface RpcPort {
   start?: () => void;
 }
 
+/** Production Worker surface. Test-key import is intentionally omitted. */
 const METHODS = [
   "getState",
   "setPin",
@@ -17,7 +18,6 @@ const METHODS = [
   "endSession",
   "issueApproveToken",
   "eddsaSignWire",
-  "importTestKeyWire",
 ] as const satisfies readonly (keyof RawSecureElement)[];
 
 type Method = (typeof METHODS)[number];
@@ -83,6 +83,6 @@ export function connectSecureElement(port: RpcPort, profile: SeProfile): RawSecu
     endSession: () => call("endSession"),
     issueApproveToken: (slot, message) => call("issueApproveToken", slot, message),
     eddsaSignWire: (slot, message, token) => call("eddsaSignWire", slot, message, token),
-    importTestKeyWire: (slot, key) => call("importTestKeyWire", slot, key),
+    importTestKeyWire: () => Promise.reject(new SeError("NOT_ALLOWED", "test key import is not available on the Worker surface")),
   };
 }

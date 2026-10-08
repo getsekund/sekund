@@ -157,9 +157,9 @@ export class SimulatedSeChip implements RawSecureElement {
       if (!record) return { status: "NO_PIN" };
       this.closeSession();
 
-      // Count the attempt before checking it, so a reload mid-check cannot skip the counter.
-      const failed = (await this.store.getFailedAttempts()) + 1;
-      await this.store.putFailedAttempts(failed);
+      // Count the attempt before checking it, in one store transaction, so concurrent
+      // Workers cannot under-count failures.
+      const failed = await this.store.incrementFailedAttempts();
 
       if (bytesEqual(await hashPin(pin, record.salt), record.hash)) {
         await this.store.putFailedAttempts(0);
