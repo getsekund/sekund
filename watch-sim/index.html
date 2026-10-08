@@ -8,6 +8,18 @@
     <link rel="preload" href="/fonts/DSEG7Classic-BoldItalic.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/DSEG14Classic-BoldItalic.woff2" as="font" type="font/woff2" crossorigin />
     <title>SEKUND watch simulator</title>
+    <script>
+      (function () {
+        try {
+          var c = localStorage.getItem("sekund-theme");
+          var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = c === "dark" || (c !== "light" && systemDark);
+          document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

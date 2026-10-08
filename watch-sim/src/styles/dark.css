@@ -1,0 +1,72 @@
+/*
+ * Dark theme only. Every rule is under html[data-theme="dark"], so light mode
+ * keeps the paper tokens in tokens.css exactly.
+ * The dither is the page ground. Plates behind text stay solid, with no blur.
+ */
+
+html[data-theme="dark"] {
+  --sk-ground: #07080d;
+  --sk-paper: #12131a;
+  --sk-paper-2: #1a1c26;
+  --sk-ink: #f3f1e8;
+  --sk-graphite: #c5c7ce;
+  --sk-line: #9b9da6;
+  --sk-rule: #3a3d48;
+  --sk-spot: #ff8a62;
+  --sk-focus: #f3f1e8;
+  --sk-shadow-key: 0 2px 0 0 #000;
+  --sk-shadow-object: 0 28px 36px -24px rgb(0 0 0 / 0.55);
+  color-scheme: dark;
+  background-color: var(--sk-ground);
+}
+
+html[data-theme="dark"] body {
+  background: transparent;
+}
+
+html[data-theme="dark"] .sk-dither {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] #root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Solid plates. The dither does not run through these glyphs. */
+html[data-theme="dark"] .sk-plate,
+html[data-theme="dark"] article,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] :is(h1, h2, h3, p, label, dt, dd, li) {
+  background-color: var(--sk-paper);
+}
+
+html[data-theme="dark"] .sk-bench {
+  background-color: transparent;
+}
+
+html[data-theme="dark"] .sk-logo {
+  filter: invert(1);
+}
+
+html[data-theme="dark"] [data-chip="REJECTED"],
+html[data-theme="dark"] [data-chip="EXPIRED"],
+html[data-theme="dark"] [data-chip="LOCKED"],
+html[data-theme="dark"] [data-chip="FAILED"],
+html[data-theme="dark"] [data-variant="destructive"],
+html[data-theme="dark"] [data-variant="stop"] {
+  color: #f3f1e8;
+}
+
+/* The face stays a reflective LCD. These values are the light-theme literals. */
+html[data-theme="dark"] .sk-wordmark { fill: #e9eae4; }
+html[data-theme="dark"] .sk-lcd { fill: #b4bca6; }
+html[data-theme="dark"] .sk-seg { fill: #1d221c; }
+html[data-theme="dark"] .sk-ghost { fill: #a9b19b; }
+html[data-theme="dark"] .sk-resin { fill: #1c1d1f; }
+html[data-theme="dark"] .sk-bezel { fill: #2a2b2e; }

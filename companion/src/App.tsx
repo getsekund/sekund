@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { address as toAddress, type Address } from "@solana/kit";
 import { RequestList } from "@/components/request-list";
 import { StatusChip } from "@/components/status-chip";
+import { DarkGround, ThemeControl, ThemeRoot } from "@/components/theme-chrome";
 import { TransferForm } from "@/components/transfer-form";
 import { WatchPanel } from "@/components/watch-panel";
 import { useSekund } from "@/hooks/use-sekund";
@@ -68,24 +69,27 @@ export default function App() {
           : null;
 
   return (
+    <ThemeRoot>
+    <DarkGround />
     <div className="min-h-svh">
       <header className="border-b border-rule">
         <div className="mx-auto flex min-h-14 max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">
-          <a href="/" className="shrink-0" aria-label="SEKUND companion">
-            <img src="/sekund-logo-v2.svg" alt="SEKUND" width={96} height={24} className="h-6 w-24" />
+          <a href="/" className="sk-plate shrink-0" aria-label="SEKUND companion">
+            <img src="/sekund-logo-v2.svg" alt="SEKUND" width={96} height={24} className="sk-logo h-6 w-24" />
           </a>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <StatusChip word={relay === "open" && watchConnected ? "CONNECTED" : "NO WATCH"} />
-            <span className="font-mono text-14">Devnet</span>
-            <a className="text-14 underline-offset-4 hover:underline" href={WATCH_URL} target="_blank" rel="noopener">
+            <span className="sk-plate font-mono text-14">Devnet</span>
+            <a className="sk-plate text-14 underline-offset-4 hover:underline" href={WATCH_URL} target="_blank" rel="noopener">
               Simulator
             </a>
+            <ThemeControl />
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-(--sk-content-max) px-(--sk-margin) py-(--sk-space-6)">
-        <div className="mb-(--sk-space-6) max-w-[72ch] space-y-2">
+        <div className="sk-plate mb-(--sk-space-6) max-w-[72ch] space-y-2">
           <h1 className="text-32 leading-tight font-semibold tracking-display">Send devnet SOL from the watch</h1>
           <p className="text-16 text-graphite">This page builds the transfer and broadcasts it. Only the watch can approve and sign it.</p>
         </div>
@@ -115,11 +119,12 @@ export default function App() {
       </main>
 
       <footer className="mx-auto max-w-(--sk-content-max) px-(--sk-margin) pb-(--sk-space-7)">
-        <p className="max-w-[72ch] border-t border-rule pt-4 text-14 text-graphite">
+        <p className="sk-plate max-w-[72ch] border-t border-rule pt-4 text-14 text-graphite">
           The secure element in this demo is simulated in software. The signatures are real, on Solana devnet only. This page never sees a private key: it sends the exact
           message bytes, verifies the returned signature, then broadcasts.
         </p>
       </footer>
     </div>
+    </ThemeRoot>
   );
 }

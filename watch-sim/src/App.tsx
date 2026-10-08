@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
 import { DotLoader } from '@/components/dot-loader'
+import { DarkGround, ThemeControl, ThemeRoot } from '@/components/theme-chrome'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -238,21 +239,24 @@ function ActiveWatch() {
     <div className="min-h-dvh">
       <nav className="border-b border-rule">
         <div className="mx-auto flex min-h-(--sk-nav-h) max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">
-          <Wordmark />
-          <div className="flex gap-4 text-sm">
-            <a href="/" aria-current="page" className="font-semibold underline underline-offset-4">
+          <span className="sk-plate">
+            <Wordmark />
+          </span>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <a href="/" aria-current="page" className="sk-plate font-semibold underline underline-offset-4">
               Simulator
             </a>
-            <a href={COMPANION_URL} className="hover:underline hover:underline-offset-4">
+            <a href={COMPANION_URL} className="sk-plate hover:underline hover:underline-offset-4">
               Companion
             </a>
+            <ThemeControl />
           </div>
         </div>
       </nav>
 
       <main className="mx-auto grid max-w-(--sk-content-max) grid-cols-1 gap-(--sk-gutter) px-(--sk-margin) py-6 lg:grid-cols-12 lg:items-start">
         <div className="order-1 flex flex-col gap-3 lg:sticky lg:top-6 lg:col-span-7">
-          <div className="flex justify-center rounded-sm bg-paper-2 px-4 py-6 md:px-12 md:py-8">
+          <div className="sk-bench flex justify-center rounded-sm bg-paper-2 px-4 py-6 md:px-12 md:py-8">
             <Watch
               face={face}
               pressed={watch.pressed}
@@ -264,7 +268,7 @@ function ActiveWatch() {
           <p className="sr-only" aria-live="polite">
             {face.spoken}
           </p>
-          <p className="bg-paper text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
+          <p className="sk-plate bg-paper text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
         </div>
 
         <div className="order-2 flex flex-col gap-8 lg:col-span-5">
@@ -279,7 +283,7 @@ function ActiveWatch() {
               </p>
             )}
             {progress && (
-              <div className="bg-paper" data-testid="pin-readout">
+              <div className="sk-plate bg-paper" data-testid="pin-readout">
                 <p className="font-mono text-32 leading-tight tabular text-ink">{progress.pattern}</p>
                 <p className="text-14 text-graphite">{progress.line}</p>
               </div>
@@ -369,8 +373,9 @@ export default function App() {
   useEffect(() => {
     void bootWatch().then((r) => setBoot(r.kind))
   }, [])
+  let screen
   if (boot === 'loading') {
-    return (
+    screen = (
       <div className="flex min-h-svh flex-col items-center justify-center gap-6 px-(--sk-margin)">
         <Wordmark />
         <p className="flex items-center gap-3 text-16 text-graphite">
@@ -379,7 +384,15 @@ export default function App() {
         </p>
       </div>
     )
+  } else if (boot === 'blocked') {
+    screen = <AlreadyOpen />
+  } else {
+    screen = <ActiveWatch />
   }
-  if (boot === 'blocked') return <AlreadyOpen />
-  return <ActiveWatch />
+  return (
+    <ThemeRoot>
+      <DarkGround />
+      {screen}
+    </ThemeRoot>
+  )
 }

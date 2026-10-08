@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
+@import "./styles/dark.css";
 
 /* Tailwind and shadcn names mapped onto the SEKUND tokens. No raw values here: edit tokens.css. */
 @theme inline {
