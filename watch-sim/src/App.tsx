@@ -62,14 +62,19 @@ class SceneBoundary extends Component<{ onError(): void; children: React.ReactNo
 
 type WatchProps = React.ComponentProps<typeof Watch>
 
-/** The 3D watch where WebGL allows it. The 2D watch shows until its first frame and stays as the fallback. */
-function WatchStage({ reducedMotion, ...props }: WatchProps & { reducedMotion: boolean }) {
+/**
+ * The 3D watch where WebGL allows it. The 2D watch shows until its first frame and stays as the fallback.
+ * The scene loads only once the SE has booted: the hidden combo is ignored until then.
+ */
+function WatchStage({ reducedMotion, booted, ...props }: WatchProps & { reducedMotion: boolean; booted: boolean }) {
   const view = useMemo(() => chooseView(window.location.search, { reducedMotion, webgl: probeWebgl() }), [reducedMotion])
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
+  const [started, setStarted] = useState(booted)
+  if (booted && !started) setStarted(true)
   const onReady = useCallback(() => setReady(true), [])
   const onFail = useCallback(() => setFailed(true), [])
-  const use3d = view === '3d' && !failed
+  const use3d = view === '3d' && !failed && started
   const shown = use3d && ready ? '3d' : '2d'
   return (
     <div className="relative flex w-full justify-center" data-view={shown}>
@@ -305,6 +310,7 @@ function ActiveWatch() {
               onPress={watch.onPress}
               onRelease={watch.onRelease}
               reducedMotion={reducedMotion}
+              booted={state.ready || wiped || bootError !== null}
             />
           </div>
           <p className="sr-only" aria-live="polite">
