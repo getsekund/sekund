@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
+import { DotLoader } from '@/components/dot-loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -58,7 +59,7 @@ function Section({ title, aside, children }: { title: string; aside?: React.Reac
   return (
     <section className="flex flex-col gap-3">
       <div className="flex min-h-(--sk-chip-h) items-center justify-between gap-3">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-24 font-semibold leading-snug">{title}</h2>
         {aside}
       </div>
       {children}
@@ -111,35 +112,24 @@ function Legend({ controls, normal }: { controls: Record<Control, string | null>
   )
 }
 
-function CompanionLink() {
-  const link = useLink()
-  const relayUp = link.state === 'open'
+function linkCopy(relayUp: boolean, peer: boolean) {
+  if (!relayUp) {
+    return (
+      <>
+        The local relay stands in for Bluetooth. Run <Mono className="text-ink">pnpm relay</Mono>. The watch connects to{' '}
+        <Mono className="text-ink">{relayUrl}</Mono> on its own.
+      </>
+    )
+  }
+  if (peer) return 'The companion is connected. Its requests appear on the watch once Secure Mode is unlocked.'
   return (
-    <Section
-      title="Companion link"
-      aside={
-        <Badge variant={link.peer ? 'ink' : 'idle'}>{!relayUp ? 'No relay' : link.peer ? 'Connected' : 'No app'}</Badge>
-      }
-    >
-      <p className="text-sm text-graphite">
-        {!relayUp ? (
-          <>
-            The local relay stands in for Bluetooth. Run <Mono className="text-ink">pnpm relay</Mono>; the watch connects to{' '}
-            <Mono className="text-ink">{relayUrl}</Mono> on its own.
-          </>
-        ) : link.peer ? (
-          'The companion is connected. Its requests appear on the watch once Secure Mode is unlocked.'
-        ) : (
-          <>
-            Relay running. Open the companion at{' '}
-            <a className="text-ink underline underline-offset-4" href={COMPANION_URL}>
-              {COMPANION_URL.replace('http://', '')}
-            </a>{' '}
-            to send a transfer.
-          </>
-        )}
-      </p>
-    </Section>
+    <>
+      Relay running. Open the companion at{' '}
+      <a className="text-ink underline underline-offset-4" href={COMPANION_URL}>
+        {COMPANION_URL.replace('http://', '')}
+      </a>{' '}
+      to send a transfer.
+    </>
   )
 }
 
@@ -199,14 +189,20 @@ function EventLog({ entries }: { entries: readonly LogEntry[] }) {
   )
 }
 
+function Wordmark({ className }: { className?: string }) {
+  return (
+    <svg className={cn('w-24 fill-ink', className)} viewBox={WORDMARK_VIEWBOX} role="img" aria-label="SEKUND">
+      <path d={WORDMARK_PATH} />
+    </svg>
+  )
+}
+
 function AlreadyOpen() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-(--sk-margin) text-center">
-      <svg className="w-24 fill-ink" viewBox={WORDMARK_VIEWBOX} role="img" aria-label="SEKUND">
-        <path d={WORDMARK_PATH} />
-      </svg>
-      <h1 className="font-mono text-20 tracking-caps">WATCH ALREADY OPEN</h1>
-      <p className="max-w-[40ch] text-16 text-graphite">
+      <Wordmark />
+      <h1 className="text-32 font-semibold leading-tight tracking-display">Watch already open</h1>
+      <p className="max-w-[42ch] text-16 text-graphite">
         Another tab in this browser owns the watch, the simulated secure element, and the relay seat. Close it, or use that tab.
       </p>
       <p className="font-mono text-14 text-graphite">Room {identity.roomId}</p>
@@ -229,14 +225,14 @@ function ActiveWatch() {
 
   const wiped = state.screen.kind === 'wiped'
   const pending = state.request ? secondsLeft(state) : null
+  const link = useLink()
+  const relayUp = link.state === 'open'
 
   return (
     <div className="min-h-dvh">
       <nav className="border-b border-rule">
         <div className="mx-auto flex h-(--sk-nav-h) max-w-(--sk-content-max) items-center justify-between px-(--sk-margin)">
-          <svg className="w-24 fill-ink" viewBox={WORDMARK_VIEWBOX} role="img" aria-label="SEKUND">
-            <path d={WORDMARK_PATH} />
-          </svg>
+          <Wordmark />
           <div className="flex gap-6 text-sm">
             <a href="/" aria-current="page" className="font-semibold underline underline-offset-4">
               Simulator
@@ -270,13 +266,13 @@ function ActiveWatch() {
               Press A + D
             </Button>
           </div>
-          <p className="text-sm text-graphite">The secure element in this simulator is software. The signatures are real.</p>
+          <p className="text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
         </div>
 
         <div className="flex flex-col gap-8 lg:col-span-5">
-          <header className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Watch simulator</h1>
-            <p className="text-sm text-graphite">Solana devnet. Requests come from the companion; approval happens only here.</p>
+          <header className="flex flex-col gap-2">
+            <h1 className="text-32 font-semibold leading-tight tracking-display">Watch simulator</h1>
+            <p className="text-16 text-graphite">Solana devnet. Requests come from the companion. Approval happens only here.</p>
           </header>
 
           {bootError && (
@@ -298,43 +294,42 @@ function ActiveWatch() {
             </label>
           </Section>
 
-          <CompanionLink />
-
-          <Section title="Room">
-            <p className="text-sm text-graphite">
-              Demo room <Mono className="text-ink">{identity.roomId}</Mono>. The companion must use the same{' '}
-              <Mono className="text-ink">?room=</Mono> value. Override with the query string; default is sekund-demo.
-            </p>
-          </Section>
-
           <Section
-            title="Secure element"
-            aside={wiped ? <Badge variant="stop">Locked</Badge> : pending !== null ? <Badge variant="waiting">Waiting</Badge> : null}
+            title="This session"
+            aside={
+              wiped ? (
+                <Badge variant="stop">LOCKED</Badge>
+              ) : pending !== null ? (
+                <Badge variant="waiting">WAITING</Badge>
+              ) : link.peer ? (
+                <Badge variant="ink">CONNECTED</Badge>
+              ) : null
+            }
           >
-            <dl className="grid grid-cols-[var(--sk-dt-width)_1fr] gap-x-4 gap-y-1.5 text-sm">
-              <dt className="text-graphite">Profile</dt>
-              <dd>{state.profile ? `${state.profile}, simulated` : 'Starting'}</dd>
-              <dt className="text-graphite">Wallet</dt>
-              <dd>{!state.ready ? 'Starting' : wiped ? 'Key erased' : state.address ? 'Key present' : 'Not set up'}</dd>
-              <dt className="text-graphite">Session</dt>
-              <dd>{state.session ? 'Open' : 'Closed'}</dd>
-              <dt className="text-graphite">PIN tries</dt>
-              <dd className="font-mono tabular">{state.hasPin ? `${state.attemptsLeft} left` : 'No PIN set'}</dd>
-              <dt className="text-graphite">Max size</dt>
-              <dd className="font-mono tabular">{state.maxMessageBytes ? `${state.maxMessageBytes} bytes` : 'Starting'}</dd>
-              <dt className="text-graphite">Request</dt>
-              <dd className="font-mono tabular">{pending === null ? 'None' : `${pending} s left on the watch`}</dd>
-              {state.address && (
-                <>
-                  <dt className="text-graphite">Address</dt>
-                  <dd className="font-mono break-words">{grouped(state.address)}</dd>
-                </>
-              )}
+            <p className="text-14 text-graphite">{linkCopy(relayUp, link.peer)}</p>
+            <dl>
+              {(
+                [
+                  { label: 'Room', value: identity.roomId, mono: true },
+                  { label: 'Profile', value: state.profile ? `${state.profile}, simulated` : 'Starting', mono: false },
+                  { label: 'Wallet', value: !state.ready ? 'Starting' : wiped ? 'Key erased' : state.address ? 'Key present' : 'Not set up', mono: false },
+                  { label: 'Session', value: state.session ? 'Open' : 'Closed', mono: false },
+                  { label: 'PIN tries', value: state.hasPin ? `${state.attemptsLeft} left` : 'No PIN set', mono: true },
+                  { label: 'Max size', value: state.maxMessageBytes ? `${state.maxMessageBytes} bytes` : 'Starting', mono: true },
+                  { label: 'Request', value: pending === null ? 'None' : `${pending} s left on the watch`, mono: true },
+                  ...(state.address ? [{ label: 'Address', value: grouped(state.address), mono: true }] : []),
+                ]
+              ).map((row) => (
+                <div key={row.label} className="grid grid-cols-[var(--sk-dt-width)_1fr] gap-3 border-t border-rule py-2 text-14">
+                  <dt className="text-graphite">{row.label}</dt>
+                  <dd className={row.mono ? 'font-mono break-words tabular' : undefined}>{row.value}</dd>
+                </div>
+              ))}
             </dl>
             {state.ready && !state.hasPin && !wiped && (
-              <p className="text-sm text-graphite">
-                First use. Hold A and D, choose a four-digit PIN, then enter it again to confirm. The secure
-                element creates a devnet key that stays in this browser.
+              <p className="text-14 text-graphite">
+                First use. Hold A and D, choose a four-digit PIN, then enter it again to confirm. The secure element creates a
+                devnet key that stays in this browser.
               </p>
             )}
             {wiped && <ResetSimulator />}
@@ -354,7 +349,13 @@ export default function App() {
   }, [])
   if (boot === 'loading') {
     return (
-      <div className="flex min-h-svh items-center justify-center text-14 text-graphite">Starting the watch…</div>
+      <div className="flex min-h-svh flex-col items-center justify-center gap-6 px-(--sk-margin)">
+        <Wordmark />
+        <p className="flex items-center gap-3 text-16 text-graphite">
+          <DotLoader />
+          Starting the watch.
+        </p>
+      </div>
     )
   }
   if (boot === 'blocked') return <AlreadyOpen />

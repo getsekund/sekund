@@ -4,7 +4,7 @@ The SEKUND face in the browser: a soft-rectangle resin watch with four plain pus
 
 It speaks the real protocol (`docs/PROTOCOL.md`). Frames arrive over the local relay and pass the shared `RequestGuard` from `@sekund/protocol`. The simulated SE from `@sekund/se-sim` signs them, running in a Web Worker with IndexedDB.
 
-The visuals follow the brand system in DESIGN.md: its tokens, watch face spec and Secure Mode state screens. The page is light only, Spot appears only where a person must stop, and there are no gradients, glow or backlight.
+The visuals follow the brand system in DESIGN.md: tokens, the watch face, Secure Mode screens, and the page around them (paper bench, Archivo titles, status chips in the watch's own words). The watch face is the one dot surface on this page. The boot screen uses the section 10 paper loader beside "Starting the watch." and does not add a second field behind the bench. The page is light only, Spot appears only where a person must stop, and there are no gradients, glow or backlight.
 
 ## Run
 

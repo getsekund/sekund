@@ -155,3 +155,32 @@
     --sk-dur-state: 0ms;
   }
 }
+
+/* Dots: the one motif. DESIGN.md section 10. The watch face is the dot surface
+   on this page; the loader below is only the boot screen, before the face is shown. */
+:root {
+  --sk-dot-pitch-fine: 4px;
+  --sk-dot-pitch: 6px;
+  --sk-dot-pitch-terrain: 8px;
+  --sk-dot-pitch-title: 9px;
+  --sk-dot-size: 0.78;
+  --sk-dot-size-max: 0.9;
+  --sk-dot-size-lcd: 0.8;
+  --sk-dot-levels: 4;
+  --sk-dot-bayer: 8;
+  --sk-dot-coverage-max: 0.25;
+  --sk-dot-clearance: 2;
+  --sk-dot-ink: var(--sk-ink);
+  --sk-dot-lcd-on: var(--sk-segment);
+  --sk-dot-lcd-off: var(--sk-ghost);
+  --sk-dot-loader-off: var(--sk-rule);
+  --sk-dot-period: 8s;
+  --sk-dot-fps: 24;
+  --sk-dot-loader-period: 2400ms;
+  --sk-dot-loader-fps: 10;
+  --sk-dot-resolve: 480ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --sk-dot-fps: 0; --sk-dot-loader-fps: 0; --sk-dot-resolve: 0ms; }
+}

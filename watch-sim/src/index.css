@@ -40,6 +40,16 @@
   --text-lg: var(--sk-text-20);
   --text-xl: var(--sk-text-24);
   --text-2xl: var(--sk-text-32);
+  --text-12: var(--sk-text-12);
+  --text-14: var(--sk-text-14);
+  --text-16: var(--sk-text-16);
+  --text-20: var(--sk-text-20);
+  --text-24: var(--sk-text-24);
+  --text-32: var(--sk-text-32);
+  --leading-tight: var(--sk-leading-tight);
+  --leading-snug: var(--sk-leading-snug);
+  --tracking-caps: var(--sk-tracking-caps);
+  --tracking-display: var(--sk-tracking-display);
   --radius-xs: var(--sk-radius);
   --radius-sm: var(--sk-radius);
   --radius-md: var(--sk-radius);
