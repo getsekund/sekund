@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
 import { DotLoader } from '@/components/dot-loader'
 import { ThemeControl, ThemeRoot } from '@/components/theme-chrome'
@@ -15,6 +15,9 @@ import { secondsLeft } from '@/machine/machine'
 import { bootWatch, controller, identity, relayUrl, startSecureElement, transport } from '@/services'
 import { cn } from '@/lib/utils'
 import { KEYS, useWatch } from '@/useWatch'
+import { chooseView, probeWebgl } from '@/watch3d/support'
+
+const Watch3D = lazy(() => import('@/watch3d/WatchScene'))
 
 const COMPANION_URL = `http://127.0.0.1:${COMPANION_PORT}`
 const PUSHER_LABELS: Record<Pusher, string> = {
@@ -41,6 +44,44 @@ function useReducedMotion(): boolean {
       return () => m.removeEventListener('change', fn)
     },
     () => window.matchMedia(query).matches,
+  )
+}
+
+class SceneBoundary extends Component<{ onError(): void; children: React.ReactNode }, { failed: boolean }> {
+  override state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  override componentDidCatch() {
+    this.props.onError()
+  }
+  override render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
+type WatchProps = React.ComponentProps<typeof Watch>
+
+/** The 3D watch where WebGL allows it. The 2D watch shows until its first frame and stays as the fallback. */
+function WatchStage({ reducedMotion, ...props }: WatchProps & { reducedMotion: boolean }) {
+  const view = useMemo(() => chooseView(window.location.search, { reducedMotion, webgl: probeWebgl() }), [reducedMotion])
+  const [failed, setFailed] = useState(false)
+  const [ready, setReady] = useState(false)
+  const onReady = useCallback(() => setReady(true), [])
+  const onFail = useCallback(() => setFailed(true), [])
+  const use3d = view === '3d' && !failed
+  const shown = use3d && ready ? '3d' : '2d'
+  return (
+    <div className="relative flex w-full justify-center" data-view={shown}>
+      {use3d && (
+        <SceneBoundary onError={onFail}>
+          <Suspense fallback={null}>
+            <Watch3D {...props} ready={ready} onReady={onReady} onLost={onFail} />
+          </Suspense>
+        </SceneBoundary>
+      )}
+      {shown === '2d' && <Watch {...props} />}
+    </div>
   )
 }
 
@@ -257,12 +298,13 @@ function ActiveWatch() {
       <main className="mx-auto grid max-w-(--sk-content-max) grid-cols-1 gap-(--sk-gutter) px-(--sk-margin) py-6 lg:grid-cols-12 lg:items-start">
         <div className="order-1 flex flex-col gap-3 lg:sticky lg:top-6 lg:col-span-7">
           <div className="sk-bench flex justify-center rounded-sm bg-paper-2 px-4 py-6 md:px-12 md:py-8">
-            <Watch
+            <WatchStage
               face={face}
               pressed={watch.pressed}
               labels={PUSHER_LABELS}
               onPress={watch.onPress}
               onRelease={watch.onRelease}
+              reducedMotion={reducedMotion}
             />
           </div>
           <p className="sr-only" aria-live="polite">

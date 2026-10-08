@@ -45,6 +45,12 @@
 }
 .sk-pusher-hit:focus-visible { outline: var(--sk-focus-ring); outline-offset: var(--sk-focus-offset); }
 
+/* 3D watch: drag tilts, vertical swipes still scroll on touch. Pointer clicks go to the model. */
+.sk-watch-3d { touch-action: pan-y; cursor: grab; }
+.sk-watch-3d[data-dragging='true'] { cursor: grabbing; }
+.sk-watch-3d[data-hover='pusher'] { cursor: pointer; }
+.sk-pusher-focus { pointer-events: none; }
+
 /* Keycap letters on the bench beside each pusher, never on the case. */
 .sk-keyhint {
   position: absolute;

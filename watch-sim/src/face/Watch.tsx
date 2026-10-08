@@ -14,19 +14,19 @@ interface Props {
 }
 
 /* Geometry from DESIGN.md §5, in viewBox units. */
-const VIEW = { w: 360, h: 470 }
-const CASE = { x: 32, y: 52, w: 296, h: 366, r: 40 }
-const LCD = { x: 70, y: 116, w: 220, h: 236 }
-const PUSHER = { w: 20, h: 36 }
-const PUSHERS: { id: Button; side: 'left' | 'right'; y: number }[] = [
+export const VIEW = { w: 360, h: 470 }
+export const CASE = { x: 32, y: 52, w: 296, h: 366, r: 40 }
+export const LCD = { x: 70, y: 116, w: 220, h: 236 }
+export const PUSHER = { w: 20, h: 36 }
+export const PUSHERS: { id: Button; side: 'left' | 'right'; y: number }[] = [
   { id: 'A', side: 'left', y: 147 },
   { id: 'B', side: 'left', y: 287 },
   { id: 'C', side: 'right', y: 147 },
   { id: 'D', side: 'right', y: 287 },
 ]
-const pusherX = (side: 'left' | 'right') => (side === 'left' ? 16 : 324)
+export const pusherX = (side: 'left' | 'right') => (side === 'left' ? 16 : 324)
 
-const pct = (v: number, of: number) => `${(v / of) * 100}%`
+export const pct = (v: number, of: number) => `${(v / of) * 100}%`
 
 function Annunciator({ x, y, dir, on }: { x: number; y: number; dir: 'r' | 'l'; on: boolean }) {
   const s = 4
@@ -64,6 +64,21 @@ function Lcd({ face }: { face: FaceContent }) {
       <Annunciator x={x + w - 5} y={y + 53} dir="l" on={a.C} />
       <Annunciator x={x + w - 5} y={y + 193} dir="l" on={a.D} />
     </g>
+  )
+}
+
+/** The LCD alone, cropped to its window, for the 3D face. */
+export function LcdPanel({ face, width, height }: { face: FaceContent; width: number; height: number }) {
+  return (
+    <svg
+      className="block"
+      width={width}
+      height={height}
+      viewBox={`${LCD.x} ${LCD.y} ${LCD.w} ${LCD.h}`}
+      aria-hidden="true"
+    >
+      <Lcd face={face} />
+    </svg>
   )
 }
 
