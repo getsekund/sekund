@@ -30,9 +30,11 @@ test.describe("watch simulator buttons", () => {
   async function unlock(watchPage: Page) {
     await watchPage.goto(WATCH_URL);
     await watchPage.locator("body").click();
-    await watchPage.waitForTimeout(600);
+    const hint = watchPage.getByTestId("step-hint");
+    await expect(hint).toHaveText("Hold A and D together to enter Secure.");
     await press(watchPage, ...COMBO);
     await watchPage.waitForTimeout(1100);
+    await expect(hint).toHaveText("A lowers the digit. B raises it. Hold C and D together to confirm.");
     await enterPin(watchPage, PIN);
     // First use: REPEAT PIN
     await enterPin(watchPage, PIN);
@@ -60,6 +62,7 @@ test.describe("watch simulator buttons", () => {
     await page.getByRole("button", { name: "Send to watch" }).click();
     await expect(card(page)).toHaveAttribute("data-chip", "WAITING");
     await reviewAll(watchPage);
+    await expect(watchPage.getByTestId("step-hint")).toHaveText("C rejects. D approves.");
     await press(watchPage, "d");
     await expect(card(page)).toHaveAttribute("data-chip", "CONFIRMED", { timeout: 20_000 });
     const verified = await verifyBroadcast(devnet.sent[0]!, watchAddress);

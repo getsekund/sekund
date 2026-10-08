@@ -6,6 +6,25 @@ export type Controls = Record<Control, string | null>
 
 const NONE: Controls = { A: null, B: null, C: null, D: null, 'C+D': null }
 
+/** Short hint for the step on screen. Other screens stay quiet. */
+export function stepHint(state: WatchState): string | null {
+  const s = state.screen
+  switch (s.kind) {
+    case 'normal':
+      if (!state.onWrist) return 'Turn the wrist on. Then hold A and D together to enter Secure.'
+      return 'Hold A and D together to enter Secure.'
+    case 'entry':
+    case 'pin':
+      return 'A lowers the digit. B raises it. Hold C and D together to confirm.'
+    case 'review':
+      return s.page === REVIEW_PAGES.length - 1
+        ? 'C rejects. D approves.'
+        : 'B shows the next field. C rejects. D approves on the last page.'
+    default:
+      return null
+  }
+}
+
 /**
  * What each pusher does in the current state; null when it does nothing. Drives the
  * legend beside the watch and the LCD annunciators (lit only while a pusher acts).

@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { renderFace } from '@/face/screens'
 import { Watch } from '@/face/Watch'
 import { WORDMARK_PATH, WORDMARK_VIEWBOX } from '@/face/wordmark'
-import { type Control, controlsFor } from '@/hints'
+import { type Control, controlsFor, stepHint } from '@/hints'
 import type { Button as Pusher } from '@/machine/gestures'
 import type { LogEntry } from '@/machine/log'
 import { secondsLeft } from '@/machine/machine'
@@ -216,6 +216,7 @@ function ActiveWatch() {
   const reducedMotion = useReducedMotion()
   const face = useMemo(() => renderFace(state, { reducedMotion }), [state, reducedMotion])
   const controls = controlsFor(state)
+  const hint = stepHint(state)
   const log = useSyncExternalStore(controller!.subscribe, controller!.getLog)
   const [bootError, setBootError] = useState<string | null>(null)
 
@@ -258,6 +259,11 @@ function ActiveWatch() {
           <p className="sr-only" aria-live="polite">
             {face.spoken}
           </p>
+          {hint && (
+            <p className="text-14 text-graphite" data-testid="step-hint">
+              {hint}
+            </p>
+          )}
           <div className="flex flex-wrap gap-3 md:hidden">
             <Button variant="secondary" size="sm" onClick={() => watch.chord('C', 'D')}>
               Press C + D
