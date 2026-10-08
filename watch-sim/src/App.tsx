@@ -237,9 +237,9 @@ function ActiveWatch() {
   return (
     <div className="min-h-dvh">
       <nav className="border-b border-rule">
-        <div className="mx-auto flex h-(--sk-nav-h) max-w-(--sk-content-max) items-center justify-between px-(--sk-margin)">
+        <div className="mx-auto flex min-h-(--sk-nav-h) max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">
           <Wordmark />
-          <div className="flex gap-6 text-sm">
+          <div className="flex gap-4 text-sm">
             <a href="/" aria-current="page" className="font-semibold underline underline-offset-4">
               Simulator
             </a>
@@ -251,7 +251,7 @@ function ActiveWatch() {
       </nav>
 
       <main className="mx-auto grid max-w-(--sk-content-max) grid-cols-1 gap-(--sk-gutter) px-(--sk-margin) py-6 lg:grid-cols-12 lg:items-start">
-        <div className="flex flex-col gap-3 lg:sticky lg:top-6 lg:col-span-7">
+        <div className="order-1 flex flex-col gap-3 lg:sticky lg:top-6 lg:col-span-7">
           <div className="flex justify-center rounded-sm bg-paper-2 px-4 py-6 md:px-12 md:py-8">
             <Watch
               face={face}
@@ -264,52 +264,47 @@ function ActiveWatch() {
           <p className="sr-only" aria-live="polite">
             {face.spoken}
           </p>
-          {hint && (
-            <p className="bg-paper text-16 text-ink" data-testid="step-hint" aria-live="polite">
-              {hint}
-            </p>
-          )}
-          {progress && (
-            <div className="bg-paper" data-testid="pin-readout">
-              <p className="font-mono text-32 leading-tight tabular text-ink">{progress.pattern}</p>
-              <p className="text-14 text-graphite">{progress.line}</p>
-            </div>
-          )}
-          {actions.length > 0 && (
-            <div className="flex flex-wrap gap-3 md:hidden">
-              {actions.map((action) => (
-                <Button
-                  key={action.label}
-                  variant={action.tone === 'primary' ? 'default' : 'secondary'}
-                  onClick={() => watch.chord(...action.buttons)}
-                >
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
-          <div className="lg:hidden">
-            <Legend controls={controls} normal={state.screen.kind === 'normal'} />
-          </div>
           <p className="bg-paper text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
         </div>
 
-        <div className="flex flex-col gap-8 lg:col-span-5">
-          <header className="flex flex-col gap-2">
-            <h1 className="text-32 font-semibold leading-tight tracking-display">Watch simulator</h1>
-            <p className="text-16 text-graphite">Solana devnet. Requests come from the companion. Approval happens only here.</p>
-          </header>
-
+        <div className="order-2 flex flex-col gap-8 lg:col-span-5">
+          <div className="flex flex-col gap-3">
+            <header className="flex flex-col gap-2">
+              <h1 className="text-32 font-semibold leading-tight tracking-display">Watch simulator</h1>
+              <p className="text-16 text-graphite">Solana devnet. Requests come from the companion. Approval happens only here.</p>
+            </header>
+            {hint && (
+              <p className="bg-paper text-16 text-ink" data-testid="step-hint" aria-live="polite">
+                {hint}
+              </p>
+            )}
+            {progress && (
+              <div className="bg-paper" data-testid="pin-readout">
+                <p className="font-mono text-32 leading-tight tabular text-ink">{progress.pattern}</p>
+                <p className="text-14 text-graphite">{progress.line}</p>
+              </div>
+            )}
+            {actions.length > 0 && (
+              <div className="flex flex-wrap gap-3 md:hidden">
+                {actions.map((action) => (
+                  <Button
+                    key={action.label}
+                    variant={action.tone === 'primary' ? 'default' : 'secondary'}
+                    onClick={() => watch.chord(...action.buttons)}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Legend controls={controls} normal={state.screen.kind === 'normal'} />
           {bootError && (
             <p className="border-l-2 border-spot pl-3 text-sm text-spot">
               <span className="font-semibold">The simulated secure element did not start.</span> {bootError}. Use a browser
               with WebCrypto Ed25519 and IndexedDB (Chrome 137+, Firefox, Safari), then reload.
             </p>
           )}
-
-          <div className="hidden lg:block">
-            <Legend controls={controls} normal={state.screen.kind === 'normal'} />
-          </div>
 
           <Section title="Wrist">
             <label className="flex min-h-(--sk-control-h) cursor-pointer items-center justify-between gap-4">
