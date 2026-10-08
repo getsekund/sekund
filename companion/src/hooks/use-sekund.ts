@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRelayTransport, type GetAddressResult, type TransportState, type WatchStatus } from "@sekund/protocol";
 import { SekundClient } from "@/lib/sekund-client";
 import { companionIdentityFromLocation } from "@/lib/session";
@@ -14,7 +14,7 @@ export interface SekundConnection {
 }
 
 export function useSekund(): SekundConnection {
-  const identity = companionIdentityFromLocation();
+  const identity = useMemo(() => companionIdentityFromLocation(), []);
   const [client, setClient] = useState<SekundClient | null>(null);
   const [relay, setRelay] = useState<TransportState>("connecting");
   const [watchConnected, setWatchConnected] = useState(false);

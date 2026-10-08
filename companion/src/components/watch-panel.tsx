@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { address as toAddress } from "@solana/kit";
 import { formatLamports, type GetAddressResult, type TransportState, type WatchStatus } from "@sekund/protocol";
+import { DotLoader } from "@/components/dot-loader";
 import { InlineError } from "@/components/inline-error";
 import { Button } from "@/components/ui/button";
 import { groupAddress } from "@/lib/request-view";
@@ -81,7 +82,10 @@ export function WatchPanel({ rpc, relay, watchConnected, watchStatus, wallet, wa
           ) : wallet?.status === "NO_WALLET" ? (
             <p>The watch has no key yet. Set it up on the watch first.</p>
           ) : (
-            <p>Asking the watch for its address.</p>
+            <div className="flex items-center gap-3" data-testid="watch-asking">
+              <DotLoader label="Asking the watch" />
+              <p>Asking the watch for its address.</p>
+            </div>
           )}
         </div>
       ) : (

@@ -45,9 +45,22 @@ export async function connectHeadlessWatch(): Promise<E2eWatch> {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("relay not reachable on ws://127.0.0.1:4319")), 10_000);
     transport.onState((state) => {
-      if (state === "open") {
+      if (state === "rejected") {
         clearTimeout(timer);
-        resolve();
+        reject(new Error("watch seat rejected: room already has a watch"));
+        return;
+      }
+      if (state === "open") {
+        // Seat rejection is sent after onopen; wait one macrotask before accepting.
+        setTimeout(() => {
+          if (transport.state === "rejected") {
+            clearTimeout(timer);
+            reject(new Error("watch seat rejected: room already has a watch"));
+          } else if (transport.state === "open") {
+            clearTimeout(timer);
+            resolve();
+          }
+        }, 0);
       }
     });
   });
