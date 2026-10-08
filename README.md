@@ -47,7 +47,7 @@ pnpm dev
 
 Open both apps in separate windows (same `?room=` value; default `sekund-demo`). Unlock the watch with its PIN, then send a transfer from the companion and approve it on the watch. A second watch tab shows WATCH ALREADY OPEN and does not connect.
 
-To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`. Until `watch-sim/` is on `main`, pnpm prints "No projects matched" for it and `pnpm dev` starts only the relay and the companion; use the headless watch below.
+To run them separately: `pnpm relay`, `pnpm dev:companion`, `pnpm dev:watch`.
 
 Without the watch simulator, a terminal stand-in can answer the companion over the same link (ephemeral key, for development only):
 
