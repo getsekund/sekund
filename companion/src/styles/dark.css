@@ -46,6 +46,41 @@ html[data-theme="dark"] :is(h1, h2, h3, p, label, dt, dd, li) {
   background-color: var(--sk-paper);
 }
 
+/* Status, hints, and labels keep a full line box so wraps do not collide. */
+html[data-theme="dark"] :is(p, label, dt, dd, li, [role="alert"]) {
+  line-height: 1.5;
+}
+
+html[data-theme="dark"] :is(p, label, dt, dd, li, [role="alert"]) :is(code, strong, em, a, small) {
+  line-height: inherit;
+  background-color: transparent;
+}
+
+html[data-theme="dark"] [role="alert"] {
+  background-color: var(--sk-paper);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+html[data-theme="dark"] [role="alert"] strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  background-color: var(--sk-paper);
+}
+
+html[data-theme="dark"] [role="alert"] code {
+  white-space: nowrap;
+  background-color: var(--sk-paper);
+}
+
+html[data-theme="dark"] [data-chip="NO WATCH"],
+html[data-theme="dark"] [data-chip="CONNECTED"],
+html[data-theme="dark"] [data-chip="SENDING"],
+html[data-theme="dark"] [data-chip="SIGNED"],
+html[data-theme="dark"] [data-chip="WAITING"] {
+  background-color: var(--sk-paper);
+}
+
 html[data-theme="dark"] .sk-bench {
   background-color: transparent;
 }
