@@ -93,8 +93,9 @@ pnpm e2e
 |---|---|---|---|
 | `companion/e2e/companion.spec.ts` | Headless watch over the real relay (same `RequestGuard` and simulated SE, buttons scripted) | Not connected, waiting with countdown, approve with verified signature and explorer link, reject, expire and send again, devnet error | Passing |
 | `companion/e2e/watch-sim.spec.ts` | The watch simulator page: Secure Mode combination, NEW/REPEAT PIN, review pages, APPROVE / REJECT with keys `a` `b` `c` `d` | Approve with verified signature, reject, expire | Passing |
+| `companion/e2e/watch-3d.spec.ts` | The 3D watch (`?view=3d`): mouse clicks on the model's pushers | The WebGL canvas and LCD mount; 3D pushers change the PIN digit | Passing |
 
-`?reviewSeconds=N` on the companion URL caps the review window at N seconds for the expiry tests. It can only shorten the window. `SEKUND_E2E_PIN` (default `1234`) and `SEKUND_E2E_COMBO` (default `a+d`) configure the watch-simulator spec.
+`watch-sim.spec.ts` runs on the 2D fallback (`?view=2d`); `SEKUND_E2E_VIEW=3d` runs the same path on the 3D watch. `?reviewSeconds=N` on the companion URL caps the review window at N seconds for the expiry tests. It can only shorten the window. `SEKUND_E2E_PIN` (default `1234`) and `SEKUND_E2E_COMBO` (default `a+d`) configure the watch-simulator spec.
 
 ## Devnet proof
 

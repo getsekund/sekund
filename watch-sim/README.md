@@ -43,6 +43,12 @@ The pushers sit at A (upper left), B (lower left), C (upper right) and D (lower 
 
 You can click the pushers too. Shift-click latches a pusher, so a mouse can make combinations. On touch screens, press two pushers with two fingers, or use the C+D and A+D buttons under the watch. `W` toggles the wrist.
 
+## 3D watch
+
+Where the browser has fast WebGL, the watch is a real-time 3D model (react-three-fiber, built in code: resin case, recessed LCD window, lugs, strap and four pushers). Drag it to tilt; it springs back to the front. Click or hold the pushers on the model; shift-click and two-finger holds work as on the 2D watch. The LCD on its face is the same component as the 2D LCD, laid out as DOM at its on-screen pixel size, so the segments stay sharp and nothing post-processes it.
+
+The 2D watch stays as the fallback: without WebGL, with software-only WebGL, with `prefers-reduced-motion`, or with `?view=2d` in the URL. `?view=3d` forces the model wherever WebGL exists. The 3D code loads lazily after the SE has booted, and the 2D watch shows until the first 3D frame.
+
 | Screen | Pushers |
 |---|---|
 | Normal | Shows the time and does nothing else. **A+D (hidden) enters Secure Mode.** |
@@ -86,6 +92,7 @@ The side panel shows the wrist toggle, the companion link, the SE state and an e
 | `src/hints.ts` | What each pusher does per state (annunciators and the legend). |
 | `src/services.ts` | Relay transport (role `watch`) and the browser SE. |
 | `src/face/Watch.tsx` | SVG case, strap, pushers and LCD, following the DESIGN.md face geometry (360×470). |
+| `src/watch3d/` | The 3D watch: `WatchScene.tsx` (camera, light, tilt), `WatchModel.tsx`, `Pushers.tsx`, `Face.tsx` (the LCD on the face), `support.ts` (2D or 3D). |
 | `src/face/screens.ts` | State → LCD strings: DSEG14 top line, DSEG7 main digits, two-line dot-matrix strip. |
 | `src/face/strip.ts`, `DotMatrix.tsx`, `glcdfont.ts` | 16×2 strip with the Adafruit 5×7 glcdfont (BSD, `glcdfont-LICENSE.txt`). |
 | `src/face/wordmark.ts` | SEKUND wordmark path. |

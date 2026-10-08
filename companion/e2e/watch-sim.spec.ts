@@ -8,7 +8,8 @@ import { verifyBroadcast } from "./support/verify.ts";
  * review pages, APPROVE / REJECT. Keys a/b/c/d press the pushers; chords are held together.
  */
 
-const WATCH_URL = "http://localhost:4318/?room=sekund-demo";
+// The 2D fallback by default; SEKUND_E2E_VIEW=3d runs the same path on the 3D watch.
+const WATCH_URL = `http://localhost:4318/?room=sekund-demo&view=${process.env.SEKUND_E2E_VIEW ?? "2d"}`;
 const PIN = process.env.SEKUND_E2E_PIN ?? "1234";
 const COMBO = (process.env.SEKUND_E2E_COMBO ?? "a+d").split("+") as Key[];
 type Key = "a" | "b" | "c" | "d";
