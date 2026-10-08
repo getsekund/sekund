@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { address as toAddress, type Address } from "@solana/kit";
 import { RequestList } from "@/components/request-list";
 import { StatusChip } from "@/components/status-chip";
-import { DarkGround, ThemeControl, ThemeRoot } from "@/components/theme-chrome";
+import { ThemeControl, ThemeRoot } from "@/components/theme-chrome";
 import { TransferForm } from "@/components/transfer-form";
 import { WatchPanel } from "@/components/watch-panel";
 import { useSekund } from "@/hooks/use-sekund";
@@ -70,7 +70,6 @@ export default function App() {
 
   return (
     <ThemeRoot>
-    <DarkGround />
     <div className="min-h-svh">
       <header className="border-b border-rule">
         <div className="mx-auto flex min-h-14 max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">

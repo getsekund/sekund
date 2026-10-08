@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { paintDarkDither } from "@/lib/dark-dither";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { installCtaDither } from "@/lib/dark-dither";
 import { applyTheme, readThemeChoice, storeThemeChoice, type ThemeChoice } from "@/lib/theme";
 
 interface ThemeApi {
@@ -21,11 +21,17 @@ export function ThemeRoot({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
 
   useEffect(() => {
-    setDark(applyTheme(choice) === "dark");
+    const resolved = applyTheme(choice);
+    setDark(resolved === "dark");
+    installCtaDither(document.documentElement, resolved === "dark");
     storeThemeChoice(localStorage, choice);
     if (choice !== "system") return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => setDark(applyTheme("system") === "dark");
+    const onChange = () => {
+      const next = applyTheme("system");
+      setDark(next === "dark");
+      installCtaDither(document.documentElement, next === "dark");
+    };
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
   }, [choice]);
@@ -50,23 +56,4 @@ export function ThemeControl() {
       </select>
     </label>
   );
-}
-
-/** Full-viewport pixel dither. Present only while the resolved theme is dark. */
-export function DarkGround() {
-  const { dark } = useThemeApi();
-  const ref = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    if (!dark) return;
-    const canvas = ref.current;
-    if (!canvas) return;
-    const draw = () => paintDarkDither(canvas);
-    draw();
-    window.addEventListener("resize", draw);
-    return () => window.removeEventListener("resize", draw);
-  }, [dark]);
-
-  if (!dark) return null;
-  return <canvas ref={ref} className="sk-dither" aria-hidden="true" />;
 }

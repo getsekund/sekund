@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { COMPANION_PORT, type TransportState } from '@sekund/protocol'
 import { DotLoader } from '@/components/dot-loader'
-import { DarkGround, ThemeControl, ThemeRoot } from '@/components/theme-chrome'
+import { ThemeControl, ThemeRoot } from '@/components/theme-chrome'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -390,9 +390,6 @@ export default function App() {
     screen = <ActiveWatch />
   }
   return (
-    <ThemeRoot>
-      <DarkGround />
-      {screen}
-    </ThemeRoot>
+    <ThemeRoot>{screen}</ThemeRoot>
   )
 }

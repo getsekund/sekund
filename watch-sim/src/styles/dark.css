@@ -1,13 +1,13 @@
 /*
  * Dark theme only. Every rule is under html[data-theme="dark"], so light mode
  * keeps the paper tokens in tokens.css exactly.
- * The dither is the page ground. Plates behind text stay solid, with no blur.
+ * The page is solid black. The Bayer field is only the enabled primary action.
  */
 
 html[data-theme="dark"] {
-  --sk-ground: #07080d;
-  --sk-paper: #12131a;
-  --sk-paper-2: #1a1c26;
+  --sk-ground: #000;
+  --sk-paper: #000;
+  --sk-paper-2: #000;
   --sk-ink: #f3f1e8;
   --sk-graphite: #c5c7ce;
   --sk-line: #9b9da6;
@@ -17,23 +17,11 @@ html[data-theme="dark"] {
   --sk-shadow-key: 0 2px 0 0 #000;
   --sk-shadow-object: 0 28px 36px -24px rgb(0 0 0 / 0.55);
   color-scheme: dark;
-  background-color: var(--sk-ground);
+  background-color: #000;
 }
 
 html[data-theme="dark"] body {
-  background: transparent;
-}
-
-html[data-theme="dark"] .sk-dither {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-
-html[data-theme="dark"] #root {
-  position: relative;
-  z-index: 1;
+  background-color: #000;
 }
 
 /* Solid plates. The dither does not run through these glyphs. */
@@ -97,7 +85,28 @@ html[data-theme="dark"] [data-chip="WAITING"] {
 }
 
 html[data-theme="dark"] .sk-bench {
-  background-color: transparent;
+  background-color: #000;
+}
+
+/* The one primary on-screen action. Other buttons stay flat. */
+html[data-theme="dark"] [data-slot="button"][data-variant="default"]:not(:disabled) {
+  background-color: #000;
+  background-image: var(--sk-cta-dither);
+  background-repeat: repeat;
+  image-rendering: pixelated;
+  color: #f3f1e8;
+  border-color: #f3f1e8;
+  letter-spacing: 0;
+  word-spacing: normal;
+}
+
+html[data-theme="dark"] [data-slot="button"][data-variant="default"]:disabled {
+  opacity: 1;
+  background-image: none;
+  background-color: #000;
+  color: #8b8e98;
+  border-color: #3a3d48;
+  letter-spacing: 0;
 }
 
 html[data-theme="dark"] .sk-logo {
