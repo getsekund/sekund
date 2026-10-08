@@ -3,7 +3,7 @@ import { address, blockhash, type Signature } from "@solana/kit";
 import { createMemoryTransportPair, randomBytes, toBase58 } from "@sekund/protocol";
 import { createInProcessSecureElement } from "@sekund/se-sim";
 import { SekundClient } from "../src/lib/sekund-client.ts";
-import { describeRequest, formatCountdown, groupAddress, parseReviewCap, truncateSignature, type RequestEntry } from "../src/lib/request-view.ts";
+import { describeRequest, formatCountdown, groupAddress, parseReviewCap, statusLine, truncateSignature, type RequestEntry } from "../src/lib/request-view.ts";
 import { sendTransfer } from "../src/lib/transfer-flow.ts";
 import { HeadlessWatch } from "../src/testing/headless-watch.ts";
 
@@ -17,6 +17,11 @@ describe("request card states (DESIGN.md companion chips)", () => {
     expect(view({ stage: { stage: "fetching-blockhash" } }).step).toBe("Fetching a recent blockhash.");
     expect(view({ stage: { stage: "awaiting-approval", requestId: "r", deadline: 1, expiresInMs: 1, messageLength: 150 } }).chip).toBe("WAITING");
     expect(view({ stage: { stage: "broadcasting" }, sentAt: 0, answeredAt: 24_000 })).toMatchObject({ chip: "SIGNED", summary: "Approved on the watch after 24 s.", step: "Broadcasting to devnet." });
+    expect(statusLine(view({ stage: { stage: "broadcasting" }, sentAt: 0, answeredAt: 24_000 }))).toBe(
+      "Approved on the watch after 24 s. Broadcasting to devnet.",
+    );
+    expect(statusLine(view({ stage: { stage: "awaiting-approval", requestId: "r", deadline: 1, expiresInMs: 1, messageLength: 150 } }))).toContain("Waiting for the watch");
+    expect(statusLine(view({ outcome: { kind: "confirmed", signature: sig, explorerUrl: "x", requestId: "r" } }))).toContain("Confirmed on devnet.");
     expect(view({ stage: { stage: "confirming", signature: sig } })).toMatchObject({ chip: "SIGNED", signature: sig });
     expect(view({ outcome: { kind: "confirmed", signature: sig, explorerUrl: "x", requestId: "r" } })).toMatchObject({ chip: "CONFIRMED", signature: sig, action: "new" });
     expect(view({ outcome: { kind: "watch-refused", status: "REJECTED", requestId: "r" } })).toMatchObject({ chip: "REJECTED", action: "again" });

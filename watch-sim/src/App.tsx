@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { renderFace } from '@/face/screens'
 import { Watch } from '@/face/Watch'
 import { WORDMARK_PATH, WORDMARK_VIEWBOX } from '@/face/wordmark'
-import { type Control, controlsFor, stepHint } from '@/hints'
+import { type Control, controlsFor, pinProgress, POSITION, stepActions, stepHint } from '@/hints'
 import type { Button as Pusher } from '@/machine/gestures'
 import type { LogEntry } from '@/machine/log'
 import { secondsLeft } from '@/machine/machine'
@@ -88,8 +88,8 @@ function Legend({ controls, normal }: { controls: Record<Control, string | null>
         {rows.map((r) => {
           const action = controls[r.id]
           return (
-            <li key={r.id} className={cn('flex items-center gap-3 text-sm lg:order-none', MOBILE_ORDER[r.id])}>
-              <span className="flex w-14 shrink-0 items-center gap-1">
+            <li key={r.id} className={cn('flex items-start gap-3 text-sm lg:order-none', MOBILE_ORDER[r.id])}>
+              <span className="flex shrink-0 items-center gap-1 pt-0.5">
                 {r.caps.map((c, i) => (
                   <span key={c} className="flex items-center gap-1">
                     {i > 0 && <span className="text-graphite">+</span>}
@@ -97,16 +97,19 @@ function Legend({ controls, normal }: { controls: Record<Control, string | null>
                   </span>
                 ))}
               </span>
-              <span className="hidden w-12 shrink-0 font-mono text-xs text-graphite lg:inline">{r.key}</span>
-              <span className={action ? 'text-ink' : 'text-graphite'}>{action ?? 'Not used'}</span>
+              <span className="min-w-0">
+                <span className="block text-14 text-graphite">{POSITION[r.id]}</span>
+                <span className={cn('block text-16', action ? 'text-ink' : 'text-graphite')}>{action ?? 'Not used'}</span>
+                <span className="hidden font-mono text-12 text-graphite lg:block">{r.key}</span>
+              </span>
             </li>
           )
         })}
       </ul>
       <p className="text-sm text-graphite">
         {normal
-          ? 'Normal shows only the time. Secure Mode opens with a hidden combination: hold A and D together.'
-          : 'Click the pushers or use the keys. Hold two keys for a combination; shift-click holds a pusher. W toggles the wrist.'}
+          ? 'The face shows the time until you hold upper left (A) and lower right (D).'
+          : 'Click a pusher, or use the key on a wide screen. W toggles the wrist.'}
       </p>
     </Section>
   )
@@ -217,6 +220,8 @@ function ActiveWatch() {
   const face = useMemo(() => renderFace(state, { reducedMotion }), [state, reducedMotion])
   const controls = controlsFor(state)
   const hint = stepHint(state)
+  const progress = pinProgress(state)
+  const actions = stepActions(state)
   const log = useSyncExternalStore(controller!.subscribe, controller!.getLog)
   const [bootError, setBootError] = useState<string | null>(null)
 
@@ -260,19 +265,33 @@ function ActiveWatch() {
             {face.spoken}
           </p>
           {hint && (
-            <p className="text-14 text-graphite" data-testid="step-hint">
+            <p className="bg-paper text-16 text-ink" data-testid="step-hint" aria-live="polite">
               {hint}
             </p>
           )}
-          <div className="flex flex-wrap gap-3 md:hidden">
-            <Button variant="secondary" size="sm" onClick={() => watch.chord('C', 'D')}>
-              Press C + D
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => watch.chord('A', 'D')}>
-              Press A + D
-            </Button>
+          {progress && (
+            <div className="bg-paper" data-testid="pin-readout">
+              <p className="font-mono text-32 leading-tight tabular text-ink">{progress.pattern}</p>
+              <p className="text-14 text-graphite">{progress.line}</p>
+            </div>
+          )}
+          {actions.length > 0 && (
+            <div className="flex flex-wrap gap-3 md:hidden">
+              {actions.map((action) => (
+                <Button
+                  key={action.label}
+                  variant={action.tone === 'primary' ? 'default' : 'secondary'}
+                  onClick={() => watch.chord(...action.buttons)}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          )}
+          <div className="lg:hidden">
+            <Legend controls={controls} normal={state.screen.kind === 'normal'} />
           </div>
-          <p className="text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
+          <p className="bg-paper text-14 text-graphite">The secure element in this simulator is software. The signatures are real.</p>
         </div>
 
         <div className="flex flex-col gap-8 lg:col-span-5">
@@ -288,7 +307,9 @@ function ActiveWatch() {
             </p>
           )}
 
-          <Legend controls={controls} normal={state.screen.kind === 'normal'} />
+          <div className="hidden lg:block">
+            <Legend controls={controls} normal={state.screen.kind === 'normal'} />
+          </div>
 
           <Section title="Wrist">
             <label className="flex min-h-(--sk-control-h) cursor-pointer items-center justify-between gap-4">
@@ -313,29 +334,29 @@ function ActiveWatch() {
             }
           >
             <p className="text-14 text-graphite">{linkCopy(relayUp, link.peer)}</p>
+            {state.address && (
+              <div className="bg-paper">
+                <p className="text-14 text-graphite">Address</p>
+                <p className="font-mono text-16 leading-body break-words">{grouped(state.address)}</p>
+              </div>
+            )}
             <dl>
               {(
                 [
-                  { label: 'Room', value: identity.roomId, mono: true },
-                  { label: 'Profile', value: state.profile ? `${state.profile}, simulated` : 'Starting', mono: false },
-                  { label: 'Wallet', value: !state.ready ? 'Starting' : wiped ? 'Key erased' : state.address ? 'Key present' : 'Not set up', mono: false },
-                  { label: 'Session', value: state.session ? 'Open' : 'Closed', mono: false },
-                  { label: 'PIN tries', value: state.hasPin ? `${state.attemptsLeft} left` : 'No PIN set', mono: true },
-                  { label: 'Max size', value: state.maxMessageBytes ? `${state.maxMessageBytes} bytes` : 'Starting', mono: true },
-                  { label: 'Request', value: pending === null ? 'None' : `${pending} s left on the watch`, mono: true },
-                  ...(state.address ? [{ label: 'Address', value: grouped(state.address), mono: true }] : []),
+                  { label: 'PIN tries', value: state.hasPin ? `${state.attemptsLeft} left` : 'No PIN yet' },
+                  { label: 'Request', value: pending === null ? 'None' : `${pending} s left` },
                 ]
               ).map((row) => (
                 <div key={row.label} className="grid grid-cols-[var(--sk-dt-width)_1fr] gap-3 border-t border-rule py-2 text-14">
                   <dt className="text-graphite">{row.label}</dt>
-                  <dd className={row.mono ? 'font-mono break-words tabular' : undefined}>{row.value}</dd>
+                  <dd className="font-mono tabular">{row.value}</dd>
                 </div>
               ))}
             </dl>
             {state.ready && !state.hasPin && !wiped && (
               <p className="text-14 text-graphite">
-                First use. Hold A and D, choose a four-digit PIN, then enter it again to confirm. The secure element creates a
-                devnet key that stays in this browser.
+                First use. Hold upper left (A) and lower right (D), choose a four-digit PIN, then enter it again. The secure
+                element creates a devnet key that stays in this browser.
               </p>
             )}
             {wiped && <ResetSimulator />}

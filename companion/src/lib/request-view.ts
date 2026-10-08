@@ -65,8 +65,11 @@ export function describeRequest(entry: RequestEntry, sol: string): RequestView {
   }
 
   switch (outcome.kind) {
-    case "confirmed":
-      return { chip: "CONFIRMED", summary: signedSummary(entry), signature: outcome.signature, action: "new", announce: `${what} confirmed on devnet.` };
+    case "confirmed": {
+      const approved = signedSummary(entry);
+      const summary = approved.startsWith("Approved") ? `Confirmed on devnet. ${approved}` : "Confirmed on devnet.";
+      return { chip: "CONFIRMED", summary, signature: outcome.signature, action: "new", announce: `${what} confirmed on devnet.` };
+    }
     case "timeout":
       return {
         chip: "EXPIRED",
@@ -133,6 +136,13 @@ export function describeRequest(entry: RequestEntry, sol: string): RequestView {
         announce: `${what} failed: ${outcome.message}`,
       };
   }
+}
+
+/** The one sentence on the card. In-progress steps replace a second heading. */
+export function statusLine(view: RequestView): string {
+  if (view.chip === "SENDING" && view.step) return view.step;
+  if (view.chip === "SIGNED" && view.step) return `${view.summary} ${view.step}`;
+  return view.summary;
 }
 
 function signedSummary(entry: RequestEntry): string {

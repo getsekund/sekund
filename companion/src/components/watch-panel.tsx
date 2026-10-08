@@ -76,24 +76,32 @@ export function WatchPanel({ rpc, relay, watchConnected, watchStatus, wallet, wa
           </Button>
         </div>
       ) : !addr ? (
-        <div className="rounded-sk bg-paper-2 p-4 text-14">
-          {wallet?.status === "LOCKED" || watchStatus?.session === "CLOSED" ? (
-            <p>The watch is locked. Open Secure Mode and enter the PIN on the watch to share its address.</p>
-          ) : wallet?.status === "NO_WALLET" ? (
-            <p>The watch has no key yet. Set it up on the watch first.</p>
-          ) : (
-            <div className="flex items-center gap-3" data-testid="watch-asking">
-              <DotLoader label="Asking the watch" />
-              <p>Asking the watch for its address.</p>
-            </div>
-          )}
-        </div>
+        wallet?.status === "NO_WALLET" ? (
+          <div className="space-y-2 rounded-sk bg-paper-2 p-4" data-testid="needs-pin">
+            <p className="text-16">Needs a PIN.</p>
+            <p className="text-14 text-graphite">
+              The watch has no key yet. Hold upper left (A) and lower right (D), choose four digits, then enter them again. This page asks for the address after that.
+            </p>
+          </div>
+        ) : wallet?.status === "LOCKED" || watchStatus?.session === "CLOSED" ? (
+          <div className="space-y-2 rounded-sk bg-paper-2 p-4" data-testid="needs-pin">
+            <p className="text-16">Needs the PIN.</p>
+            <p className="text-14 text-graphite">
+              Hold upper left (A) and lower right (D) on the watch, then enter the four digits. This page cannot enter the PIN. It asks for the address once the watch is unlocked.
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-sk bg-paper-2 p-4 text-16" data-testid="watch-asking">
+            <DotLoader label="Asking the watch" />
+            <p>Asking the watch for its address.</p>
+          </div>
+        )
       ) : (
-        <dl className="text-14">
-          <div className="grid grid-cols-[76px_1fr] gap-3 border-t border-rule py-2">
+        <dl className="bg-paper text-14">
+          <div className="grid grid-cols-1 gap-2 border-t border-rule py-3 sm:grid-cols-[76px_1fr] sm:gap-3">
             <dt className="text-graphite">Address</dt>
-            <dd className="space-y-2">
-              <span className="block font-mono text-[13.5px] leading-body" data-testid="watch-address" data-address={addr}>
+            <dd className="min-w-0 space-y-2">
+              <span className="block bg-paper font-mono text-16 leading-body break-words" data-testid="watch-address" data-address={addr}>
                 {groupAddress(addr)}
               </span>
               <span className="flex flex-wrap gap-2">
@@ -102,10 +110,10 @@ export function WatchPanel({ rpc, relay, watchConnected, watchStatus, wallet, wa
               </span>
             </dd>
           </div>
-          <div className="grid grid-cols-[76px_1fr] gap-3 border-t border-rule py-2">
+          <div className="grid grid-cols-1 gap-2 border-t border-rule py-3 sm:grid-cols-[76px_1fr] sm:gap-3">
             <dt className="text-graphite">Balance</dt>
             <dd className="space-y-2">
-              <span className="block font-mono text-[13.5px] tabular">{balance === null ? "Unknown" : `${formatLamports(balance)} SOL`}</span>
+              <span className="block bg-paper font-mono text-16 tabular">{balance === null ? "Unknown. Press Refresh." : `${formatLamports(balance)} SOL`}</span>
               <span className="flex flex-wrap gap-2">
                 <Button variant="small" onClick={refresh} disabled={loading}>
                   {loading ? "Refreshing" : "Refresh"}
@@ -116,14 +124,6 @@ export function WatchPanel({ rpc, relay, watchConnected, watchStatus, wallet, wa
               </span>
             </dd>
           </div>
-          {wallet?.profile && (
-            <div className="grid grid-cols-[76px_1fr] gap-3 border-t border-rule py-2">
-              <dt className="text-graphite">Signer</dt>
-              <dd className="font-mono text-[13.5px]">
-                {wallet.profile} simulated, {wallet.maxMessageBytes} B max
-              </dd>
-            </div>
-          )}
         </dl>
       )}
 

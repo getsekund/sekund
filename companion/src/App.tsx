@@ -17,7 +17,7 @@ const WATCH_URL = (() => {
 export default function App() {
   const rpc = useMemo(() => createDevnetRpc(), []);
   const reviewCapMs = useMemo(() => parseReviewCap(window.location.search), []);
-  const { client, relay, watchConnected, watchStatus, wallet, roomId } = useSekund();
+  const { client, relay, watchConnected, watchStatus, wallet } = useSekund();
   const [balance, setBalance] = useState<bigint | null>(null);
   const [entries, setEntries] = useState<RequestEntry[]>([]);
   const nextId = useRef(1);
@@ -64,23 +64,20 @@ export default function App() {
       : !watchConnected
         ? "No watch connected. Open the watch simulator."
         : !from
-          ? "Unlock the watch to share its address."
+          ? "Needs the PIN. Hold upper left (A) and lower right (D) on the watch, then enter the four digits."
           : null;
 
   return (
     <div className="min-h-svh">
       <header className="border-b border-rule">
-        <div className="mx-auto flex h-14 max-w-(--sk-content-max) items-center justify-between gap-4 px-(--sk-margin)">
+        <div className="mx-auto flex min-h-14 max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">
           <a href="/" className="shrink-0" aria-label="SEKUND companion">
             <img src="/sekund-logo-v2.svg" alt="SEKUND" width={96} height={24} className="h-6 w-24" />
           </a>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <StatusChip word={relay === "open" && watchConnected ? "CONNECTED" : "NO WATCH"} />
             <span className="font-mono text-14">Devnet</span>
-            <span className="hidden font-mono text-12 text-graphite sm:inline" title="Relay room">
-              room {roomId}
-            </span>
-            <a className="hidden text-14 underline-offset-4 hover:underline sm:inline" href={WATCH_URL} target="_blank" rel="noopener">
+            <a className="text-14 underline-offset-4 hover:underline" href={WATCH_URL} target="_blank" rel="noopener">
               Simulator
             </a>
           </div>

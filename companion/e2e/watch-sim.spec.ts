@@ -31,10 +31,13 @@ test.describe("watch simulator buttons", () => {
     await watchPage.goto(WATCH_URL);
     await watchPage.locator("body").click();
     const hint = watchPage.getByTestId("step-hint");
-    await expect(hint).toHaveText("Hold A and D together to enter Secure.");
+    await expect(hint).toHaveText("Hold upper left (A) and lower right (D) together to enter Secure.");
     await press(watchPage, ...COMBO);
     await watchPage.waitForTimeout(1100);
-    await expect(hint).toHaveText("A lowers the digit. B raises it. Hold C and D together to confirm.");
+    await expect(hint).toHaveText(
+      "Choose digit 1 of 4. It is 0. Upper left (A) lowers it. Lower left (B) raises it. Hold both right buttons (C and D) to lock it.",
+    );
+    await expect(watchPage.getByTestId("pin-readout")).toContainText("0  _  _  _");
     await enterPin(watchPage, PIN);
     // First use: REPEAT PIN
     await enterPin(watchPage, PIN);
@@ -62,7 +65,7 @@ test.describe("watch simulator buttons", () => {
     await page.getByRole("button", { name: "Send to watch" }).click();
     await expect(card(page)).toHaveAttribute("data-chip", "WAITING");
     await reviewAll(watchPage);
-    await expect(watchPage.getByTestId("step-hint")).toHaveText("C rejects. D approves.");
+    await expect(watchPage.getByTestId("step-hint")).toHaveText("Upper right (C) rejects. Lower right (D) approves.");
     await press(watchPage, "d");
     await expect(card(page)).toHaveAttribute("data-chip", "CONFIRMED", { timeout: 20_000 });
     const verified = await verifyBroadcast(devnet.sent[0]!, watchAddress);
