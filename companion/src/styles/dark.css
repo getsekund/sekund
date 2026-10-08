@@ -68,9 +68,23 @@ html[data-theme="dark"] [role="alert"] strong {
   background-color: var(--sk-paper);
 }
 
+/* Commands stay one phrase, in the same face as the sentence. No tracking. */
 html[data-theme="dark"] [role="alert"] code {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-stretch: 100%;
+  font-kerning: normal;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  letter-spacing: 0;
+  word-spacing: normal;
   white-space: nowrap;
-  background-color: var(--sk-paper);
+  box-decoration-break: slice;
 }
 
 html[data-theme="dark"] [data-chip="NO WATCH"],
