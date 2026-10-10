@@ -2,9 +2,9 @@ import { Wordmark } from "@/ui/Wordmark";
 import { SlideFrame } from "./SlideFrame";
 import { SLIDES } from "./slides";
 
-/** `?sheet`: a 1920 × 1080 contact sheet of every slide, five across, two rows, centred on the board. */
+/** `?sheet`: a 1920 × 1080 contact sheet of every slide, four across (eleven slides: 4, 4, 3), centred on the board. */
 export function Sheet() {
-  const columns = 5;
+  const columns = 4;
   const gap = 24;
   const thumbWidth = (1920 - 112 - gap * (columns - 1)) / columns;
   return (
@@ -15,7 +15,7 @@ export function Sheet() {
         </h1>
         <span className="sheet__label">{SLIDES.length} slides</span>
       </header>
-      <div className="sheet__grid">
+      <div className="sheet__grid" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: `28px ${gap}px` }}>
         {SLIDES.map((slide, i) => (
           <figure className="sheet__item" key={slide.id} style={{ margin: 0 }}>
             <div className="thumb">

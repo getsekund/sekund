@@ -140,7 +140,7 @@ export function IllustrationOptions() {
       <Head
         title="Watch illustration options"
         sub="Generated resin watch, three-quarter view, black ground. LCD is the real watch-sim capture, composited in perspective; the wordmark is the live brand option."
-        note="The dithered column is what slides 1 and 10 show. Cell size here is 2 stage pixels at 300 px wide, which matches cell 4 at the 760 px the slide uses."
+        note="The dithered column is what the first and last slide show. Cell size here is 2 stage pixels at 300 px wide, which matches cell 4 at the 760 px the slide uses."
       />
       <div className="opt__grid">
         {ILLUSTRATION_OPTIONS.map((spec) => (
@@ -225,7 +225,7 @@ export function PaletteOptions() {
                   <Thumb key={slide.id} index={i} width={106} palette={palette} />
                 ))}
               </div>
-              <figcaption className="caption">All ten slides</figcaption>
+              <figcaption className="caption">All {SLIDES.length} slides</figcaption>
             </figure>
           </section>
         ))}
@@ -241,7 +241,7 @@ export function HeroLcdVariants() {
       <Head
         title="Hero LCD treatments"
         sub="The live Brow illustration at the exact size and cell slide 1 draws it. Left: everything through the dither. Right: the resin dithered, the LCD panel and wordmark laid over crisp, as a lit display."
-        note="One-line switch in deck/src/brand/illustrations.ts: ILLUSTRATION = BROW keeps the fully dithered hero; ILLUSTRATION = BROW_LIT lights the panel on slides 1 and 10."
+        note="One-line switch in deck/src/brand/illustrations.ts: ILLUSTRATION = BROW keeps the fully dithered hero; ILLUSTRATION = BROW_LIT lights the panel on the first and last slide."
       />
       <div className="opt__grid">
         {HERO_LCD_VARIANTS.map((spec) => (
@@ -261,7 +261,7 @@ export function HeroLcdVariants() {
             </figure>
             <figure className="opt__fig opt__fig--hero">
               <HeroWatch spec={spec} width={410} height={500} cell={2} variant="approve" />
-              <figcaption className="caption">Slide 10, APPROVE? page, at half size (cell 2 for the same density)</figcaption>
+              <figcaption className="caption">The last slide, APPROVE? page, at half size (cell 2 for the same density)</figcaption>
             </figure>
           </section>
         ))}

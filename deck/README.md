@@ -1,6 +1,6 @@
 # SEKUND pitch deck
 
-The Colosseum Crypto World's Fair deck as a web app: ten 1920 × 1080 slides, one per screen, drawn in the brand's ordered-dither look, white and steel blue on black. English on the slides, Serbian in the speaker notes.
+The Colosseum Crypto World's Fair deck as a web app: eleven 1920 × 1080 slides, one per screen, drawn in the brand's ordered-dither look, white and steel blue on black. English on the slides, Serbian in the speaker notes.
 
 ```bash
 pnpm install
@@ -25,7 +25,7 @@ Keys: arrows, Space, PageUp/PageDown, Home/End, `1`–`9`, `0`. Click right to a
 Cmd+P in the browser prints one 16:9 page per slide with backgrounds. Or, with the dev server running:
 
 ```bash
-pnpm deck:export      # deck/out/: 01-claim.png … 10-close.png, contact-sheet.png, logo-options.png, illustration-options.png, hero-lcd-variants.png, dither-colour-options.png, sekund-pitch-deck.pdf
+pnpm deck:export      # deck/out/: 01-claim.png … 11-close.png, contact-sheet.png, logo-options.png, illustration-options.png, hero-lcd-variants.png, dither-colour-options.png, sekund-pitch-deck.pdf
 ```
 
 ## Brand
@@ -35,14 +35,14 @@ Three constants, one assignment each:
 | Export | Where | What |
 |---|---|---|
 | `WORDMARK` | `src/brand/index.ts` | The live wordmark: `INTER`, "SEKUND" in Inter SemiBold (600) with +4% tracking, converted to outlines from the self-hosted `@fontsource/inter` files (`src/brand/wordmark-inter.ts`). `BLOCK`, `CHAMFER`, `ROUND`, `DOTS` are the four drawn directions, `SEGMENT` the v2 mark; all stay on `/?logos`. The same outline is in `watch-sim/src/face/wordmark.ts` and `companion/public/sekund-logo.svg`. |
-| `ILLUSTRATION` | `src/brand/illustrations.ts` | The live watch illustration for slides 1 and 10: `BROW_LIT`, the Brow photo with only the resin dithered and the LCD panel and wordmark laid over crisp. `BROW` is the fully dithered one; `FACETED`, `FRONTAL`, `TURNED` the other candidates; `CAPTURE` the plain watch-sim render. |
+| `ILLUSTRATION` | `src/brand/illustrations.ts` | The live watch illustration for slides 1 and 11: `BROW_LIT`, the Brow photo with only the resin dithered and the LCD panel and wordmark laid over crisp. `BROW` is the fully dithered one; `FACETED`, `FRONTAL`, `TURNED` the other candidates; `CAPTURE` the plain watch-sim render. |
 | `DITHER_PALETTE` | `src/dither/palette.ts` | The dither colours: `STEEL` (`#7a9bd0`, 60% of lit cells blue). `ELECTRIC` and `SOLANA` are the other two options on `/?palette`; `MONO` is white on black. Of the lit cells, the earliest in the Bayer order take the blue, so the pattern stays ordered at any density. Text, plates and the LCD never take the colour. |
 
 Each drawn wordmark is one SVG path of polygons on a 100-unit cap height; the Inter one is the font's outlines with overlaps removed, on the same box, so every surface (raster composites, SVG face, 3D geometry, companion image) draws the identical shape with no runtime font. The illustrations are generated photos of a resin watch with a clean screen; the LCD is the real watch-sim capture warped into the screen in perspective, and the wordmark is kept as a separate transparent layer (`watch-*-mark.png`) that `HeroWatch` lays over the dithered photo so the letters stay crisp. A spec with `lcdSrc` (`watch-d-lcd.png`, `watch-d-approve-lcd.png`) gets the same treatment for the panel. Nothing in them is a photograph of real SEKUND hardware.
 
 ## Layout
 
-No slide chrome: the wordmark appears only where it is content (the bezel, the LCD captures) and the slide index lives in the presenter view. One margin (`--d-margin`, 112 px) on all four sides. One headline weight (600) at two sizes: `.claim` (120 px) on the first and last slide, `.title` (84 px) on the rest; `.lead` 44, `.body` and `.sub` 36, `.mono` 30, `.small` 24, `.caption` 21 (`src/styles/tokens.css`). `.slide__body--quiet` centres a slide's group; `.slide__body--dense` runs from the top margin down, with `.foot` anchoring the closing line at the bottom margin. No plates on the dither: text that sits on a field is set with `Knock` (`src/ui/Knock.tsx`), which draws the text twice, a ground-coloured stroke under the ink, so the dither is knocked out in a tight per-letter shape (`--knock`, 9 px on `.claim`, 6 px on `.small`) and never a rectangle. The only accent allowed on a field is the paper chip (`.plate--inverse`). On slides 1 and 10 the watch is drawn by the same canvas as the field: `Dither` with `src`, `box` and `field` places the photo inside the full-bleed field on one cell grid, takes the object's silhouette from the photo and feathers it (`feather`, in cells) so the field is out in a band around the case and thins back in from there, with no rectangular edge. In the show, the pieces of the current slide rise in over 520 ms with a 90 ms stagger; the animation is scoped to `.show`, so print, the sheet and the presenter thumbnails are still, and it is off under `prefers-reduced-motion` (which the export sets).
+No slide chrome: the wordmark appears only where it is content (the bezel, the LCD captures) and the slide index lives in the presenter view. One margin (`--d-margin`, 112 px) on all four sides. One headline weight (600) at two sizes: `.claim` (120 px) on the first and last slide, `.title` (84 px) on the rest; `.lead` 44, `.body` and `.sub` 36, `.mono` 30, `.small` 24, `.caption` 21 (`src/styles/tokens.css`). `.slide__body--quiet` centres a slide's group; `.slide__body--dense` runs from the top margin down, with `.foot` anchoring the closing line at the bottom margin. No plates on the dither: text that sits on a field is set with `Knock` (`src/ui/Knock.tsx`), which draws the text twice, a ground-coloured stroke under the ink, so the dither is knocked out in a tight per-letter shape (`--knock`, 9 px on `.claim`, 6 px on `.small`) and never a rectangle. The only accent allowed on a field is the paper chip (`.plate--inverse`). On slides 1 and 11 the watch is drawn by the same canvas as the field: `Dither` with `src`, `box` and `field` places the photo inside the full-bleed field on one cell grid, takes the object's silhouette from the photo and feathers it (`feather`, in cells) so the field is out in a band around the case and thins back in from there, with no rectangular edge. In the show, the pieces of the current slide rise in over 520 ms with a 90 ms stagger; the animation is scoped to `.show`, so print, the sheet and the presenter thumbnails are still, and it is off under `prefers-reduced-motion` (which the export sets).
 
 ## Where things are
 

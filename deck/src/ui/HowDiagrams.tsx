@@ -174,13 +174,13 @@ function Box({ title, children }: { title: string; children: React.ReactNode }) 
   );
 }
 
-/** 1 · The companion builds the transaction and sends the exact message bytes to the watch. */
+/** 1 · The phone app builds the transaction and sends the exact message bytes to the watch. */
 export function BuildDiagram() {
   const palette = usePalette();
   const strip = { x: 262, y: 246, cols: 12, rows: 3 };
   const stripEnd = strip.x + bytesWidth(strip.cols);
   return (
-    <Box title="The companion app sends the exact message bytes to the watch">
+    <Box title="The phone app sends the exact message bytes to the watch">
       <Phone x={40} y={50} width={190} height={440} />
       <line x1={70} y1={110} x2={200} y2={110} stroke={DIM} strokeWidth={3} />
       <line x1={70} y1={142} x2={200} y2={142} stroke={DIM} strokeWidth={3} />
@@ -258,7 +258,7 @@ export function ApproveDiagram() {
   );
 }
 
-/** 4 · The signature comes back over the same bytes; the companion verifies, assembles and broadcasts. */
+/** 4 · The signature comes back over the same bytes; the phone app verifies, assembles and broadcasts. */
 export function SignDiagram() {
   const palette = usePalette();
   const sig = { x: 262, y: 200, cols: 8, rows: 8 };
@@ -271,7 +271,7 @@ export function SignDiagram() {
     { x: 656, y: 364 },
   ];
   return (
-    <Box title="The Ed25519 signature returns; the companion verifies it, assembles the transaction and broadcasts">
+    <Box title="The Ed25519 signature returns; the phone app verifies it, assembles the transaction and broadcasts">
       <Watch x={24} y={150} width={190} height={230} inset={22} palette={palette}>
         <Label text="SIGNED" x={24 + 22 + 3} y={150 + 33 + 52} dot={4} color={SEG} />
       </Watch>

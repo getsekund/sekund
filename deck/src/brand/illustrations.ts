@@ -12,7 +12,7 @@ export interface IllustrationSpec {
   note: string;
   /** Composite with the clock face (slide 1). */
   src: string;
-  /** Composite with the APPROVE? page (slide 10). Falls back to `src`. */
+  /** Composite with the APPROVE? page (the last slide). Falls back to `src`. */
   approveSrc?: string;
   /** The wordmark alone, warped into the same frame, as a transparent PNG at 2x. Laid over the dither so it stays crisp. */
   markSrc?: string;
@@ -107,7 +107,7 @@ export const BROW_LIT: IllustrationSpec = {
   approveLcdSrc: "/assets/watch-d-approve-lcd.png",
 };
 
-/** The illustration slides 1 and 10 draw. Swap the constant to change it (`BROW` for the fully dithered one). Goran's pick: the lit LCD. */
+/** The illustration the first and last slide draw. Swap the constant to change it (`BROW` for the fully dithered one). Goran's pick: the lit LCD. */
 export const ILLUSTRATION = BROW_LIT;
 
 /** The candidates on the option sheet, in sheet order. */

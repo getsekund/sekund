@@ -10,14 +10,14 @@ export function Shot({ src, alt, width, height, caption }: { src: string; alt: s
   );
 }
 
-/** One numbered step on the how-it-works slide: LCD number, a drawn figure, title, one line. */
-export function Step({ n, title, detail, figure }: { n: string; title: string; detail: string; figure: React.ReactNode }) {
+/** One numbered step on the how-it-works slide: LCD number, a drawn figure, title, an optional line. */
+export function Step({ n, title, detail, figure }: { n: string; title: string; detail?: string; figure: React.ReactNode }) {
   return (
     <div className="step">
       <span className="step__n">{n}</span>
       <div className="step__img">{figure}</div>
       <h3 className="sub">{title}</h3>
-      <p className="step__d">{detail}</p>
+      {detail && <p className="step__d">{detail}</p>}
     </div>
   );
 }

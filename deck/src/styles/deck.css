@@ -80,7 +80,7 @@ a {
 }
 
 /* The closing line of a dense slide sits on the bottom margin, in the same place on every slide. */
-.foot {
+.slide__body > .foot {
   margin-top: auto;
   align-self: flex-start;
 }
@@ -601,7 +601,7 @@ a {
   page-break-after: auto;
 }
 
-/* Contact sheet (?sheet): all slides on one 16:9 board, five across, head and rows centred as one group. */
+/* Contact sheet (?sheet): all slides on one 16:9 board, four across, head and rows centred as one group. */
 .sheet {
   width: 1920px;
   min-height: 1080px;
@@ -623,8 +623,8 @@ a {
 
 .sheet__grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 36px 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px 24px;
 }
 
 .sheet__title {
@@ -958,7 +958,7 @@ a {
 
 .opt__mini {
   display: grid;
-  grid-template-columns: repeat(5, 106px);
+  grid-template-columns: repeat(4, 106px);
   gap: 10px;
 }
 
