@@ -13,9 +13,7 @@ export function Sheet() {
         <h1 className="sheet__title" style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <Wordmark width={150} /> pitch deck v3
         </h1>
-        <span className="sheet__label">
-          Colosseum Crypto World&rsquo;s Fair &middot; {SLIDES.length} slides
-        </span>
+        <span className="sheet__label">{SLIDES.length} slides</span>
       </header>
       <div className="sheet__grid">
         {SLIDES.map((slide, i) => (

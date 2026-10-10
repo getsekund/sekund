@@ -96,6 +96,11 @@ a {
   max-width: 1040px;
 }
 
+/* A hero with no footer line reserves the footer's height, so its copy sits where the close slide's does. */
+.hero-copy--solo {
+  padding-bottom: calc(var(--d-text-small) * 1.4 + var(--d-gap));
+}
+
 .slide__bg {
   position: absolute;
   inset: 0;

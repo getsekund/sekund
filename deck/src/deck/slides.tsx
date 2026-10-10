@@ -38,7 +38,7 @@ export const SLIDES: readonly Slide[] = [
           <HeroWatch spec={ILLUSTRATION} width={STAGE_W} height={STAGE_H} box={HERO} field={pulse} cell={5} feather={7} animate={active} fps={16} reveal={active ? 900 : 0} />
         </div>
         <div className="slide__body">
-          <div className="hero-copy">
+          <div className="hero-copy hero-copy--solo">
             <Knock as="h1" className="claim">
               Verify and sign
               <br />
@@ -52,9 +52,6 @@ export const SLIDES: readonly Slide[] = [
               </span>
             </p>
           </div>
-          <Knock as="p" className="small dim foot">
-            Colosseum Crypto World&rsquo;s Fair &middot; software proof of concept on Solana devnet
-          </Knock>
         </div>
       </>
     ),
@@ -96,44 +93,21 @@ export const SLIDES: readonly Slide[] = [
     id: "proof",
     title: "Proof",
     notes: [
-      `Ovo je devnet transakcija potvrđena 8. oktobra 2026: ${PROOF_TX.amountSol} SOL, jedini potpisnik je adresa simulatora sata ${shortKey(PROOF_TX.signer)}. Companion je proverio potpis pre slanja. Levo je simulator na ekranu APPROVE?, desno sažetak iz Solana Explorera, isti potpis.`,
+      `Na slajdu su samo naslov i dve slike; sve činjenice izgovori. Levo je simulator na poslednjoj stranici pregleda, APPROVE?, dugme D odobrava. Desno je sažetak iz Solana Explorera, devnet: Status Success, fee payer i jedini potpisnik je ključ simulatora, ${shortKey(PROOF_TX.signer)}.`,
+      `Ovo je devnet transakcija potvrđena 8. oktobra 2026: prenos ${PROOF_TX.amountSol} SOL sa adrese simulatora ${shortKey(PROOF_TX.signer)} na ${shortKey(PROOF_TX.destination)}. Companion je proverio potpis pre slanja. Ceo zapis: ${explorerUrl(PROOF_TX.signature)}`,
       "Reci glasno: u ovom dokazu secure element je softver, Web Worker sa Ed25519 ključem koji se ne može izvesti, a sat je simulator u pregledaču. Potpis je pravi Ed25519 i lanac ga je prihvatio. Ne reci da je čip već u kućištu, ni da je ključ na fizičkom zglobu.",
       "Rečenica za sudije: simulator prikazuje tačno ono što potpisuje, potpisuje samo posle radnje odobrenja na satu, i devnet je to prihvatio. Sve tri su proverljive, u Exploreru i u repou.",
-      `Ako traže drugi primer: ranija potvrda ${shortKey(EARLIER_TX.signature)}, ${EARLIER_TX.amountSol} SOL sa adrese ${shortKey(EARLIER_TX.signer)}, takođe potpisana u simulatoru.`,
+      `Ako traže drugi primer: ranija potvrda ${shortKey(EARLIER_TX.signature)}, ${EARLIER_TX.amountSol} SOL sa adrese ${shortKey(EARLIER_TX.signer)}, takođe potpisana u simulatoru. ${explorerUrl(EARLIER_TX.signature)}`,
     ],
     render: () => (
-      <div className="slide__body slide__body--dense">
+      <div className="slide__body slide__body--quiet">
         <h2 className="title">
           Signed in the simulator. <span className="dim">Accepted on devnet.</span>
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: `${PROOF_LCD_W}px 1fr`, gap: 56, alignItems: "start" }}>
-          <Shot src="/assets/lcd-approve.png" alt="The watch simulator's LCD on the APPROVE? page with the countdown" width={PROOF_LCD_W} height={PROOF_H} caption="The last review page in the simulator. D approves." />
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
-            <Shot
-              src="/assets/explorer-rows.png"
-              alt="Solana Explorer summary of the confirmed devnet transaction: success, signature, fee payer, slot, timestamp"
-              width={PROOF_EXPLORER_W}
-              height={PROOF_H}
-              caption="Solana Explorer, devnet. Status Success. Fee payer and only signer: the simulator's key."
-            />
-            <div className="facts">
-              <span className="caption">Transfer</span>
-              <span className="mono">
-                <span className="lcd" style={{ fontSize: 40 }}>
-                  {PROOF_TX.amountSol}
-                </span>{" "}
-                SOL &middot; signer {shortKey(PROOF_TX.signer)}, the simulator &middot; to {shortKey(PROOF_TX.destination)}
-              </span>
-              <span className="caption">Explorer</span>
-              <a className="small link" href={explorerUrl(PROOF_TX.signature)} target="_blank" rel="noreferrer">
-                {explorerUrl(PROOF_TX.signature)}
-              </a>
-            </div>
-          </div>
+          <Shot src="/assets/lcd-approve.png" alt="The watch simulator's LCD on the APPROVE? page with the countdown" width={PROOF_LCD_W} height={PROOF_H} />
+          <Shot src="/assets/explorer-rows.png" alt="Solana Explorer summary of the confirmed devnet transaction: success, signature, fee payer, slot, timestamp" width={PROOF_EXPLORER_W} height={PROOF_H} />
         </div>
-        <p className="lead foot">
-          <span className="plate plate--inverse">In this proof the secure element is software. The Ed25519 signature is real.</span>
-        </p>
       </div>
     ),
   },
@@ -170,7 +144,8 @@ export const SLIDES: readonly Slide[] = [
     notes: [
       "Tri razloga. Ed25519 je nativan: čip potpisuje tačno one bajtove koje prikazuje, bez dodatnog heširanja i bez druge krive.",
       "Potvrda je dovoljno brza: čitav krug, zahtev, pregled na satu, pritisak, emitovanje, staje u životni vek blockhash-a; companion drži rezervu za slanje i, ako istekne, traži novi blockhash i novi pregled.",
-      "Treći razlog: telefon koji korisnik već ima. Companion je wallet aplikacija na telefonu ili laptopu i priča sa satom preko Bluetooth LE; na Androidu dApp-ovi do nje stižu kroz Mobile Wallet Adapter, a sat je potpisnik iza nje. Android prvo, iOS kasnije kroz nativni companion, jer Web Bluetooth tamo ne postoji. Seeker je kanal distribucije, ne zavisnost. U ovom dokazu Bluetooth je lokalni link; uparivanje je u planu za 90 dana. Ako pitaju za Ethereum: druga kriva (secp256k1), roadmap, ne ovaj build.",
+      "Treći razlog: telefon koji korisnik već ima, Android prvo. Companion je wallet aplikacija na telefonu ili laptopu i priča sa satom preko Bluetooth LE; na Androidu dApp-ovi do nje stižu kroz Mobile Wallet Adapter, a sat je potpisnik iza nje. Seeker je kanal distribucije, ne zavisnost.",
+      "Zašto Android prvo, ako pitaju: companion je web aplikacija i koristi Web Bluetooth, koji radi u Chrome-u na Androidu i na desktopu. U iOS Safariju Web Bluetooth ne postoji, pa je iOS kasnija nativna aplikacija preko Core Bluetootha. To nije tvrdnja za ovaj build i nema veze sa Seekerom. U ovom dokazu Bluetooth je lokalni link; uparivanje je u planu za 90 dana. Ako pitaju za Ethereum: druga kriva (secp256k1), roadmap, ne ovaj build.",
     ],
     render: ({ active }) => (
       <>
@@ -194,8 +169,8 @@ export const SLIDES: readonly Slide[] = [
             </div>
             <div className="col">
               <hr className="rule" />
-              <h3 className="sub">Any phone with Bluetooth LE</h3>
-              <p className="body">The companion is the wallet app; the watch is the signer behind it. Seeker is a channel, not a requirement.</p>
+              <h3 className="sub">Android first</h3>
+              <p className="body">The companion is the wallet app; the watch is the signer. iOS is a later native app.</p>
             </div>
           </div>
         </div>
@@ -208,7 +183,7 @@ export const SLIDES: readonly Slide[] = [
     title: "Business",
     notes: [
       "Bez brojeva. Prodajemo sat; companion je besplatan.",
-      "Redosled, ne prognoza: prvo hardverski prototip; onda mala pilot grupa ljudi koji već sami čuvaju ključeve na Solani; onda Wallet Standard adapter i postojeći wallet-i koji nas prikažu kao podržanog potpisnika; onda pre-orderi sa povratnim depozitom. Solana Mobile je sledeći kanal: companion na Seeker dApp Store-u, bundle ako ga zaslužimo. Sat radi sa bilo kojim Android telefonom i bez toga.",
+      "Redosled, ne prognoza: prvo hardverski prototip; onda pilot, taj jedan prototip u rukama nekog ko već sam čuva ključeve na Solani; onda Wallet Standard adapter i postojeći wallet-i koji nas prikažu kao podržanog potpisnika; onda pre-orderi sa povratnim depozitom. Solana Mobile je sledeći kanal: companion na Seeker dApp Store-u, bundle ako ga zaslužimo. Seeker je kanal, ne zavisnost: companion je Android prvo, na bilo kom Android telefonu sa Chrome-om; iOS je kasnija nativna aplikacija.",
       "White-label za berze i custody deskove tek posle pravog secure elementa, secure boot-a i eksterne revizije. Pre toga ga ne nudimo.",
       "Ako pitaju za cenu, BOM ili tiraž: to još nemamo i nećemo izmišljati.",
     ],
@@ -232,7 +207,7 @@ export const SLIDES: readonly Slide[] = [
             </div>
             <div className="card">
               <h3 className="sub">Solana Mobile, next</h3>
-              <p className="mono">The companion on the Seeker dApp Store; a bundle if it earns one. Any Android phone works without it.</p>
+              <p className="mono">The companion on the Seeker dApp Store; a bundle if it earns one. A channel, not a requirement.</p>
             </div>
           </div>
           <p className="small dim">White-label only after a real secure element, secure boot and an audit.</p>
@@ -246,8 +221,8 @@ export const SLIDES: readonly Slide[] = [
     title: "Next 90 days and the ask",
     notes: [
       "Levo je plan, desno molba. Naručujemo Tropic Square TROPIC01 Mini Board i Nordic nRF52840 DK, dižemo SPI i secure channel ka čipu, pa BLE uparivanje umesto lokalnog linka. Ništa od toga još ne postoji; danas potpisuje simulator.",
-      "Cilj do kraja perioda: deset radnih prototipova, pilot sa ljudima koji već sami čuvaju ključeve, i tok oporavka (Squads dizajn) koji se može demonstrirati.",
-      "Tražimo tri stvari: mesto u akceleratoru, uvod kod Solana Mobile kao kanal, i hardverskog partnera za kućište i pilot seriju. Izgovori sve tri, pa stani.",
+      "Cilj do kraja perioda: jedan završen radni prototip, ne serija. Pilot je taj jedan prototip u rukama nekog ko već sam čuva ključeve na Solani. Uz to tok oporavka (Squads dizajn) koji se može demonstrirati. Ne reci deset, ne reci tiraž.",
+      "Tražimo tri stvari: mesto u akceleratoru, uvod kod Solana Mobile kao kanal, i hardverskog partnera za kućište i taj prvi prototip. Izgovori sve tri, pa stani.",
     ],
     render: () => (
       <>
@@ -259,7 +234,7 @@ export const SLIDES: readonly Slide[] = [
             <h2 className="title">Next 90 days.</h2>
             <ul className="list">
               <li>Tropic Square TROPIC01 and Nordic nRF52840 boards on the bench</li>
-              <li>Ten working prototypes</li>
+              <li>One final working prototype in 90 days</li>
               <li>Bluetooth LE pairing in place of the local link</li>
               <li>A small Solana self-custody pilot</li>
               <li>Recovery flow, the Squads design</li>
@@ -270,7 +245,7 @@ export const SLIDES: readonly Slide[] = [
             <ul className="list">
               <li>A place in the accelerator cohort</li>
               <li>An introduction to Solana Mobile, as a channel</li>
-              <li>A hardware partner for the case and the pilot run</li>
+              <li>A hardware partner for the case and the first prototype</li>
             </ul>
           </div>
         </div>
