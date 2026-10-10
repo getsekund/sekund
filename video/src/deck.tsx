@@ -3,7 +3,7 @@ import { continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfi
 import { setAssetBase } from "@/asset";
 import { DitherClockProvider, type DitherClock } from "@/dither/clock";
 import "@/styles/deck.css";
-import { deckSlide, riseAll, RISE_PX, RISE_S, riseEase, type Build } from "./slides";
+import { deckSlide, riseAll, RISE_PX, RISE_S, riseEase, swapImages, type Build, type ImageSwap } from "./slides";
 
 // The deck serves public/ at the root; Remotion serves it under its own static prefix.
 setAssetBase(staticFile("x").slice(0, -2));
@@ -75,13 +75,14 @@ export function Builds({ scene, builds }: { scene: string; builds: readonly Buil
 }
 
 /** One deck slide, exactly as the show draws it, on the video's clock. */
-export function DeckSlide({ id, builds = riseAll(), children }: { id: string; builds?: readonly Build[]; children?: ReactNode }) {
+export function DeckSlide({ id, builds = riseAll(), images, children }: { id: string; builds?: readonly Build[]; images?: ImageSwap; children?: ReactNode }) {
   const slide = deckSlide(id);
+  const body = slide.render({ active: true });
   return (
     <FrameClock>
       <ImagesReady>
         <section className="slide" data-slide={slide.id} data-scene={slide.id} data-active="true">
-          {slide.render({ active: true })}
+          {images ? swapImages(body, images) : body}
           {children}
         </section>
       </ImagesReady>

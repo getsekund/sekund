@@ -3,6 +3,7 @@
   "room": "sekund-video-mv2qpmqk",
   "watch": "http://127.0.0.1:4318/?room=sekund-video-mv2qpmqk&view=3d",
   "companion": "http://127.0.0.1:4317/?room=sekund-video-mv2qpmqk",
+  "broadcast": "none: the faucet was rate-limited, so the simulator address was unfunded and sendTransaction was held and dropped. The video shows the phone app only up to WAITING from this run.",
   "shots": {
     "watch-clock": "Normal mode: the clock",
     "watch-pin": "Secure Mode: NEW PIN entry",
@@ -18,8 +19,6 @@
     "watch-review-approve": "Review page 6: approve",
     "watch-review-approve-2": "APPROVE? one second later, the countdown running",
     "watch-press-d": "D held down on APPROVE?",
-    "watch-signed": "Result after approve",
-    "companion-signed": "Companion: signature back from the watch, verified",
-    "companion-signed-page": "Companion page after the signature"
+    "watch-signed": "Result after approve"
   }
 }

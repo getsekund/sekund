@@ -1,6 +1,7 @@
 import { Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { appCards, confirmed, RUN } from "../capture-run";
 import { Builds, DeckSlide, FrameClock, ImagesReady } from "../deck";
-import { deckSlide, riseAll, type Build } from "../slides";
+import { deckSlide, riseAll, type Build, type ImageSwap } from "../slides";
 import { beat, cueAt } from "../script";
 
 /**
@@ -8,8 +9,16 @@ import { beat, cueAt } from "../script";
  * 1. What is simulated and what is real, over the deck's 3D simulator capture.
  * 2. The approve flow from scripts/capture.ts: the phone app's request card and the watch
  *    simulator paging through the review to APPROVE?, D pressed, SIGNED.
- * 3. The deck's proof slide: the confirmed devnet transfer in Solana Explorer.
+ * 3. The deck's proof slide: a confirmed devnet transfer in Solana Explorer.
+ *
+ * What the phone app shows after the watch signs, and whose transfer Explorer shows, come from
+ * the capture run. A run that was broadcast and confirmed records its transaction: the card goes
+ * on to SIGNED and CONFIRMED, and Explorer shows that same signature. A run that was not sent
+ * never shows the card past WAITING; it leaves when the watch signs, and Explorer keeps the deck's.
  */
+const CONFIRMED_RUN = confirmed(RUN);
+const EXPLORER_SWAP: ImageSwap | undefined = CONFIRMED_RUN ? { "/assets/explorer-rows.png": "/captures/explorer-rows.png" } : undefined;
+
 const PROOF = beat("proof");
 /** Shot boundaries, in seconds from the start of the beat. */
 const FLOW_AT = 9;
@@ -28,7 +37,7 @@ export function ProofScene() {
         <FlowShot />
       </Sequence>
       <Sequence from={f(EXPLORER_AT)} durationInFrames={f(length) - f(EXPLORER_AT)} name="Devnet">
-        <DeckSlide id="proof" builds={riseAll(0.15, 2)} />
+        <DeckSlide id="proof" builds={riseAll(0.15, 2)} images={EXPLORER_SWAP} />
       </Sequence>
     </>
   );
@@ -82,7 +91,13 @@ const WATCH_PAGES: readonly (readonly [number, string])[] = [
   [10.6, "watch-signed"], // 53.6: "The signature comes back"
 ];
 const PRESS = { from: 9.1, to: 10.6 };
-const APP_SIGNED_AT = 11.3;
+/** The watch shows SIGNED. */
+const WATCH_SIGNED_AT = 10.6;
+
+/** The phone app's card: SIGNED at 54.3, CONFIRMED at 55.6, before "Devnet confirmed" lands on Explorer. */
+const APP_CARDS = appCards(RUN, { signed: 11.3, confirmed: 12.6 });
+/** A run that was not sent has no card after WAITING, so the card leaves as the watch signs. */
+const APP_LEAVES_AT = CONFIRMED_RUN ? Infinity : WATCH_SIGNED_AT;
 
 function current<T>(t: number, schedule: readonly (readonly [number, T])[]): T {
   let out = schedule[0]![1];
@@ -95,7 +110,8 @@ function FlowShot() {
   const { fps } = useVideoConfig();
   const t = frame / fps;
   const page = current(t, WATCH_PAGES);
-  const appSigned = t >= APP_SIGNED_AT;
+  const appCard = current(t, APP_CARDS);
+  const appOut = Math.min(1, Math.max(0, (t - APP_LEAVES_AT) / 0.4));
   const pressed = t >= PRESS.from && t < PRESS.to;
   const ring = Math.min(1, Math.max(0, (t - PRESS.from) / 0.2));
   const builds: Build[] = [
@@ -106,10 +122,17 @@ function FlowShot() {
   return (
     <section className="slide" data-scene="flow">
       <div className="slide__body flow__app" style={{ justifyContent: "center", paddingRight: 1920 - 112 - CARD_W }}>
-        <p className="caption">Phone app, devnet</p>
-        <div style={{ position: "relative", width: CARD_W }}>
-          <Img src={staticFile("captures/companion-waiting.png")} style={{ width: CARD_W, display: "block", visibility: appSigned ? "hidden" : "visible" }} />
-          <Img src={staticFile("captures/companion-signed.png")} style={{ position: "absolute", left: 0, top: 0, width: CARD_W, display: "block", visibility: appSigned ? "visible" : "hidden" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--d-gap)", opacity: 1 - appOut }}>
+          <p className="caption">Phone app, devnet</p>
+          <div style={{ position: "relative", width: CARD_W }}>
+            {APP_CARDS.map(([, name], i) => (
+              <Img
+                key={name}
+                src={staticFile(`captures/${name}.png`)}
+                style={{ ...(i === 0 ? {} : { position: "absolute", left: 0, top: 0 }), width: CARD_W, display: "block", visibility: name === appCard ? "visible" : "hidden" }}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="flow__watch" style={{ position: "absolute", right: WATCH.right, top: WATCH.top, width: WATCH.width, height: WATCH.height }}>
