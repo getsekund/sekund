@@ -276,7 +276,7 @@ export const SLIDES: readonly Slide[] = [
     notes: [
       "Ključ koji ne napušta sat postavlja pitanje: šta kad sat nestane? Odgovor nije seed fraza na papiru.",
       "SEKUND je jedan potpisnik u Squads multisig trezoru, ili je uparen sa drugim satom. Izgubljen sat se zamenjuje i uklanja iz trezora; sredstva ostaju.",
-      "!ODLUKA ZA GORANA: okvir Squads multisig / drugi upareni sat još nije potvrđen kao zvanični odgovor. Ako ne stoji, slajd se skraćuje na „tok oporavka je u planu za 90 dana“ i dijagram se uklanja.",
+      "Reci jasno: ovo je dizajn oporavka, ne nešto što je isporučeno. Squads integracija ne radi u demou; tok oporavka je stavka u planu za 90 dana. Ako pitaju za detalje, odgovor je: drugi potpisnik je ili drugi upareni sat ili ključ koji korisnik već drži, a trezor je Squads multisig na Solani.",
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
