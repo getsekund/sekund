@@ -28,7 +28,8 @@ export const SLIDES: readonly Slide[] = [
     id: "claim",
     title: "Claim",
     notes: [
-      "Jedna rečenica, pa stani. Jeftin digitalni sat koji potpisuje Solana transakcije. Ključ ne napušta ručni zglob: ne ide u telefon, ne ide preko linka, ne ide u aplikaciju.",
+      "Jedna rečenica, pa stani. Proveri i potpiši Solanu na ruci: običan sat od smole koji sam pročita poruku koju potpisuje, prikaže iznos i primaoca iz tih bajtova, i potpiše tek posle odobrenja na satu. Ključ nikad ne stiže do companion aplikacije.",
+      "Ne reci jeftin (nemamo BOM), ne reci prvi ni jedinstven (nosivi potpisnici postoje). Ne reci da je ključ već u hardveru ili na fizičkom zglobu: ovo je softverski dokaz, kućište, dugme, Bluetooth i čip su plan.",
       "Sve ostalo u prezentaciji je dokaz ove rečenice. Ne objašnjavaj još ništa; pusti sliku sata da stoji dve sekunde.",
     ],
     render: ({ active }) => (
@@ -39,16 +40,16 @@ export const SLIDES: readonly Slide[] = [
         <div className="slide__body">
           <div className="hero-copy">
             <Knock as="h1" className="claim">
-              A cheap
+              Verify and sign
               <br />
-              digital watch
-              <br />
-              that signs Solana
-              <br />
-              transactions.
+              Solana on-wrist.
             </Knock>
             <p className="lead">
-              <span className="plate plate--inverse">The key never leaves your wrist.</span>
+              <span className="plate plate--inverse">
+                A simple resin watch.
+                <br />
+                The key never reaches the companion.
+              </span>
             </p>
           </div>
           <Knock as="p" className="small dim foot">
@@ -95,24 +96,25 @@ export const SLIDES: readonly Slide[] = [
     id: "proof",
     title: "Proof",
     notes: [
-      `Ovo je devnet transakcija potvrđena 8. oktobra 2026: ${PROOF_TX.amountSol} SOL, jedini potpisnik je adresa sata ${shortKey(PROOF_TX.signer)}. Companion je proverio potpis pre slanja. Levo je sat na ekranu APPROVE?, desno sažetak iz Solana Explorera, isti potpis.`,
-      "Reci glasno: u ovom dokazu secure element je softver, Web Worker sa Ed25519 ključem koji se ne može izvesti. Potpis je pravi Ed25519 i lanac ga je prihvatio. Ne reci da je čip već u kućištu.",
-      `Ako traže drugi primer: ranija potvrda ${shortKey(EARLIER_TX.signature)}, ${EARLIER_TX.amountSol} SOL sa adrese ${shortKey(EARLIER_TX.signer)}, takođe potpisana na satu.`,
+      `Ovo je devnet transakcija potvrđena 8. oktobra 2026: ${PROOF_TX.amountSol} SOL, jedini potpisnik je adresa simulatora sata ${shortKey(PROOF_TX.signer)}. Companion je proverio potpis pre slanja. Levo je simulator na ekranu APPROVE?, desno sažetak iz Solana Explorera, isti potpis.`,
+      "Reci glasno: u ovom dokazu secure element je softver, Web Worker sa Ed25519 ključem koji se ne može izvesti, a sat je simulator u pregledaču. Potpis je pravi Ed25519 i lanac ga je prihvatio. Ne reci da je čip već u kućištu, ni da je ključ na fizičkom zglobu.",
+      "Rečenica za sudije: simulator prikazuje tačno ono što potpisuje, potpisuje samo posle radnje odobrenja na satu, i devnet je to prihvatio. Sve tri su proverljive, u Exploreru i u repou.",
+      `Ako traže drugi primer: ranija potvrda ${shortKey(EARLIER_TX.signature)}, ${EARLIER_TX.amountSol} SOL sa adrese ${shortKey(EARLIER_TX.signer)}, takođe potpisana u simulatoru.`,
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
         <h2 className="title">
-          Signed on the watch. <span className="dim">Confirmed on devnet.</span>
+          Signed in the simulator. <span className="dim">Accepted on devnet.</span>
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: `${PROOF_LCD_W}px 1fr`, gap: 56, alignItems: "start" }}>
-          <Shot src="/assets/lcd-approve.png" alt="The watch LCD on the APPROVE? page with the countdown" width={PROOF_LCD_W} height={PROOF_H} caption="The last review page on the watch. D approves." />
+          <Shot src="/assets/lcd-approve.png" alt="The watch simulator's LCD on the APPROVE? page with the countdown" width={PROOF_LCD_W} height={PROOF_H} caption="The last review page in the simulator. D approves." />
           <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
             <Shot
               src="/assets/explorer-rows.png"
               alt="Solana Explorer summary of the confirmed devnet transaction: success, signature, fee payer, slot, timestamp"
               width={PROOF_EXPLORER_W}
               height={PROOF_H}
-              caption="Solana Explorer, devnet. Status Success. Fee payer and only signer: the watch."
+              caption="Solana Explorer, devnet. Status Success. Fee payer and only signer: the simulator's key."
             />
             <div className="facts">
               <span className="caption">Transfer</span>
@@ -120,7 +122,7 @@ export const SLIDES: readonly Slide[] = [
                 <span className="lcd" style={{ fontSize: 40 }}>
                   {PROOF_TX.amountSol}
                 </span>{" "}
-                SOL &middot; signer {shortKey(PROOF_TX.signer)}, the watch &middot; to {shortKey(PROOF_TX.destination)}
+                SOL &middot; signer {shortKey(PROOF_TX.signer)}, the simulator &middot; to {shortKey(PROOF_TX.destination)}
               </span>
               <span className="caption">Explorer</span>
               <a className="small link" href={explorerUrl(PROOF_TX.signature)} target="_blank" rel="noreferrer">
@@ -140,21 +142,23 @@ export const SLIDES: readonly Slide[] = [
     id: "how",
     title: "How it works",
     notes: [
-      "Četiri koraka, bez detalja. Companion pravi transakciju odmah posle blockhash-a i šalje tačne bajtove poruke. Sat prikazuje iznos i primaoca pročitane iz tih bajtova, ne iz teksta koji je poslala aplikacija.",
-      "PIN otvara sesiju; odobrenje je poseban fizički pritisak. Čip vraća Ed25519 potpis nad neheširanim bajtovima; companion ga proveri, sastavi transakciju i emituje. Tri pogrešna PIN-a brišu ključ.",
+      "Četiri koraka, bez detalja. Companion pravi transakciju odmah posle blockhash-a i šalje tačne bajtove poruke. Sat sam parsira tu poruku i prikazuje iznos i primaoca pročitane iz bajtova koje će potpisati, ne iz polja koja je aplikacija poslala pored njih. To je razlika koju pokazujemo.",
+      "PIN otvara sesiju; odobrenje je posebna radnja na satu, u simulatoru dugme D, na hardveru fizičko dugme. Secure element vraća Ed25519 potpis nad istim neheširanim bajtovima; companion ga proveri, sastavi transakciju i emituje. Ključ nikad ne stiže do companiona; na hardverskoj meti ostaje u secure elementu. Tri pogrešna PIN-a brišu ključ.",
+      "Granica poverenja, ako pitaju: secure element čuva ključ i potpisuje bajtove koje mu firmver pošalje; firmver sata odlučuje šta se prikazuje i kad se potpisuje. Zato pre bilo kakve tvrdnje o hardverskoj bezbednosti idu secure boot, zaključan debug port i šifrovan kanal ka čipu. U ovom dokazu tu ulogu igra Web Worker sa istim interfejsom koji će imati drajver.",
       "Za pitanja: pre prikaza sat odbija replay, istekle zahteve, poruke veće od limita čipa, durable nonce, lookup tabele (v0) i sve što nije jedan System Program transfer sa sopstvene adrese. Odobrenje izdaje jednokratni token vezan za tačne bajtove, važi pet sekundi. Dva profila čipa u kodu: TROPIC01 (4096 bajtova, little-endian) i SE050E (919 bajtova, big-endian). Link je lokalni relay umesto Bluetootha; skidanje sa ruke odmah zatvara sesiju.",
+      "Ako pomenu druge nosive potpisnike (SolWear, ESP32 sa NFC-om, je na Colosseumu): da, postoje, ne tvrdimo da smo prvi. Razlika je u ovom koraku dva: mi parsiramo poruku i prikazujemo iz bajtova koje potpisujemo; ne prikazujemo polja koja aplikacija pošalje odvojeno od bajtova. Bez omalovažavanja, samo činjenica iz koda.",
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
         <h2 className="title">How it works.</h2>
         <div className="cols" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
           <Step n="1" src="/assets/companion-card-mobile.png" alt="The companion request card on a phone, waiting for the watch" title="Companion builds the transaction" detail="Fresh blockhash, exact message bytes, sent to the watch." fit="contain" background="#e9eae4" />
-          <Step n="2" src="/assets/lcd-to.png" alt="The watch LCD showing the destination address" title="Shows amount and destination" detail="Read from the bytes it will sign, not from the app." />
-          <Step n="3" src="/assets/lcd-approve.png" alt="The watch LCD on the APPROVE? page" title="PIN, then a physical approve" detail="PIN opens a session. Approve is its own button press." />
-          <Step n="4" src="/assets/lcd-signed.png" alt="The watch LCD showing SIGNED, sent to app" title="Ed25519 signature returns" detail="Companion verifies it, assembles the transaction, broadcasts." />
+          <Step n="2" src="/assets/lcd-to.png" alt="The watch LCD showing the destination address" title="Parses the exact bytes" detail="Amount and destination read from the bytes it signs, not the app." />
+          <Step n="3" src="/assets/lcd-approve.png" alt="The watch LCD on the APPROVE? page" title="PIN, then a separate approve" detail="PIN opens a session. Approve is a separate button." />
+          <Step n="4" src="/assets/lcd-signed.png" alt="The watch LCD showing SIGNED, sent to app" title="Ed25519 signature returns" detail="Over the same bytes. Companion verifies, assembles, broadcasts." />
         </div>
         <p className="lead foot">
-          <span className="plate plate--inverse">Three wrong PINs wipe the key.</span>
+          <span className="plate plate--inverse">The key never reaches the companion. On hardware it stays in the secure element.</span>
         </p>
       </div>
     ),
@@ -166,7 +170,7 @@ export const SLIDES: readonly Slide[] = [
     notes: [
       "Tri razloga. Ed25519 je nativan: čip potpisuje tačno one bajtove koje prikazuje, bez dodatnog heširanja i bez druge krive.",
       "Potvrda je dovoljno brza: čitav krug, zahtev, pregled na satu, pritisak, emitovanje, staje u životni vek blockhash-a; companion drži rezervu za slanje i, ako istekne, traži novi blockhash i novi pregled.",
-      "Mobile Wallet Adapter i Seeker: ekosistem telefona koji već očekuje spoljnog potpisnika. Ako pitaju za Ethereum: druga kriva (secp256k1), to je roadmap, ne ovaj build.",
+      "Treći razlog: telefon koji korisnik već ima. Companion je wallet aplikacija na telefonu ili laptopu i priča sa satom preko Bluetooth LE; na Androidu dApp-ovi do nje stižu kroz Mobile Wallet Adapter, a sat je potpisnik iza nje. Android prvo, iOS kasnije kroz nativni companion, jer Web Bluetooth tamo ne postoji. Seeker je kanal distribucije, ne zavisnost. U ovom dokazu Bluetooth je lokalni link; uparivanje je u planu za 90 dana. Ako pitaju za Ethereum: druga kriva (secp256k1), roadmap, ne ovaj build.",
     ],
     render: ({ active }) => (
       <>
@@ -181,7 +185,7 @@ export const SLIDES: readonly Slide[] = [
             <div className="col">
               <hr className="rule" />
               <h3 className="sub">Native Ed25519</h3>
-              <p className="body">The chip signs the exact bytes it shows. No hashing step, no second curve.</p>
+              <p className="body">The watch signs the exact bytes it shows. No hashing step, no second curve.</p>
             </div>
             <div className="col">
               <hr className="rule" />
@@ -190,8 +194,8 @@ export const SLIDES: readonly Slide[] = [
             </div>
             <div className="col">
               <hr className="rule" />
-              <h3 className="sub">Mobile Wallet Adapter &middot; Seeker</h3>
-              <p className="body">A phone ecosystem that already expects an external signer.</p>
+              <h3 className="sub">Any phone with Bluetooth LE</h3>
+              <p className="body">The companion is the wallet app; the watch is the signer behind it. Seeker is a channel, not a requirement.</p>
             </div>
           </div>
         </div>
@@ -204,8 +208,9 @@ export const SLIDES: readonly Slide[] = [
     title: "Business",
     notes: [
       "Bez brojeva. Prodajemo sat; companion je besplatan.",
-      "Dva pravca koja proveravamo, ne prognoze: white-label za berze i custody deskove, kojima treba jeftin fizički potpisnik za klijente; Seeker bundle, sat uz telefon.",
-      "Ako pitaju za cenu ili tiraž: to još nemamo i nećemo izmišljati.",
+      "Redosled, ne prognoza: prvo hardverski prototip; onda mala pilot grupa ljudi koji već sami čuvaju ključeve na Solani; onda Wallet Standard adapter i postojeći wallet-i koji nas prikažu kao podržanog potpisnika; onda pre-orderi sa povratnim depozitom. Solana Mobile je sledeći kanal: companion na Seeker dApp Store-u, bundle ako ga zaslužimo. Sat radi sa bilo kojim Android telefonom i bez toga.",
+      "White-label za berze i custody deskove tek posle pravog secure elementa, secure boot-a i eksterne revizije. Pre toga ga ne nudimo.",
+      "Ako pitaju za cenu, BOM ili tiraž: to još nemamo i nećemo izmišljati.",
     ],
     render: ({ active }) => (
       <>
@@ -222,15 +227,15 @@ export const SLIDES: readonly Slide[] = [
           </h2>
           <div className="cols" style={{ gridTemplateColumns: "1fr 1fr", gap: 32 }}>
             <div className="card">
-              <h3 className="sub">White-label</h3>
-              <p className="mono">Exchanges and custody desks hand clients a signer they will actually wear.</p>
+              <h3 className="sub">Direct, in this order</h3>
+              <p className="mono">Hardware prototype. A small Solana self-custody pilot. Wallet Standard and existing wallets. Refundable pre-orders.</p>
             </div>
             <div className="card">
-              <h3 className="sub">Seeker bundle</h3>
-              <p className="mono">The watch beside the phone, paired out of the box through Mobile Wallet Adapter.</p>
+              <h3 className="sub">Solana Mobile, next</h3>
+              <p className="mono">The companion on the Seeker dApp Store; a bundle if it earns one. Any Android phone works without it.</p>
             </div>
           </div>
-          <p className="small dim">Directions we are testing, not forecasts.</p>
+          <p className="small dim">White-label only after a real secure element, secure boot and an audit.</p>
         </div>
       </>
     ),
@@ -240,9 +245,9 @@ export const SLIDES: readonly Slide[] = [
     id: "next",
     title: "Next 90 days and the ask",
     notes: [
-      "Levo je plan, desno molba. Naručujemo Tropic Square TROPIC01 Mini Board i Nordic nRF52840 DK, dižemo SPI i secure channel ka čipu, pa BLE uparivanje umesto lokalnog linka.",
-      "Cilj do kraja perioda: deset radnih prototipova i tok oporavka koji se može demonstrirati.",
-      "Tražimo tri stvari: mesto u akceleratoru, uvod kod Solana Mobile, i hardverskog partnera za kućište i malu seriju. Izgovori sve tri, pa stani.",
+      "Levo je plan, desno molba. Naručujemo Tropic Square TROPIC01 Mini Board i Nordic nRF52840 DK, dižemo SPI i secure channel ka čipu, pa BLE uparivanje umesto lokalnog linka. Ništa od toga još ne postoji; danas potpisuje simulator.",
+      "Cilj do kraja perioda: deset radnih prototipova, pilot sa ljudima koji već sami čuvaju ključeve, i tok oporavka (Squads dizajn) koji se može demonstrirati.",
+      "Tražimo tri stvari: mesto u akceleratoru, uvod kod Solana Mobile kao kanal, i hardverskog partnera za kućište i pilot seriju. Izgovori sve tri, pa stani.",
     ],
     render: () => (
       <>
@@ -256,15 +261,16 @@ export const SLIDES: readonly Slide[] = [
               <li>Tropic Square TROPIC01 and Nordic nRF52840 boards on the bench</li>
               <li>Ten working prototypes</li>
               <li>Bluetooth LE pairing in place of the local link</li>
-              <li>Recovery flow</li>
+              <li>A small Solana self-custody pilot</li>
+              <li>Recovery flow, the Squads design</li>
             </ul>
           </div>
           <div className="col on-paper" style={{ gap: 56 }}>
             <h2 className="title">The ask.</h2>
             <ul className="list">
               <li>A place in the accelerator cohort</li>
-              <li>An introduction to Solana Mobile</li>
-              <li>A hardware partner for the case and the first run</li>
+              <li>An introduction to Solana Mobile, as a channel</li>
+              <li>A hardware partner for the case and the pilot run</li>
             </ul>
           </div>
         </div>
@@ -286,10 +292,11 @@ export const SLIDES: readonly Slide[] = [
         <p className="lead" style={{ maxWidth: 1400 }}>
           SEKUND is one signer in a Squads multisig, or paired with a second watch. A lost watch is replaced; the vault stays.
         </p>
+        <p className="small dim">The recovery design. Not in the demo; in the 90-day plan.</p>
         <div className="equation">
           <div className="card card--centered">
             <DotText text="SEKUND" dot={6} />
-            <p className="mono">Signer one, on the wrist</p>
+            <p className="mono">Signer one, the watch</p>
           </div>
           <span className="op">+</span>
           <div className="card card--centered">
@@ -310,20 +317,20 @@ export const SLIDES: readonly Slide[] = [
     id: "shipped",
     title: "Shipped this week",
     notes: [
-      "Ne ko smo, nego šta smo isporučili ove nedelje. Jezgro potpisivanja: protokol, čuvar zahteva sa allowlist-om, PIN sesija i jednokratni token za odobrenje.",
-      "Potvrđena devnet transakcija potpisana na satu. 3D simulator sata sa živim LCD-om i 2D rezervom. Companion koji pravi, proverava i emituje. Testovi za sve to, od parsera do klika na 3D dugme.",
-      "Ako pitaju ko šta radi: Goran sat, 3D model, lice i pitch; Srki protokol, secure element i companion. Dvoje ljudi, jedna nedelja.",
+      "Ne ko smo, nego šta smo isporučili ove nedelje. Jezgro potpisivanja: parser poruke, čuvar zahteva sa allowlist-om, PIN sesija i jednokratni token za odobrenje.",
+      "Potvrđena devnet transakcija potpisana u simulatoru sata. 3D simulator sa živim LCD-om. Companion koji pravi, proverava i emituje. Dva profila čipa u kodu; sami čipovi, kućište, dugme i Bluetooth su plan. Testovi za sve to, od parsera do klika na 3D dugme. Repo je javan, Apache-2.0.",
+      "Imena ne idu na slajd. Ako pitaju ko šta radi: Goran vodi proizvod i inženjering. Srkijevu ulogu opiši onako kako ste se dogovorili; ne nabrajaj delove koda umesto njega. Dvoje ljudi, jedna nedelja.",
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
         <h2 className="title">Shipped this week.</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 560px", gap: 96, alignItems: "start", flex: 1, minHeight: 0 }}>
           <ul className="list" style={{ gap: 28 }}>
-            <li>Signing core: request guard, transfer allowlist, PIN session, one-time approve token</li>
-            <li>A confirmed devnet transaction, signed on the watch, verified before broadcast</li>
-            <li>A 3D watch simulator with the live LCD on its face, and a flat fallback</li>
+            <li>Signing core: message parser, request guard, transfer allowlist, PIN session, one-time approve token</li>
+            <li>A confirmed devnet transaction, signed in the watch simulator, verified before broadcast</li>
+            <li>A 3D watch simulator with the live LCD on its face</li>
             <li>A companion that builds, verifies and broadcasts, with the watch&rsquo;s own words for every state</li>
-            <li>Two secure-element profiles in code: TROPIC01 and SE050E</li>
+            <li>Two secure-element profiles in code, TROPIC01 and SE050E. The chips themselves are roadmap</li>
           </ul>
           <figure className="frame" style={{ margin: 0, alignSelf: "stretch", minHeight: 0 }}>
             <img className="render" src="/assets/watch-sim-3d.png" alt="The 3D watch simulator, dark theme, showing the clock face" />
@@ -338,8 +345,9 @@ export const SLIDES: readonly Slide[] = [
     id: "close",
     title: "Close",
     notes: [
-      "Ponovi rečenicu i molbu, pa stani. Jeftin digitalni sat koji potpisuje Solana transakcije; ključ ne napušta ručni zglob.",
-      "Tražimo akcelerator, uvod kod Solana Mobile i hardverskog partnera. Repo je na GitHubu. Hvala.",
+      "Ponovi rečenicu, pa onu za sudije, pa molbu, pa stani. Proveri i potpiši Solanu na ruci; običan sat od smole; ključ nikad ne stiže do companion aplikacije.",
+      "Za sudije: simulator prikazuje tačno ono što potpisuje, potpisuje samo posle radnje odobrenja na satu, i devnet je to prihvatio. Sve tri su proverljive, u Exploreru i u repou.",
+      "Tražimo akcelerator, uvod kod Solana Mobile i hardverskog partnera. Repo je na GitHubu, Apache-2.0. Hvala.",
     ],
     render: ({ active }) => (
       <>
@@ -349,16 +357,16 @@ export const SLIDES: readonly Slide[] = [
         <div className="slide__body">
           <div className="hero-copy">
             <Knock as="h2" className="claim">
-              A cheap
+              Verify and sign
               <br />
-              digital watch
-              <br />
-              that signs Solana
-              <br />
-              transactions.
+              Solana on-wrist.
             </Knock>
             <p className="lead">
-              <span className="plate plate--inverse">The key never leaves your wrist.</span>
+              <span className="plate plate--inverse">
+                A simple resin watch.
+                <br />
+                The key never reaches the companion.
+              </span>
             </p>
             <Knock as="p" className="body">
               Fund SEKUND: accelerator, Solana Mobile, a hardware partner.
