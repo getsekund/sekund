@@ -8,6 +8,7 @@
     "dev": "remotion studio src/index.ts --port 4321",
     "render": "tsx scripts/render.ts",
     "capture": "tsx scripts/capture.ts",
+    "vo": "tsx scripts/vo.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "oxlint src scripts test"

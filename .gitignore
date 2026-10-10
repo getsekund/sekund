@@ -20,5 +20,7 @@ test-results/
 # Pitch deck export (pnpm deck:export)
 deck/out/
 
-# Pitch video renders (pnpm --filter @sekund/video render)
+# Pitch video renders (pnpm --filter @sekund/video render), and Goran's voice and face, which live in the Project store
 video/out/
+video/public/vo.mp3
+video/public/founder.mp4

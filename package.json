@@ -18,6 +18,7 @@
     "dev:video": "pnpm --filter @sekund/video dev",
     "video:capture": "pnpm --filter @sekund/video capture",
     "video:render": "pnpm --filter @sekund/video render",
+    "video:vo": "pnpm --filter @sekund/video vo",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "pnpm --filter @sekund/companion e2e",
