@@ -12,8 +12,8 @@ import { beat, cueAt } from "../script";
  */
 const PROOF = beat("proof");
 /** Shot boundaries, in seconds from the start of the beat. */
-const FLOW_AT = 8;
-const EXPLORER_AT = 22.5;
+const FLOW_AT = 9;
+const EXPLORER_AT = 23;
 
 export function ProofScene() {
   const { fps } = useVideoConfig();
@@ -37,10 +37,10 @@ export function ProofScene() {
 function HonestyShot() {
   const builds: Build[] = [
     { selector: ".slide__body > :nth-child(1)", at: cueAt("proof", 0) },
-    // Timed to "a browser simulator" and "software" in the second line.
-    { selector: ".list > li:nth-child(1)", at: cueAt("proof", 1, 1.4) },
+    // Timed to "a browser simulator", "software" and "real" in the second line.
+    { selector: ".list > li:nth-child(1)", at: cueAt("proof", 1, 1.6) },
     { selector: ".list > li:nth-child(2)", at: cueAt("proof", 1, 3.4) },
-    { selector: ".list > li:nth-child(3)", at: cueAt("proof", 1, 4.6) },
+    { selector: ".list > li:nth-child(3)", at: cueAt("proof", 1, 5.0) },
   ];
   return (
     <FrameClock>
@@ -71,18 +71,18 @@ const CARD_W = 860;
 
 /** What the watch shows, from seconds since the shot began; absolute times are in the comments. */
 const WATCH_PAGES: readonly (readonly [number, string])[] = [
-  [0, "watch-menu"], // 42.0: Secure Mode, PIN entered, waiting for a request
-  [2.6, "watch-review-amount"], // 44.6: the request arrives
-  [6.6, "watch-review-to-1"], // 48.6: "the destination"
-  [7.3, "watch-review-to-2"],
-  [7.8, "watch-review-network"],
-  [8.05, "watch-review-fee"],
-  [8.3, "watch-review-approve"], // 50.3: "approve?"
-  [9.4, "watch-press-d"], // 51.4: "I press approve"
-  [10.9, "watch-signed"], // 52.9: "The signature comes back"
+  [0, "watch-menu"], // 43.0: Secure Mode, PIN entered, waiting for a request
+  [2.8, "watch-review-amount"], // 45.8: the request arrives
+  [6.4, "watch-review-to-1"], // 49.4: "the destination"
+  [7.1, "watch-review-to-2"],
+  [7.6, "watch-review-network"],
+  [7.85, "watch-review-fee"],
+  [8.1, "watch-review-approve"], // 51.1: "approve?"
+  [9.1, "watch-press-d"], // 52.1: "I press approve"
+  [10.6, "watch-signed"], // 53.6: "The signature comes back"
 ];
-const PRESS = { from: 9.4, to: 10.9 };
-const APP_SIGNED_AT = 11.6;
+const PRESS = { from: 9.1, to: 10.6 };
+const APP_SIGNED_AT = 11.3;
 
 function current<T>(t: number, schedule: readonly (readonly [number, T])[]): T {
   let out = schedule[0]![1];

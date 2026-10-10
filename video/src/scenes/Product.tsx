@@ -57,8 +57,8 @@ export function ProductScene() {
         </section>
       </ImagesReady>
       <Builds scene="product" builds={builds} />
-      {/* The leads sit on the busiest part of the field, so they knock out as wide as the claim does. */}
-      <style>{`[data-scene="product"] .product__bg .slide__body { display: none; } [data-scene="product"] .lead.knock { --knock: 9px; }`}</style>
+      {/* At lead size a word space is wider than the deck's halo, so the leads knock out wider to keep dots out of the gaps. */}
+      <style>{`[data-scene="product"] .product__bg .slide__body { display: none; } [data-scene="product"] .lead.knock { --knock: 16px; }`}</style>
     </FrameClock>
   );
 }
