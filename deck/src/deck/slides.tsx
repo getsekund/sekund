@@ -4,7 +4,6 @@ import { bands, fade, horizon, pulse } from "@/dither/fields";
 import { DotText } from "@/ui/DotText";
 import { HeroWatch } from "@/ui/HeroWatch";
 import { Shot, Step } from "@/ui/pieces";
-import { Wordmark } from "@/ui/Wordmark";
 import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
 import type { Slide } from "./types";
 
@@ -15,7 +14,6 @@ export const SLIDES: readonly Slide[] = [
   {
     id: "claim",
     title: "Claim",
-    bareMark: true,
     notes: [
       "Jedna rečenica, pa stani. Jeftin digitalni sat koji potpisuje Solana transakcije. Ključ ne napušta ručni zglob: ne ide u telefon, ne ide preko linka, ne ide u aplikaciju.",
       "Sve ostalo u prezentaciji je dokaz ove rečenice. Ne objašnjavaj još ništa; pusti sliku sata da stoji dve sekunde.",
@@ -29,9 +27,6 @@ export const SLIDES: readonly Slide[] = [
           </div>
         </div>
         <div className="slide__body" style={{ justifyContent: "space-between" }}>
-          <div className="plate" style={{ width: 300, padding: "8px 24px 8px 0" }}>
-            <Wordmark width={260} />
-          </div>
           <div style={{ maxWidth: 1040 }}>
             <div className="block">
               <h1 className="claim">
@@ -348,7 +343,6 @@ export const SLIDES: readonly Slide[] = [
   {
     id: "close",
     title: "Close",
-    bareMark: true,
     notes: [
       "Ponovi rečenicu i molbu, pa stani. Jeftin digitalni sat koji potpisuje Solana transakcije; ključ ne napušta ručni zglob.",
       "Tražimo akcelerator, uvod kod Solana Mobile i hardverskog partnera. Repo je na GitHubu. Hvala.",
@@ -362,9 +356,6 @@ export const SLIDES: readonly Slide[] = [
           </div>
         </div>
         <div className="slide__body" style={{ justifyContent: "space-between" }}>
-          <div className="plate" style={{ width: 300, padding: "8px 24px 8px 0" }}>
-            <Wordmark width={260} />
-          </div>
           <div style={{ maxWidth: 1000, display: "flex", flexDirection: "column", gap: 28, alignItems: "flex-start" }}>
             <div className="block">
               <h2 className="claim" style={{ fontSize: 96 }}>

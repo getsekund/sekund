@@ -173,73 +173,11 @@ a {
   border-top-color: var(--d-rule);
 }
 
-/* Slide chrome: wordmark top-left, counter bottom-right. */
-.chrome {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.chrome__mark {
-  position: absolute;
-  left: calc(var(--d-margin) - 12px);
-  top: 48px;
-  padding: 8px 16px 8px 12px;
-  background: var(--d-ground);
-  color: var(--d-ink);
-  line-height: 0;
-}
-
-.chrome__counter {
-  position: absolute;
-  right: calc(var(--d-margin) - 12px);
-  bottom: 40px;
-  padding: 8px 12px;
-  background: var(--d-ground);
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  color: var(--d-ink);
-}
-
 /* A solid block behind a run of lines, so no dots show between them. */
 .block {
   display: inline-block;
   background: var(--d-ground);
   padding: 12px 40px 20px 0;
-}
-
-.chrome__lcd {
-  position: relative;
-  display: inline-block;
-  font-family: var(--d-font-lcd7);
-  font-style: italic;
-  font-size: 28px;
-  line-height: 1;
-}
-
-.chrome__lcd .ghost {
-  color: var(--d-rule);
-}
-
-.chrome__lcd .lit {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-.chrome__foot {
-  position: absolute;
-  left: var(--d-margin);
-  bottom: 48px;
-  color: var(--d-dim);
-  font-family: var(--d-font-mono);
-  font-size: 20px;
-  line-height: 1;
-  display: flex;
-  gap: 24px;
-  align-items: center;
 }
 
 /* Screenshot frames: a hairline box, a one-line caption underneath, no shadow. */

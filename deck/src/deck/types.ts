@@ -13,6 +13,4 @@ export interface Slide {
   /** Speaker notes in Serbian. Paragraphs; a paragraph starting with "!" is a flag. */
   notes: readonly string[];
   render: (ctx: SlideContext) => ReactNode;
-  /** Hide the wordmark chrome on slides that carry it themselves. */
-  bareMark?: boolean;
 }
