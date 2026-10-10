@@ -85,7 +85,10 @@ a {
   align-self: flex-start;
 }
 
-/* Claim and close: the copy is centred in the space above the footer line. */
+/*
+ * Claim and close: the copy is centred in the space above the footer line, lifted by the room the
+ * close slide's QR needs under the ask line (`--d-hero-lift`), so the copy clears the QR there.
+ */
 .hero-copy {
   flex: 1;
   display: flex;
@@ -94,11 +97,13 @@ a {
   align-items: flex-start;
   gap: 28px;
   max-width: 1040px;
+  --d-hero-lift: 96px;
+  padding-bottom: var(--d-hero-lift);
 }
 
-/* A hero with no footer line reserves the footer's height, so its copy sits where the close slide's does. */
+/* A hero with no footer line reserves the footer's height too, so its copy sits where the close slide's does. */
 .hero-copy--solo {
-  padding-bottom: calc(var(--d-text-small) * 1.4 + var(--d-gap));
+  padding-bottom: calc(var(--d-hero-lift) + var(--d-text-small) * 1.4 + var(--d-gap));
 }
 
 /*
