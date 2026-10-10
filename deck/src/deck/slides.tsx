@@ -3,6 +3,7 @@ import { Dither } from "@/dither/Dither";
 import { bands, fade, horizon, pulse } from "@/dither/fields";
 import { DotText } from "@/ui/DotText";
 import { HeroWatch } from "@/ui/HeroWatch";
+import { Knock } from "@/ui/Knock";
 import { Shot, Step } from "@/ui/pieces";
 import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
 import type { Slide } from "./types";
@@ -10,8 +11,12 @@ import type { Slide } from "./types";
 const STAGE_W = 1920;
 const STAGE_H = 1080;
 
-/** The hero illustration sits in the same box on the first and the last slide, so the two bookend the deck. */
-const HERO = { right: 80, top: 20, width: 780, height: 1040 };
+/**
+ * The hero illustration sits in the same box on the first and the last slide, so the two bookend
+ * the deck. It is drawn into the full-bleed field on one canvas, so the case meets the dots with
+ * no rectangular edge; the box runs past the top and bottom so the strap leaves the frame.
+ */
+const HERO = { x: STAGE_W - 80 - 830, y: -30, width: 830, height: 1140 };
 
 /** Proof slide: both captures share one height, so their top and bottom edges line up. */
 const PROOF_H = 454;
@@ -29,29 +34,26 @@ export const SLIDES: readonly Slide[] = [
     render: ({ active }) => (
       <>
         <div className="slide__bg">
-          <Dither width={STAGE_W} height={STAGE_H} cell={6} field={pulse} animate={active} fps={16} contrast={1} />
-          <div style={{ position: "absolute", right: HERO.right, top: HERO.top }}>
-            <HeroWatch spec={ILLUSTRATION} width={HERO.width} height={HERO.height} reveal={active ? 900 : 0} />
-          </div>
+          <HeroWatch spec={ILLUSTRATION} width={STAGE_W} height={STAGE_H} box={HERO} field={pulse} cell={5} feather={7} animate={active} fps={16} reveal={active ? 900 : 0} />
         </div>
         <div className="slide__body">
           <div className="hero-copy">
-            <div className="block">
-              <h1 className="claim">
-                A cheap
-                <br />
-                digital watch
-                <br />
-                that signs Solana
-                <br />
-                transactions.
-              </h1>
-            </div>
+            <Knock as="h1" className="claim">
+              A cheap
+              <br />
+              digital watch
+              <br />
+              that signs Solana
+              <br />
+              transactions.
+            </Knock>
             <p className="lead">
               <span className="plate plate--inverse">The key never leaves your wrist.</span>
             </p>
           </div>
-          <p className="small plate dim foot">Colosseum Crypto World&rsquo;s Fair &middot; software proof of concept on Solana devnet</p>
+          <Knock as="p" className="small dim foot">
+            Colosseum Crypto World&rsquo;s Fair &middot; software proof of concept on Solana devnet
+          </Knock>
         </div>
       </>
     ),
@@ -342,34 +344,29 @@ export const SLIDES: readonly Slide[] = [
     render: ({ active }) => (
       <>
         <div className="slide__bg">
-          <Dither width={STAGE_W} height={STAGE_H} cell={6} field={pulse} animate={active} fps={16} />
-          <div style={{ position: "absolute", right: HERO.right, top: HERO.top }}>
-            <HeroWatch spec={ILLUSTRATION} width={HERO.width} height={HERO.height} variant="approve" reveal={active ? 900 : 0} />
-          </div>
+          <HeroWatch spec={ILLUSTRATION} width={STAGE_W} height={STAGE_H} box={HERO} field={pulse} cell={5} feather={7} animate={active} fps={16} variant="approve" reveal={active ? 900 : 0} />
         </div>
         <div className="slide__body">
           <div className="hero-copy">
-            <div className="block">
-              <h2 className="claim">
-                A cheap
-                <br />
-                digital watch
-                <br />
-                that signs Solana
-                <br />
-                transactions.
-              </h2>
-            </div>
+            <Knock as="h2" className="claim">
+              A cheap
+              <br />
+              digital watch
+              <br />
+              that signs Solana
+              <br />
+              transactions.
+            </Knock>
             <p className="lead">
               <span className="plate plate--inverse">The key never leaves your wrist.</span>
             </p>
-            <p className="body">
-              <span className="plate">Fund SEKUND: accelerator, Solana Mobile, a hardware partner.</span>
-            </p>
+            <Knock as="p" className="body">
+              Fund SEKUND: accelerator, Solana Mobile, a hardware partner.
+            </Knock>
           </div>
-          <p className="small plate foot">
+          <p className="small foot">
             <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
-              github.com/GoranUI/Sekund
+              <Knock>github.com/GoranUI/Sekund</Knock>
             </a>
           </p>
         </div>

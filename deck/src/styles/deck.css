@@ -102,9 +102,40 @@ a {
   z-index: 0;
 }
 
-/* Text always sits on solid ground. Dots never run through glyphs. */
+/*
+ * Type over the dither has no plate. `Knock` draws the text twice: a ground-coloured copy with a
+ * thick stroke underneath, ink on top. The stroke knocks the dots out a few pixels around every
+ * glyph and nowhere else, so the field stays continuous and the letters stay sharp.
+ */
+.knock {
+  position: relative;
+  display: inline-block;
+  --knock: 6px;
+}
+
+.knock__halo {
+  position: absolute;
+  inset: 0;
+  color: var(--d-ground);
+  -webkit-text-stroke: var(--knock) var(--d-ground);
+  user-select: none;
+}
+
+.knock__ink {
+  position: relative;
+}
+
+.claim.knock {
+  --knock: 9px;
+}
+
+.small.knock,
+.caption.knock {
+  --knock: 6px;
+}
+
+/* The one accent allowed on the dither: a paper chip. */
 .plate {
-  background: var(--d-ground);
   display: inline-block;
   padding: 0.06em 0.18em 0.1em 0;
   box-decoration-break: clone;
@@ -209,13 +240,6 @@ a {
 
 .rule--dim {
   border-top-color: var(--d-rule);
-}
-
-/* A solid block behind a run of lines, so no dots show between them. */
-.block {
-  display: inline-block;
-  background: var(--d-ground);
-  padding: 12px 40px 20px 0;
 }
 
 /* Paper: the ink colour as a surface, with the tokens swapped so everything on it reads in black. */
