@@ -108,8 +108,8 @@ export const BROW_LIT: IllustrationSpec = {
   approveLcdSrc: "/assets/watch-d-approve-lcd.png",
 };
 
-/** The illustration slides 1 and 10 draw. Swap the constant to change it (`BROW_LIT` for the crisp LCD). */
-export const ILLUSTRATION = BROW;
+/** The illustration slides 1 and 10 draw. Swap the constant to change it (`BROW` for the fully dithered one). Goran's pick: the lit LCD. */
+export const ILLUSTRATION = BROW_LIT;
 
 /** The candidates on the option sheet, in sheet order. */
 export const ILLUSTRATION_OPTIONS: readonly IllustrationSpec[] = [FACETED, FRONTAL, TURNED, BROW];

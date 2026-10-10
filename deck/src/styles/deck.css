@@ -733,6 +733,19 @@ a {
   min-height: 200px;
 }
 
+/* The chosen mark set live in the self-hosted face, under its outline version, so the two can be compared. */
+.opt__live {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 110px; /* Inter's cap height is 0.7275 em: 110 px gives the 80 px cap of the 480 px outline above */
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
 .opt__cell--stack {
   gap: 16px;
 }

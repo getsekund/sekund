@@ -71,10 +71,16 @@ export function LogoOptions() {
             <span className="opt__letter">{spec.label}</span>
             <h2 className="opt__name">{spec.name}</h2>
             <p className="caption">{spec.note}</p>
-            {spec.id === WORDMARK.id && <span className="opt__tag">Recommended · live on the deck</span>}
+            {spec.id === WORDMARK.id && <span className="opt__tag">Chosen · live on the deck</span>}
           </div>
           <div className="opt__cell opt__cell--ink">
             <Wordmark spec={spec} width={480} />
+            {spec.id === "inter" && (
+              <span className="opt__live" aria-hidden>
+                SEKUND
+                <span className="caption">Set live in Inter 600, +0.04em, as the outlines were made</span>
+              </span>
+            )}
           </div>
           <div className="opt__cell opt__cell--stack">
             <div className="opt__paper">

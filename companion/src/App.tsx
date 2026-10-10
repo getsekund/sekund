@@ -74,7 +74,7 @@ export default function App() {
       <header className="border-b border-rule">
         <div className="mx-auto flex min-h-14 max-w-(--sk-content-max) flex-wrap items-center justify-between gap-x-4 gap-y-2 px-(--sk-margin) py-2">
           <a href="/" className="sk-plate shrink-0" aria-label="SEKUND companion">
-            <img src="/sekund-logo-v2.svg" alt="SEKUND" width={96} height={24} className="sk-logo h-6 w-24" />
+            <img src="/sekund-logo.svg" alt="SEKUND" width={96} height={24} className="sk-logo h-6 w-24" />
           </a>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <StatusChip word={relay === "open" && watchConnected ? "CONNECTED" : "NO WATCH"} />
