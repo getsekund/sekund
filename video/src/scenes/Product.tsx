@@ -36,7 +36,7 @@ export function ProductScene() {
               <Knock as="h2" className="title">
                 A simple resin watch
                 <br />
-                that signs Solana.
+                that signs Solana
               </Knock>
               <Knock as="p" className="lead">
                 Reads the exact bytes it signs.

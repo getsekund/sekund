@@ -48,7 +48,7 @@ function HonestyShot() {
         <section className="slide" data-scene="honesty">
           <div className="proof__bg">{deckSlide("shipped").render({ active: true })}</div>
           <div className="slide__body slide__body--quiet">
-            <h2 className="title">Proof of concept.</h2>
+            <h2 className="title">Proof of concept</h2>
             <ul className="list" style={{ gap: 36, maxWidth: 920 }}>
               <li>The watch: a simulator in the browser</li>
               <li>The secure element: software</li>
