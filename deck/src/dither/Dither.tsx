@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { luma, on, threshold, tone, type Tone } from "./bayer";
+import { useDitherClock } from "./clock";
 import type { Field } from "./fields";
 import { usePalette, type DitherPalette } from "./palette";
 
@@ -129,6 +130,12 @@ function feathered(hard: Float32Array, cols: number, rows: number, grow: number,
  */
 export function Dither(props: DitherProps) {
   const live = usePalette();
+  const clock = useDitherClock();
+  const clocked = clock !== null;
+  const time = clock?.time ?? 0;
+  const timeRef = useRef(time);
+  const holdRef = useRef(clock?.hold);
+  const frameRef = useRef<((t: number) => void) | null>(null);
   const {
     width,
     height,
@@ -156,7 +163,12 @@ export function Dither(props: DitherProps) {
   const bw = box?.width ?? width;
   const bh = box?.height ?? height;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    timeRef.current = time;
+    holdRef.current = clock?.hold;
+  });
+
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const cols = Math.max(1, Math.round(width / cell));
@@ -209,10 +221,13 @@ export function Dither(props: DitherProps) {
     let raf = 0;
     let timer = 0;
     let cancelled = false;
+    let release: (() => void) | undefined;
     const stop = () => {
       cancelled = true;
       if (raf) cancelAnimationFrame(raf);
       if (timer) window.clearTimeout(timer);
+      frameRef.current = null;
+      release?.();
     };
 
     // Image luma per cell (toned); a tight silhouette that places the image; a wide one that shades the field around it.
@@ -256,15 +271,38 @@ export function Dither(props: DitherProps) {
       raf = requestAnimationFrame(loop);
     };
 
+    // On an outside clock: the field steps at this surface's fps, the reveal runs on the clock itself.
+    const at = (t: number) => {
+      const p = lum && reveal > 0 ? Math.min(1, (t * 1000) / reveal) : 1;
+      const e = 1 - (1 - p) * (1 - p);
+      const ft = field && animate && fps > 0 ? Math.floor(t * fps) / fps : 0;
+      paint((x, y) => coverageAt(x, y, ft, e));
+    };
+
     if (!src) {
+      if (clocked) {
+        frameRef.current = at;
+        at(timeRef.current);
+        return stop;
+      }
       // Draw the first frame synchronously so a still field never flashes empty.
       paint((x, y) => coverageAt(x, y, 0, 1));
       if (field && animate && !reduced && fps > 0) run();
       return stop;
     }
 
+    if (clocked) {
+      const done = holdRef.current?.();
+      let released = false;
+      release = () => {
+        if (released) return;
+        released = true;
+        done?.();
+      };
+    }
     const img = new Image();
     img.decoding = "async";
+    img.onerror = () => release?.();
     img.onload = () => {
       if (cancelled) return;
       // Fit the image into its box on the cell grid, then read one luma per cell.
@@ -298,6 +336,12 @@ export function Dither(props: DitherProps) {
         shape = feathered(hard, cols, rows, 1, 1);
         shade = feathered(hard, cols, rows, Math.round(feather * 0.75), feather);
       }
+      if (clocked) {
+        frameRef.current = at;
+        at(timeRef.current);
+        release?.();
+        return;
+      }
       if (reveal <= 0 || reduced) {
         paint((x, y) => coverageAt(x, y, 0, 1));
         if (field && animate && !reduced && fps > 0) run();
@@ -307,7 +351,11 @@ export function Dither(props: DitherProps) {
     };
     img.src = src;
     return stop;
-  }, [width, height, cell, src, fit, bx, by, bw, bh, feather, field, ink, ground, palette.blue, palette.mix, animate, fps, reveal, contrast, gamma, invert]);
+  }, [width, height, cell, src, fit, bx, by, bw, bh, feather, field, ink, ground, palette.blue, palette.mix, animate, fps, reveal, contrast, gamma, invert, clocked]);
+
+  useLayoutEffect(() => {
+    if (clocked) frameRef.current?.(time);
+  }, [clocked, time]);
 
   return (
     <canvas

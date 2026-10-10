@@ -1,3 +1,4 @@
+import { asset } from "@/asset";
 import { ILLUSTRATION } from "@/brand/illustrations";
 import { Dither } from "@/dither/Dither";
 import { bands, fade, horizon, pulse } from "@/dither/fields";
@@ -305,7 +306,7 @@ export const SLIDES: readonly Slide[] = [
           <div className="paper" style={{ position: "absolute", left: PAPER_X, top: 0, right: 0, bottom: 0 }} />
           <div style={{ position: "absolute", left: 0, top: 0, width: PAPER_X, height: STAGE_H, overflow: "hidden" }}>
             <img
-              src="/assets/watch-target-render.png"
+              src={asset("/assets/watch-target-render.png")}
               alt="Render of the target SEKUND design: a matte black resin watch showing the APPROVE? page"
               style={{ position: "absolute", left: RENDER.left, top: RENDER.top, width: RENDER.size, height: RENDER.size }}
             />
@@ -410,7 +411,7 @@ export const SLIDES: readonly Slide[] = [
       <>
         <div className="slide__bg">
           <img
-            src="/assets/watch-sim-3d.png"
+            src={asset("/assets/watch-sim-3d.png")}
             alt="The 3D watch simulator in the browser, dark theme, turned to a three-quarter view, showing the clock face"
             style={{ position: "absolute", top: 0, right: CAPTURE_RIGHT, height: STAGE_H, width: "auto" }}
           />

@@ -1,9 +1,11 @@
-/** A screenshot in a hairline frame with an optional one-line caption. */
+import { asset } from "@/asset";
+
+/** A screenshot in a hairline frame with an optional one-line caption. `src` is a path in `public/`. */
 export function Shot({ src, alt, width, height, caption }: { src: string; alt: string; width: number; height: number; caption?: string }) {
   return (
     <figure className="frame" style={{ width, margin: 0 }}>
       <div className="frame__img" style={{ width, height }}>
-        <img src={src} alt={alt} width={width} height={height} />
+        <img src={asset(src)} alt={alt} width={width} height={height} />
       </div>
       {caption && <figcaption className="caption">{caption}</figcaption>}
     </figure>
