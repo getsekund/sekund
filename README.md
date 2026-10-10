@@ -133,9 +133,9 @@ pnpm dev:deck     # http://127.0.0.1:4320
 | `/?notes` | Presenter view: current slide, next slide, Serbian speaker notes, clock and elapsed time. Open it in a second window; both windows follow the same slide over a `BroadcastChannel`. |
 | `/?print` | Every slide at full size, one under the other. |
 | `/?sheet` | Contact sheet of the whole deck. |
-| `/?logos`, `/?illustrations`, `/?hero` | Brand option sheets: the four wordmark directions, the four watch illustrations, and the live illustration fully dithered next to the crisp-LCD treatment, with the live one marked. |
+| `/?logos`, `/?illustrations`, `/?hero`, `/?palette` | Brand option sheets: the wordmark directions with the chosen Inter SemiBold, the four watch illustrations, the live illustration fully dithered next to the crisp-LCD treatment, and the three white-and-blue dither palettes, with the live one marked on each. |
 
-Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` jump to a slide; click the right part of the screen for next, the left edge for back. Motion stops under `prefers-reduced-motion`.
+Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` jump to a slide; click the right part of the screen for next, the left edge for back. Each slide's pieces rise in over half a second when it becomes current; motion stops under `prefers-reduced-motion` and in print.
 
 ### PDF
 
@@ -157,7 +157,7 @@ pnpm --filter @sekund/deck typecheck
 pnpm --filter @sekund/deck lint       # oxlint
 ```
 
-Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`); the alternatives stay next to them, so swapping is one import. See `deck/README.md`.
+Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`), the dither colours in `deck/src/dither/palette.ts` (`DITHER_PALETTE`); the alternatives stay next to each, so swapping is one assignment. See `deck/README.md`.
 
 ## Solana SDK
 
