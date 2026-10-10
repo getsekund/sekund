@@ -102,7 +102,7 @@ export const BEATS: readonly Beat[] = [
     end: 96,
     cues: [
       { at: 80.3, end: 83.5, text: "I'm Goran Petkovic, a product designer and developer." },
-      { at: 83.8, end: 89.6, text: "I run a product agency, and did product development for Motif, Twilight and BitDSM." },
+      { at: 83.8, end: 89.6, text: "Before SEKUND, I did product work for Motif Finance, Twilight and BitDSM." },
       { at: 89.9, end: 92.6, text: "Srdjan Solajic is our front-end developer." },
       { at: 92.8, end: 95.8, text: "We built all of this during the hackathon." },
     ],

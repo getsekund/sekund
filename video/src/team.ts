@@ -12,7 +12,7 @@ type Props = { children?: ReactNode };
 function text(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(text).join("");
-  if (isValidElement<Props>(node)) return text(node.props.children);
+  if (isValidElement<Props>(node)) return node.type === "br" ? " " : text(node.props.children);
   return "";
 }
 

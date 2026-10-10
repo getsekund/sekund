@@ -77,7 +77,7 @@ describe("team", () => {
   it("says every name, role and company the slide shows, so the voice-over matches the slide", () => {
     for (const f of founders) {
       expect(said, f.name).toContain(f.name);
-      const role = f.line.split(/[;.]/)[0]!.toLowerCase();
+      const role = f.line.split(/[;.(]/)[0]!.toLowerCase();
       for (const word of role.split(/\s+/).filter(Boolean)) expect(said.toLowerCase(), `${f.name}: ${word}`).toContain(word);
       const names = f.line
         .split(/[;.]\s*/)
