@@ -123,7 +123,7 @@ The companion verified the signature before broadcast. Re-checked afterwards fro
 
 ## Pitch deck
 
-The deck in `deck/` is a Vite + React app, not a slide file, so it can show the real product: screenshots from the companion and the 3D watch, the confirmed devnet transaction, and the brand's ordered-dither look drawn live on canvas (own Bayer 8×8 code, no third-party kit).
+The deck in `deck/` is a Vite + React app, not a slide file, so it can show the real product: captures from the 3D watch simulator, the confirmed devnet transaction, diagrams drawn in SVG, and the brand's ordered-dither look drawn live on canvas (own Bayer 8×8 code, no third-party kit).
 
 ```bash
 pnpm dev:deck     # http://127.0.0.1:4320
@@ -159,7 +159,7 @@ pnpm --filter @sekund/deck typecheck
 pnpm --filter @sekund/deck lint       # oxlint
 ```
 
-Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`), the dither colours in `deck/src/dither/palette.ts` (`DITHER_PALETTE`); the alternatives stay next to each, so swapping is one assignment. See `deck/README.md`.
+Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. The captures under `deck/public/assets/` were taken from the running watch simulator (`?view=3d`, dark theme) and the Solana Explorer page of the proof transaction; `watch-target-render.png` is a generated render of the target design with the real simulator LCD composited in, and the slide says so. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`), the dither colours in `deck/src/dither/palette.ts` (`DITHER_PALETTE`); the alternatives stay next to each, so swapping is one assignment. See `deck/README.md`.
 
 ## Solana SDK
 
@@ -205,4 +205,4 @@ Third-party assets keep their own licences and are not relicensed:
 | Adafruit GFX `glcdfont` 5×7 glyphs | BSD | `deck/src/ui/glcdfont-LICENSE.txt`, `watch-sim/src/face/glcdfont-LICENSE.txt` |
 | Dependencies (`@solana/kit`, React, Vite, Playwright, …) | Their own | `node_modules/*/LICENSE` |
 
-The watch illustrations under `deck/public/assets/` are generated pictures of a watch that does not exist yet; the screenshots there were taken from the running apps and from the Solana Explorer page of the proof transaction.
+The watch illustrations and the target render under `deck/public/assets/` are generated pictures of a watch that does not exist yet; the captures there were taken from the running simulator and from the Solana Explorer page of the proof transaction.

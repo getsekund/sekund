@@ -290,7 +290,7 @@ a {
 .equation {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 80px 1fr 120px 1fr;
+  grid-template-columns: 1fr 64px 1fr 96px 1fr;
   align-items: center;
   gap: 24px;
 }
@@ -300,25 +300,6 @@ a {
   font-weight: 400;
   line-height: 1;
   text-align: center;
-}
-
-/* Proof: label column and value column, baseline aligned. */
-.facts {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 40px;
-  row-gap: 8px;
-  align-items: baseline;
-}
-
-/* Shipped: the simulator render sits on the black ground with no frame; the figure takes the column height. */
-.render {
-  display: block;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  object-fit: contain;
-  object-position: top right;
 }
 
 /* Screenshot frames: a hairline box, a one-line caption underneath, no shadow. */
@@ -398,18 +379,12 @@ a {
   line-height: 1;
 }
 
-/* The picture inside a step has no frame of its own; the card border is enough. */
+/* The diagram inside a step has no frame of its own; the card border is enough. */
 .step__img {
   width: 100%;
   aspect-ratio: 724 / 540;
   background: var(--d-ground);
   overflow: hidden;
-}
-
-.step__img img {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .step .sub {

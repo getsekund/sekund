@@ -10,30 +10,12 @@ export function Shot({ src, alt, width, height, caption }: { src: string; alt: s
   );
 }
 
-/** One numbered step on the how-it-works slide: LCD number, picture, title, one line. */
-export function Step({
-  n,
-  title,
-  detail,
-  src,
-  alt,
-  fit = "cover",
-  background,
-}: {
-  n: string;
-  title: string;
-  detail: string;
-  src: string;
-  alt: string;
-  fit?: "cover" | "contain";
-  background?: string;
-}) {
+/** One numbered step on the how-it-works slide: LCD number, a drawn figure, title, one line. */
+export function Step({ n, title, detail, figure }: { n: string; title: string; detail: string; figure: React.ReactNode }) {
   return (
     <div className="step">
       <span className="step__n">{n}</span>
-      <div className="step__img" style={{ background }}>
-        <img src={src} alt={alt} style={{ objectPosition: fit === "cover" ? "top" : "center", objectFit: fit }} />
-      </div>
+      <div className="step__img">{figure}</div>
       <h3 className="sub">{title}</h3>
       <p className="step__d">{detail}</p>
     </div>

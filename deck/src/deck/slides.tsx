@@ -3,6 +3,7 @@ import { Dither } from "@/dither/Dither";
 import { bands, fade, horizon, pulse } from "@/dither/fields";
 import { DotText } from "@/ui/DotText";
 import { HeroWatch } from "@/ui/HeroWatch";
+import { ApproveDiagram, BuildDiagram, ParseDiagram, SignDiagram } from "@/ui/HowDiagrams";
 import { Knock } from "@/ui/Knock";
 import { Shot, Step } from "@/ui/pieces";
 import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
@@ -17,6 +18,22 @@ const STAGE_H = 1080;
  * no rectangular edge; the box runs past the top and bottom so the strap leaves the frame.
  */
 const HERO = { x: STAGE_W - 80 - 830, y: -30, width: 830, height: 1140 };
+
+/** Next 90 days: where the paper panel with the ask begins; the plan and the target render sit on the black to its left. */
+const PAPER_X = 1140;
+/** Gap between the plan column and the paper edge, and the inset of the ask inside the paper. */
+const PAPER_GAP = 128;
+const PAPER_PAD = 80;
+/** The target render: a square image on the black ground, under the plan, its strap leaving the frame at the bottom. */
+const RENDER = { size: 760, left: 420, top: 520 };
+
+/**
+ * Shipped slide: the simulator capture runs the full height of the stage, so the strap leaves the
+ * frame at the slide edges the way the hero does. It is 1860x2612, so 769 wide at stage height;
+ * the case ends 27 px inside its right edge, which puts the case on the right margin.
+ */
+const CAPTURE_RIGHT = 84;
+const CAPTURE_TEXT_W = 920;
 
 /** Proof slide: both captures share one height, so their top and bottom edges line up. */
 const PROOF_H = 454;
@@ -126,10 +143,10 @@ export const SLIDES: readonly Slide[] = [
       <div className="slide__body slide__body--dense">
         <h2 className="title">How it works.</h2>
         <div className="cols" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
-          <Step n="1" src="/assets/companion-card-mobile.png" alt="The companion request card on a phone, waiting for the watch" title="Companion builds the transaction" detail="Fresh blockhash, exact message bytes, sent to the watch." fit="contain" background="#e9eae4" />
-          <Step n="2" src="/assets/lcd-to.png" alt="The watch LCD showing the destination address" title="Parses the exact bytes" detail="Amount and destination read from the bytes it signs, not the app." />
-          <Step n="3" src="/assets/lcd-approve.png" alt="The watch LCD on the APPROVE? page" title="PIN, then a separate approve" detail="PIN opens a session. Approve is a separate button." />
-          <Step n="4" src="/assets/lcd-signed.png" alt="The watch LCD showing SIGNED, sent to app" title="Ed25519 signature returns" detail="Over the same bytes. Companion verifies, assembles, broadcasts." />
+          <Step n="1" figure={<BuildDiagram />} title="Companion builds the transaction" detail="Fresh blockhash, exact message bytes, sent to the watch." />
+          <Step n="2" figure={<ParseDiagram />} title="Parses the exact bytes" detail="Amount and destination read from the bytes it signs, not the app." />
+          <Step n="3" figure={<ApproveDiagram />} title="PIN, then a separate approve" detail="PIN opens a session. Approve is a separate button." />
+          <Step n="4" figure={<SignDiagram />} title="Ed25519 signature returns" detail="Over the same bytes. Companion verifies, assembles, broadcasts." />
         </div>
         <p className="lead foot">
           <span className="plate plate--inverse">The key never reaches the companion. On hardware it stays in the secure element.</span>
@@ -182,9 +199,10 @@ export const SLIDES: readonly Slide[] = [
     id: "business",
     title: "Business",
     notes: [
-      "Bez brojeva. Prodajemo sat; companion je besplatan.",
-      "Redosled, ne prognoza: prvo hardverski prototip; onda pilot, taj jedan prototip u rukama nekog ko već sam čuva ključeve na Solani; onda Wallet Standard adapter i postojeći wallet-i koji nas prikažu kao podržanog potpisnika; onda pre-orderi sa povratnim depozitom. Solana Mobile je sledeći kanal: companion na Seeker dApp Store-u, bundle ako ga zaslužimo. Seeker je kanal, ne zavisnost: companion je Android prvo, na bilo kom Android telefonu sa Chrome-om; iOS je kasnija nativna aplikacija.",
-      "White-label za berze i custody deskove tek posle pravog secure elementa, secure boot-a i eksterne revizije. Pre toga ga ne nudimo.",
+      "Bez brojeva. Prodajemo sat; companion je besplatan. Ovo je slajd o poslu, ne o planu: ko kupuje prvi i kako nas nalazi.",
+      "Ko kupuje prvi: ljudi na Solani koji drže prava sredstva u sopstvenom čuvanju i potpisuju svaki dan. Njima je hardverski novčanik u fioci stvaran problem, i oni već plaćaju za potpisnik.",
+      "Kako nas nalaze: kroz wallet-e koji nas prikažu kao podržanog potpisnika (Wallet Standard adapter, pa postojeći wallet-i), zatim kroz Solana Mobile dApp Store. Seeker je kanal, ne zavisnost: companion je Android prvo, na bilo kom Android telefonu sa Chrome-om; iOS je kasnija nativna aplikacija.",
+      "Redosled naplate, ako pitaju: pre-orderi sa povratnim depozitom tek kad radi hardver, ne pre. White-label za berze i custody deskove tek posle pravog secure elementa, secure boot-a i eksterne revizije; pre toga ga ne nudimo.",
       "Ako pitaju za cenu, BOM ili tiraž: to još nemamo i nećemo izmišljati.",
     ],
     render: ({ active }) => (
@@ -202,15 +220,14 @@ export const SLIDES: readonly Slide[] = [
           </h2>
           <div className="cols" style={{ gridTemplateColumns: "1fr 1fr", gap: 32 }}>
             <div className="card">
-              <h3 className="sub">Direct, in this order</h3>
-              <p className="mono">Hardware prototype. A small Solana self-custody pilot. Wallet Standard and existing wallets. Refundable pre-orders.</p>
+              <h3 className="sub">Who buys first</h3>
+              <p className="mono">Solana users who keep real funds in self-custody and sign every day.</p>
             </div>
             <div className="card">
-              <h3 className="sub">Solana Mobile, next</h3>
-              <p className="mono">The companion on the Seeker dApp Store; a bundle if it earns one. A channel, not a requirement.</p>
+              <h3 className="sub">How they find it</h3>
+              <p className="mono">Wallets that list SEKUND as a signer. Then the Solana Mobile dApp Store.</p>
             </div>
           </div>
-          <p className="small dim">White-label only after a real secure element, secure boot and an audit.</p>
         </div>
       </>
     ),
@@ -220,32 +237,44 @@ export const SLIDES: readonly Slide[] = [
     id: "next",
     title: "Next 90 days and the ask",
     notes: [
-      "Levo je plan, desno molba. Naručujemo Tropic Square TROPIC01 Mini Board i Nordic nRF52840 DK, dižemo SPI i secure channel ka čipu, pa BLE uparivanje umesto lokalnog linka. Ništa od toga još ne postoji; danas potpisuje simulator.",
-      "Cilj do kraja perioda: jedan završen radni prototip, ne serija. Pilot je taj jedan prototip u rukama nekog ko već sam čuva ključeve na Solani. Uz to tok oporavka (Squads dizajn) koji se može demonstrirati. Ne reci deset, ne reci tiraž.",
-      "Tražimo tri stvari: mesto u akceleratoru, uvod kod Solana Mobile kao kanal, i hardverskog partnera za kućište i taj prvi prototip. Izgovori sve tri, pa stani.",
+      "Levo je obećanje, desno molba. Jedan radni prototip za 90 dana: TROPIC01 drži ključ, nRF52840 vodi ekran, dugmad i Bluetooth, upari se sa Android telefonom, oporavak ide kroz Squads trezor. Ništa od toga još ne postoji; danas potpisuje simulator. Slika dole je render ciljanog dizajna, ne fotografija; LCD na njemu je pravi ekran simulatora, stranica APPROVE?.",
+      "Kako to proveravamo: taj jedan prototip ide u ruke ljudima koji svaki dan potpisuju na Solani i sami čuvaju ključeve; gledamo da li ga nose i da li potpisuju sa njega. Ne reci deset, ne reci serija, ne reci tiraž.",
+      "Tražimo tri stvari: mesto u akceleratoru, hardverskog partnera za kućište, i uvod kod Solana Mobile. Izgovori sve tri, pa stani.",
     ],
     render: () => (
       <>
         <div className="slide__bg">
-          <div className="paper" style={{ position: "absolute", left: 1000, top: 0, right: 0, bottom: 0 }} />
+          <div className="paper" style={{ position: "absolute", left: PAPER_X, top: 0, right: 0, bottom: 0 }} />
+          <img
+            className="target-render"
+            src="/assets/watch-target-render.png"
+            alt="Render of the target SEKUND design: a matte black resin watch showing the APPROVE? page"
+            style={{ position: "absolute", left: RENDER.left, top: RENDER.top, width: RENDER.size, height: RENDER.size }}
+          />
+          <p className="caption" style={{ position: "absolute", left: 112, bottom: 112 }}>
+            Target design, render.
+          </p>
         </div>
-        <div className="slide__body" style={{ display: "grid", gridTemplateColumns: "792px 1fr", columnGap: 192, alignContent: "start" }}>
+        <div className="slide__body" style={{ display: "grid", gridTemplateColumns: `${PAPER_X - 112 - PAPER_GAP}px 1fr`, columnGap: PAPER_GAP + PAPER_PAD, alignContent: "start" }}>
           <div className="col" style={{ gap: 56 }}>
-            <h2 className="title">Next 90 days.</h2>
+            <h2 className="title">
+              One working prototype
+              <br />
+              in 90 days.
+            </h2>
             <ul className="list">
-              <li>Tropic Square TROPIC01 and Nordic nRF52840 boards on the bench</li>
-              <li>One final working prototype in 90 days</li>
-              <li>Bluetooth LE pairing in place of the local link</li>
-              <li>A small Solana self-custody pilot</li>
-              <li>Recovery flow, the Squads design</li>
+              <li>TROPIC01 holds the key</li>
+              <li>nRF52840 runs the screen, buttons and Bluetooth</li>
+              <li>Pairs with an Android phone</li>
+              <li>Recovery through a Squads vault</li>
             </ul>
           </div>
           <div className="col on-paper" style={{ gap: 56 }}>
             <h2 className="title">The ask.</h2>
             <ul className="list">
-              <li>A place in the accelerator cohort</li>
-              <li>An introduction to Solana Mobile, as a channel</li>
-              <li>A hardware partner for the case and the first prototype</li>
+              <li>A place in the accelerator</li>
+              <li>A hardware partner for the case</li>
+              <li>An introduction to Solana Mobile</li>
             </ul>
           </div>
         </div>
@@ -297,22 +326,28 @@ export const SLIDES: readonly Slide[] = [
       "Imena ne idu na slajd. Ako pitaju ko šta radi: Goran vodi proizvod i inženjering. Srkijevu ulogu opiši onako kako ste se dogovorili; ne nabrajaj delove koda umesto njega. Dvoje ljudi, jedna nedelja.",
     ],
     render: () => (
-      <div className="slide__body slide__body--dense">
-        <h2 className="title">Shipped this week.</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 560px", gap: 96, alignItems: "start", flex: 1, minHeight: 0 }}>
-          <ul className="list" style={{ gap: 28 }}>
+      <>
+        <div className="slide__bg">
+          <img
+            src="/assets/watch-sim-3d.png"
+            alt="The 3D watch simulator in the browser, dark theme, turned to a three-quarter view, showing the clock face"
+            style={{ position: "absolute", top: 0, right: CAPTURE_RIGHT, height: STAGE_H, width: "auto" }}
+          />
+          <p className="caption" style={{ position: "absolute", left: 112, bottom: 112 }}>
+            The 3D simulator in the browser, live LCD.
+          </p>
+        </div>
+        <div className="slide__body slide__body--dense">
+          <h2 className="title">Shipped this week.</h2>
+          <ul className="list" style={{ gap: 28, maxWidth: CAPTURE_TEXT_W }}>
             <li>Signing core: message parser, request guard, transfer allowlist, PIN session, one-time approve token</li>
             <li>A confirmed devnet transaction, signed in the watch simulator, verified before broadcast</li>
             <li>A 3D watch simulator with the live LCD on its face</li>
             <li>A companion that builds, verifies and broadcasts, with the watch&rsquo;s own words for every state</li>
             <li>Two secure-element profiles in code, TROPIC01 and SE050E. The chips themselves are roadmap</li>
           </ul>
-          <figure className="frame" style={{ margin: 0, alignSelf: "stretch", minHeight: 0 }}>
-            <img className="render" src="/assets/watch-sim-3d.png" alt="The 3D watch simulator, dark theme, showing the clock face" />
-            <figcaption className="caption">The 3D simulator in the browser, live LCD.</figcaption>
-          </figure>
         </div>
-      </div>
+      </>
     ),
   },
 
@@ -322,7 +357,7 @@ export const SLIDES: readonly Slide[] = [
     notes: [
       "Ponovi rečenicu, pa onu za sudije, pa molbu, pa stani. Proveri i potpiši Solanu na ruci; običan sat od smole; ključ nikad ne stiže do companion aplikacije.",
       "Za sudije: simulator prikazuje tačno ono što potpisuje, potpisuje samo posle radnje odobrenja na satu, i devnet je to prihvatio. Sve tri su proverljive, u Exploreru i u repou.",
-      "Tražimo akcelerator, uvod kod Solana Mobile i hardverskog partnera. Repo je na GitHubu, Apache-2.0. Hvala.",
+      "Tražimo akcelerator, hardverskog partnera za kućište i uvod kod Solana Mobile. Repo je na GitHubu, Apache-2.0. Hvala.",
     ],
     render: ({ active }) => (
       <>
@@ -344,7 +379,7 @@ export const SLIDES: readonly Slide[] = [
               </span>
             </p>
             <Knock as="p" className="body">
-              Fund SEKUND: accelerator, Solana Mobile, a hardware partner.
+              Fund SEKUND: accelerator, a hardware partner, Solana Mobile.
             </Knock>
           </div>
           <p className="small foot">

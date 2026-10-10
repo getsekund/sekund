@@ -52,9 +52,9 @@ No slide chrome: the wordmark appears only where it is content (the bezel, the L
 | `src/deck/facts.ts` | The devnet transaction shown on the proof slide, read back from the chain |
 | `src/dither/` | Bayer 8×8 threshold, coverage fields, the palette, the `Dither` canvas |
 | `src/brand/` | Wordmark directions and watch illustrations; the live pick for each |
-| `src/ui/` | Wordmark, hero watch, 5×7 dot-matrix labels (Adafruit glcdfont, BSD), screenshot frames and steps |
+| `src/ui/` | Wordmark, hero watch, 5×7 dot-matrix labels (Adafruit glcdfont, BSD), the how-it-works diagrams, capture frames and steps |
 | `src/styles/` | Tokens (same fonts as the product, ink on black) and the screen, presenter, print and option-sheet stylesheets |
-| `public/assets/` | Screenshots from the running companion and 3D watch (`watch-sim-3d.png`), the Solana Explorer summary of the proof, and the watch illustrations |
+| `public/assets/` | Captures from the running 3D watch simulator (`watch-sim-3d.png`, `lcd-approve.png`), the Solana Explorer summary of the proof, the target-design render (`watch-target-render.png`) and the watch illustrations |
 | `scripts/export.ts` | Playwright export of PNGs, contact sheet, option sheets and PDF |
 
 The dither is written here; it is not the dither-kit package. That kit declares MIT in `package.json` but ships no `LICENSE` file, and its stack (Tailwind, shadcn, motion, d3 charts) does not fit a deck, so the look is reproduced, not imported.
