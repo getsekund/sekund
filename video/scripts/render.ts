@@ -15,7 +15,7 @@ import { parseArgs } from "node:util";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { VO_FILE } from "../src/script";
-import { webpackOverride } from "../webpack-override";
+import { deckWebpackOverride } from "../webpack-override";
 
 const root = resolve(import.meta.dirname, "..");
 const { values } = parseArgs({
@@ -34,7 +34,7 @@ const outDir = values.out;
 mkdirSync(outDir, { recursive: true });
 
 console.log("bundling");
-const serveUrl = await bundle({ entryPoint: resolve(root, "src/index.ts"), webpackOverride, publicDir: resolve(root, "public") });
+const serveUrl = await bundle({ entryPoint: resolve(root, "src/index.ts"), webpackOverride: deckWebpackOverride(root), publicDir: resolve(root, "public") });
 const inputProps = { captions };
 const composition = await selectComposition({ serveUrl, id: "SekundPitch", inputProps });
 
@@ -68,7 +68,7 @@ await renderMedia({
 console.log("video", video);
 
 // The poster is the title beat once the hero has dissolved in and before the first caption ends.
-const poster = resolve(outDir, `${name}-poster.png`);
+const poster = resolve(outDir, "sekund-pitch-2min-poster.png");
 await renderStill({ composition, serveUrl, inputProps: { captions: false }, frame: Math.round(4.6 * composition.fps), output: poster, overwrite: true });
 console.log("poster", poster);
 

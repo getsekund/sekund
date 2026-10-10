@@ -1,7 +1,8 @@
 import { Config } from "@remotion/cli/config";
-import { webpackOverride } from "./webpack-override";
+import { deckWebpackOverride } from "./webpack-override";
 
 Config.setVideoImageFormat("jpeg");
 Config.setJpegQuality(95);
 Config.setOverwriteOutput(true);
-Config.overrideWebpackConfig(webpackOverride);
+// The Remotion CLI evaluates this file from the package root, as CommonJS (no import.meta).
+Config.overrideWebpackConfig(deckWebpackOverride(process.cwd()));
