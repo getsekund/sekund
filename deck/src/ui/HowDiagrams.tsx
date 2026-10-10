@@ -254,8 +254,6 @@ export function ApproveDiagram() {
         <Label text="REJECT" x={lcdX(right) + 4} y={lcdY + 150} dot={3} color={SEG} />
         <Label text="APPROVE" x={lcdX(right) + 244 - 4 - dotsWidth("APPROVE", 3)} y={lcdY + 150} dot={3} color={SEG} />
       </Watch>
-      <line x1={right.x + right.w + 6} y1={right.y + right.h * 0.68 + 13} x2={right.x + right.w + 6} y2={right.y + right.h + 30} stroke={DIM} strokeWidth={3} />
-      <Label text="D" x={right.x + right.w - 9} y={right.y + right.h + 38} dot={5} />
     </Box>
   );
 }

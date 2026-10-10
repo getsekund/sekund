@@ -5,6 +5,8 @@ import { DotText } from "@/ui/DotText";
 import { HeroWatch } from "@/ui/HeroWatch";
 import { ApproveDiagram, BuildDiagram, ParseDiagram, SignDiagram } from "@/ui/HowDiagrams";
 import { Knock } from "@/ui/Knock";
+import { fitAffine } from "@/ui/affine";
+import { ApprovePage } from "@/ui/LcdApprove";
 import { Shot, Step } from "@/ui/pieces";
 import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
 import type { Slide } from "./types";
@@ -24,8 +26,27 @@ const PAPER_X = 1140;
 /** Gap between the plan column and the paper edge, and the inset of the ask inside the paper. */
 const PAPER_GAP = 128;
 const PAPER_PAD = 80;
-/** The target render: a square image on the black ground, under the plan, its strap leaving the frame at the bottom. */
-const RENDER = { size: 760, left: 420, top: 520 };
+/**
+ * The target render: a square image on the black ground, under the plan, its strap leaving the
+ * frame at the bottom. It is clipped to the black panel, so its ground never crosses onto the paper.
+ * In the 1024 px image the case spans x 0.32–0.71 and y 0.26–0.67, the buckle reaches x 0.85.
+ */
+const RENDER = { size: 900, left: 340, top: 430 };
+/** Corners of the render's LCD window in its 1024 px space, clockwise from top left, fitted from the panel edges. */
+const RENDER_LCD: readonly (readonly [number, number])[] = [
+  [387.67, 414.32],
+  [589.28, 437.5],
+  [570.63, 591.31],
+  [370.32, 568.61],
+];
+/**
+ * The page is drawn into the window at the simulator's own proportions: the window is wider than
+ * the simulator's, so the box is the page's height (136–322 in window units, plus a margin) and
+ * the window's aspect, centred on the page.
+ */
+const RENDER_LCD_BOX = { x: 48.3, y: 128, w: 263.4, h: 202 };
+/** Caption sits beside the case, right-aligned 44 px short of the left pushers (x 0.258 of the image). */
+const RENDER_CAPTION_RIGHT = STAGE_W - (RENDER.left + RENDER.size * 0.258 - 44);
 
 /**
  * Shipped slide: the simulator capture runs the full height of the stage, so the strap leaves the
@@ -245,13 +266,38 @@ export const SLIDES: readonly Slide[] = [
       <>
         <div className="slide__bg">
           <div className="paper" style={{ position: "absolute", left: PAPER_X, top: 0, right: 0, bottom: 0 }} />
-          <img
-            className="target-render"
-            src="/assets/watch-target-render.png"
-            alt="Render of the target SEKUND design: a matte black resin watch showing the APPROVE? page"
-            style={{ position: "absolute", left: RENDER.left, top: RENDER.top, width: RENDER.size, height: RENDER.size }}
-          />
-          <p className="caption" style={{ position: "absolute", left: 112, bottom: 112 }}>
+          <div style={{ position: "absolute", left: 0, top: 0, width: PAPER_X, height: STAGE_H, overflow: "hidden" }}>
+            <img
+              src="/assets/watch-target-render.png"
+              alt="Render of the target SEKUND design: a matte black resin watch showing the APPROVE? page"
+              style={{ position: "absolute", left: RENDER.left, top: RENDER.top, width: RENDER.size, height: RENDER.size }}
+            />
+            <svg
+              width={RENDER_LCD_BOX.w}
+              height={RENDER_LCD_BOX.h}
+              viewBox={`${RENDER_LCD_BOX.x} ${RENDER_LCD_BOX.y} ${RENDER_LCD_BOX.w} ${RENDER_LCD_BOX.h}`}
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                overflow: "visible",
+                transformOrigin: "0 0",
+                transform: fitAffine(
+                  [
+                    [0, 0],
+                    [RENDER_LCD_BOX.w, 0],
+                    [RENDER_LCD_BOX.w, RENDER_LCD_BOX.h],
+                    [0, RENDER_LCD_BOX.h],
+                  ],
+                  RENDER_LCD.map(([x, y]) => [RENDER.left + (x * RENDER.size) / 1024, RENDER.top + (y * RENDER.size) / 1024] as const),
+                ),
+              }}
+            >
+              <ApprovePage />
+            </svg>
+          </div>
+          <p className="caption" style={{ position: "absolute", right: RENDER_CAPTION_RIGHT, bottom: 112 }}>
             Target design, render.
           </p>
         </div>
