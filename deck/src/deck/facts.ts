@@ -29,3 +29,6 @@ export function shortKey(key: string): string {
 }
 
 export const REPO_URL = "https://github.com/getsekund/sekund";
+
+/** The public site. Registered, not deployed: a scan does not open a page yet. */
+export const SITE_URL = "https://getsekund.com";

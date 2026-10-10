@@ -101,6 +101,33 @@ a {
   padding-bottom: calc(var(--d-text-small) * 1.4 + var(--d-gap));
 }
 
+/*
+ * Close: the site QR sits in the open lower left, above the repository line, clear of the watch.
+ * The square is paper so a phone can read it off the dither. The host sits on the same baseline.
+ */
+.close-qr {
+  position: absolute;
+  left: var(--d-margin);
+  bottom: 188px;
+  width: 156px;
+  height: 156px;
+  display: block;
+  line-height: 0;
+}
+
+.site-qr__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.close-qr__host {
+  position: absolute;
+  left: calc(var(--d-margin) + 156px + 24px);
+  bottom: 188px;
+  margin: 0;
+}
+
 .slide__bg {
   position: absolute;
   inset: 0;

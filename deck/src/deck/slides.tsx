@@ -6,10 +6,11 @@ import { DotText } from "@/ui/DotText";
 import { HeroWatch } from "@/ui/HeroWatch";
 import { ApproveDiagram, BuildDiagram, ParseDiagram, SignDiagram } from "@/ui/HowDiagrams";
 import { Knock } from "@/ui/Knock";
+import { SiteQr } from "@/ui/SiteQr";
 import { fitAffine } from "@/ui/affine";
 import { ApprovePage } from "@/ui/LcdApprove";
 import { Shot, Step } from "@/ui/pieces";
-import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
+import { EARLIER_TX, PROOF_TX, REPO_URL, SITE_URL, explorerUrl, shortKey } from "./facts";
 import type { Slide } from "./types";
 
 const STAGE_W = 1920;
@@ -85,7 +86,7 @@ export const SLIDES: readonly Slide[] = [
             <Knock as="h1" className="claim">
               A hardware wallet
               <br />
-              you wear.
+              you wear
             </Knock>
             <p className="lead">
               <span className="plate plate--inverse">
@@ -118,7 +119,7 @@ export const SLIDES: readonly Slide[] = [
         <div className="slide__body slide__body--quiet">
           <h2 className="title" style={{ maxWidth: 1100 }}>
             Hardware wallets are
-            <br />a second object.
+            <br />a second object
           </h2>
           <ul className="list" style={{ maxWidth: 1060 }}>
             <li>People don&rsquo;t carry them.</li>
@@ -145,7 +146,7 @@ export const SLIDES: readonly Slide[] = [
     render: () => (
       <div className="slide__body slide__body--quiet">
         <h2 className="title">
-          Signed in the simulator. <span className="dim">Accepted on devnet.</span>
+          Signed in the simulator. <span className="dim">Accepted on devnet</span>
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: `${PROOF_LCD_W}px 1fr`, gap: 56, alignItems: "start" }}>
           <Shot src="/assets/lcd-approve.png" alt="The watch simulator's LCD on the APPROVE? page with the countdown" width={PROOF_LCD_W} height={PROOF_H} />
@@ -167,7 +168,7 @@ export const SLIDES: readonly Slide[] = [
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
-        <h2 className="title">How it works.</h2>
+        <h2 className="title">How it works</h2>
         <div className="cols" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
           <Step n="1" figure={<BuildDiagram />} title="Phone app builds the transaction" />
           <Step n="2" figure={<ParseDiagram />} title="Watch parses the bytes it signs" />
@@ -198,7 +199,7 @@ export const SLIDES: readonly Slide[] = [
           </div>
         </div>
         <div className="slide__body slide__body--quiet" style={{ paddingBottom: 300 }}>
-          <h2 className="title">Why Solana.</h2>
+          <h2 className="title">Why Solana</h2>
           <div className="cols" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 56 }}>
             <div className="col">
               <hr className="rule" />
@@ -242,7 +243,7 @@ export const SLIDES: readonly Slide[] = [
           <h2 className="title">
             We sell the watch.
             <br />
-            The phone app is free.
+            The phone app is free
           </h2>
           <div className="cols" style={{ gridTemplateColumns: "1fr 1fr", gap: 32 }}>
             <div className="card">
@@ -263,8 +264,8 @@ export const SLIDES: readonly Slide[] = [
     id: "team",
     title: "Team",
     notes: [
-      "Dvoje. Jedan red po osobi, bez biografije, bez brojeva, bez imena agencije. Goran: dizajner proizvoda i developer, vodi agenciju za proizvode; razvoj proizvoda za Motif, Twilight i BitDSM. Srdjan: front-end developer.",
-      "Ako pitaju ko je šta uradio u SEKUND-u: Goran vodi proizvod i inženjering; Srdjanovu ulogu opiši onako kako ste se dogovorili, ne nabrajaj delove koda umesto njega. Ne izmišljaj klijente, tiraže ni godine.",
+      "Dvoje. Jedan red po osobi, bez biografije, bez brojeva, bez agencije. Goran Petkovic: product designer and developer, product work for Motif Finance, Twilight, BitDSM. Srdjan Solajic: front-end developer.",
+      "Ako pitaju ko je šta uradio u SEKUND-u: Goran vodi proizvod i inženjering; Srdjan je front-end. Ne izmišljaj klijente, tiraže ni godine, i ne dodaj agenciju.",
     ],
     render: ({ active }) => (
       <>
@@ -274,17 +275,21 @@ export const SLIDES: readonly Slide[] = [
           </div>
         </div>
         <div className="slide__body slide__body--quiet">
-          <h2 className="title">Team.</h2>
+          <h2 className="title">Team</h2>
           <div className="col" style={{ gap: 56, maxWidth: TEAM_W }}>
             <div className="col">
               <hr className="rule" />
               <h3 className="sub">Goran Petkovic</h3>
-              <p className="body">Product designer and developer; runs a product agency. Product development for Motif, Twilight and BitDSM.</p>
+              <p className="body">
+                Product designer and developer
+                <br />
+                (product work for Motif Finance, Twilight, BitDSM)
+              </p>
             </div>
             <div className="col">
               <hr className="rule" />
               <h3 className="sub">Srdjan Solajic</h3>
-              <p className="body">Front-end developer.</p>
+              <p className="body">Front-end developer</p>
             </div>
           </div>
         </div>
@@ -344,7 +349,7 @@ export const SLIDES: readonly Slide[] = [
             <h2 className="title">
               One working prototype
               <br />
-              in 90 days.
+              in 90 days
             </h2>
             <ul className="list">
               <li>TROPIC01 holds the key</li>
@@ -354,7 +359,7 @@ export const SLIDES: readonly Slide[] = [
             </ul>
           </div>
           <div className="col on-paper" style={{ gap: 56 }}>
-            <h2 className="title">The ask.</h2>
+            <h2 className="title">The ask</h2>
             <ul className="list">
               <li>A place in the accelerator</li>
               <li>A hardware partner</li>
@@ -376,7 +381,7 @@ export const SLIDES: readonly Slide[] = [
     ],
     render: () => (
       <div className="slide__body slide__body--dense">
-        <h2 className="title">Lose the watch, not the funds.</h2>
+        <h2 className="title">Lose the watch, not the funds</h2>
         <p className="lead">
           SEKUND is one signer in a Squads vault.
           <br />A lost watch is replaced; the funds stay.
@@ -420,7 +425,7 @@ export const SLIDES: readonly Slide[] = [
           </p>
         </div>
         <div className="slide__body slide__body--dense">
-          <h2 className="title">Shipped this week.</h2>
+          <h2 className="title">Shipped this week</h2>
           <ul className="list" style={{ gap: 36, maxWidth: CAPTURE_TEXT_W }}>
             <li>Signing core, with a PIN and a separate approve</li>
             <li>A devnet transaction, signed in the simulator</li>
@@ -439,6 +444,7 @@ export const SLIDES: readonly Slide[] = [
       "Ponovi rečenicu, pa onu za sudije, pa molbu, pa stani. Hardverski novčanik koji nosiš; običan sat od smole koji potpisuje Solanu; ključ nikad ne stiže do aplikacije na telefonu.",
       "Za sudije: simulator prikazuje tačno ono što potpisuje, potpisuje samo posle radnje odobrenja na satu, i devnet je to prihvatio. Sve tri su proverljive, u Exploreru i u repou.",
       "Tražimo akcelerator, hardverskog partnera za kućište i uvod kod Solana Mobile. Repo je na GitHubu, Apache-2.0. Hvala.",
+      "QR je https://getsekund.com. Sajt još nije podignut, pa skeniranje danas ne otvara stranicu: HTTPS na getsekund.com ne odgovara, HTTP samo preusmerava na www.getsekund.com koji takođe ne odgovara. Nemoj reći da sajt radi. Pošta nije na slajdu; sanduče ne pominji.",
     ],
     render: ({ active }) => (
       <>
@@ -450,7 +456,7 @@ export const SLIDES: readonly Slide[] = [
             <Knock as="h2" className="claim">
               A hardware wallet
               <br />
-              you wear.
+              you wear
             </Knock>
             <p className="lead">
               <span className="plate plate--inverse">
@@ -467,6 +473,12 @@ export const SLIDES: readonly Slide[] = [
             <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
               <Knock>github.com/getsekund/sekund</Knock>
             </a>
+          </p>
+          <a className="close-qr" href={SITE_URL} target="_blank" rel="noreferrer" aria-label="getsekund.com">
+            <SiteQr />
+          </a>
+          <p className="close-qr__host">
+            <Knock className="small">getsekund.com</Knock>
           </p>
         </div>
       </>
