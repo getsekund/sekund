@@ -264,8 +264,8 @@ export const SLIDES: readonly Slide[] = [
     id: "team",
     title: "Team",
     notes: [
-      "Dvoje. Jedan red po osobi, bez biografije, bez brojeva, bez agencije. Goran Petkovic: product designer and developer, product work for Motif Finance, Twilight, BitDSM. Srdjan Solajic: front-end developer.",
-      "Ako pitaju ko je šta uradio u SEKUND-u: Goran vodi proizvod i inženjering; Srdjan je front-end. Ne izmišljaj klijente, tiraže ni godine, i ne dodaj agenciju.",
+      "Dvoje. Jedan red po osobi, bez biografije, bez brojeva, bez agencije. Goran Petkovic: product designer and developer, product work for Motif Finance, Twilight, BitDSM. Srdjan Solajic: engineer.",
+      "Ako pitaju ko je šta uradio u SEKUND-u: Goran vodi proizvod i inženjering; Srdjan je inženjer. Ne izmišljaj klijente, tiraže ni godine, i ne dodaj agenciju.",
     ],
     render: ({ active }) => (
       <>
@@ -289,7 +289,7 @@ export const SLIDES: readonly Slide[] = [
             <div className="col">
               <hr className="rule" />
               <h3 className="sub">Srdjan Solajic</h3>
-              <p className="body">Front-end developer</p>
+              <p className="body">Engineer</p>
             </div>
           </div>
         </div>
