@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { defineConfig } from "vitest/config";
 
-const packages = ["protocol", "se-sim", "companion", "watch-sim"];
+const packages = ["protocol", "se-sim", "companion", "watch-sim", "deck"];
 
 export default defineConfig({
   test: {

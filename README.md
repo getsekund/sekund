@@ -20,6 +20,7 @@ A Solana hardware wallet inside a retro digital watch. This repository is the so
 | `se-sim/` | Simulated secure element: Web Worker, IndexedDB key store, TROPIC01/SE050E profiles, `seDriver` |
 | `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317. Styles come from one tokens file, `companion/src/styles/tokens.css` (SEKUND design system) |
 | `watch-sim/` | Watch simulator, port 4318 (built in parallel) |
+| `deck/` | Pitch deck for the Colosseum Crypto World's Fair as a web app, port 4320. One-bit Bayer-dithered look, presenter notes, PDF export. See [Pitch deck](#pitch-deck) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, trust boundary and request lifecycle as built |
 | [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | Threats, where each is handled, and what the PoC does not protect |
 | `docs/PROTOCOL.md` | Wire contract and transport |
@@ -117,6 +118,45 @@ Recorded run, 7 October 2026, 23:11:10 UTC (devnet slot 508616269):
 | Explorer | https://explorer.solana.com/tx/2G7xpmPKfpXRuhdXXbgNq22NHgHc7bEKsNJ7MaDFNANj8RshowqaKusAx8ACTmEwVMYj1CAuftaSePn9T5bSbwnU?cluster=devnet |
 
 The companion verified the signature before broadcast. Re-checked afterwards from the chain: the transaction succeeded, its only signer is the simulated SE address, and the Ed25519 signature verifies over the on-chain message bytes. The SE address was funded beforehand by the funder wallet (transaction `446Ko2zsMkjjcP8yGbpgSXoXdYdvbmZ9FK6bE5yELgLqQpBe1fSqqiz18qzJaMraL3x7Ue8PYRdKK5rnHQs1FSnU`), which did not sign the SEKUND transfer.
+
+## Pitch deck
+
+The deck in `deck/` is a Vite + React app, not a slide file, so it can show the real product: screenshots from the companion and the 3D watch, the confirmed devnet transaction, and the brand's ordered-dither look drawn live on canvas (own Bayer 8×8 code, no third-party kit).
+
+```bash
+pnpm dev:deck     # http://127.0.0.1:4320
+```
+
+| URL | View |
+|---|---|
+| `/#claim`, `/#proof`, … or `/#3` | The show. One slide per screen, scaled to the window, letterboxed. The hash is the slide. |
+| `/?notes` | Presenter view: current slide, next slide, Serbian speaker notes, clock and elapsed time. Open it in a second window; both windows follow the same slide over a `BroadcastChannel`. |
+| `/?print` | Every slide at full size, one under the other. |
+| `/?sheet` | Contact sheet of the whole deck. |
+
+Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` jump to a slide; click the right part of the screen for next, the left edge for back. Motion stops under `prefers-reduced-motion`.
+
+### PDF
+
+Cmd+P (Ctrl+P) from any view prints the whole deck, one 16:9 page per slide, backgrounds included; pick "Save as PDF", no margins, and keep "Background graphics" on. The page size comes from the stylesheet (`@page { size: 1920px 1080px }`).
+
+The same result without a dialog, plus a PNG of every slide and the contact sheet:
+
+```bash
+pnpm dev:deck                                  # leave running
+pnpm deck:export                               # writes deck/out/
+OUT=/somewhere pnpm deck:export                # elsewhere
+```
+
+The export uses the Playwright Chromium when it is installed (`pnpm --filter @sekund/companion e2e:install`), otherwise a system Google Chrome.
+
+```bash
+pnpm --filter @sekund/deck test       # hash routing, Bayer matrix
+pnpm --filter @sekund/deck typecheck
+pnpm --filter @sekund/deck lint       # oxlint
+```
+
+Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction.
 
 ## Solana SDK
 

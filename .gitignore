@@ -16,3 +16,6 @@ keys/
 # Playwright
 playwright-report/
 test-results/
+
+# Pitch deck export (pnpm deck:export)
+deck/out/

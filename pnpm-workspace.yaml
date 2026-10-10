@@ -3,6 +3,7 @@ packages:
   - se-sim
   - companion
   - watch-sim
+  - deck
 
 onlyBuiltDependencies:
   - esbuild

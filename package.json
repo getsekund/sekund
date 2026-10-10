@@ -12,10 +12,13 @@
     "devnet:proof": "pnpm --filter @sekund/companion devnet:proof",
     "dev:companion": "pnpm --filter @sekund/companion dev",
     "dev:watch": "pnpm --filter ./watch-sim dev",
+    "dev:deck": "pnpm --filter @sekund/deck dev",
+    "deck:export": "pnpm --filter @sekund/deck export",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "pnpm --filter @sekund/companion e2e",
-    "typecheck": "pnpm -r --if-present typecheck"
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
