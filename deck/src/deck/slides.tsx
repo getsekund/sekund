@@ -318,7 +318,7 @@ export const SLIDES: readonly Slide[] = [
     title: "Shipped this week",
     notes: [
       "Ne ko smo, nego šta smo isporučili ove nedelje. Jezgro potpisivanja: parser poruke, čuvar zahteva sa allowlist-om, PIN sesija i jednokratni token za odobrenje.",
-      "Potvrđena devnet transakcija potpisana u simulatoru sata. 3D simulator sa živim LCD-om. Companion koji pravi, proverava i emituje. Dva profila čipa u kodu; sami čipovi, kućište, dugme i Bluetooth su plan. Testovi za sve to, od parsera do klika na 3D dugme. Repo je javan, Apache-2.0.",
+      "Potvrđena devnet transakcija potpisana u simulatoru sata. 3D simulator sa živim LCD-om. Companion koji pravi, proverava i emituje. Dva profila čipa u kodu; sami čipovi, kućište, dugme i Bluetooth su plan. Testovi za sve to, od parsera do klika na 3D dugme. Repo je na GitHubu, Apache-2.0; reci da je javan samo ako je prebačen na public pre pitcha (10. oktobra je još privatan).",
       "Imena ne idu na slajd. Ako pitaju ko šta radi: Goran vodi proizvod i inženjering. Srkijevu ulogu opiši onako kako ste se dogovorili; ne nabrajaj delove koda umesto njega. Dvoje ljudi, jedna nedelja.",
     ],
     render: () => (
