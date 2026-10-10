@@ -1,0 +1,13 @@
+import { Presenter } from "./deck/Presenter";
+import { PrintView } from "./deck/PrintView";
+import { Sheet } from "./deck/Sheet";
+import { Show } from "./deck/Show";
+import { modeFrom } from "./deck/route";
+
+export default function App() {
+  const mode = modeFrom(window.location.search);
+  if (mode === "notes") return <Presenter />;
+  if (mode === "print") return <PrintView />;
+  if (mode === "sheet") return <Sheet />;
+  return <Show />;
+}

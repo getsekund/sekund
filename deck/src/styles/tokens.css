@@ -1,0 +1,37 @@
+/*
+ * SEKUND deck tokens. The deck is the dark, one-bit cousin of the product tokens in
+ * companion/src/styles/tokens.css: the same fonts, ink #f3f1e8 on a black ground, no
+ * third colour. Everything is laid out on a fixed 1920 × 1080 stage and scaled.
+ */
+
+@font-face { font-family: "Archivo"; src: url("/fonts/Archivo-VF.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/IBMPlexMono-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DSEG7 Classic"; src: url("/fonts/DSEG7Classic-BoldItalic.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "DSEG14 Classic"; src: url("/fonts/DSEG14Classic-BoldItalic.woff2") format("woff2"); font-display: block; }
+
+:root {
+  --d-ground: #000000;
+  --d-ink: #f3f1e8;
+  --d-dim: #a9abb2;
+  --d-rule: #3a3d48;
+  --d-lcd: #b4bca6;
+  --d-segment: #1d221c;
+
+  --d-font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --d-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --d-font-lcd7: "DSEG7 Classic", monospace;
+  --d-font-lcd14: "DSEG14 Classic", monospace;
+
+  --d-stage-w: 1920px;
+  --d-stage-h: 1080px;
+  --d-margin: 112px;
+
+  --d-text-claim: 124px;
+  --d-text-title: 92px;
+  --d-text-lead: 44px;
+  --d-text-body: 36px;
+  --d-text-mono: 30px;
+  --d-text-small: 24px;
+  --d-text-caption: 21px;
+}
