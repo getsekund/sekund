@@ -1,6 +1,28 @@
+import { useEffect, useState } from "react";
 import { SlideFrame } from "./SlideFrame";
 import { SLIDES, SLIDE_IDS } from "./slides";
 import { useDeck, useStageScale } from "./useDeck";
+
+const HINT_MS = 2400;
+
+/** The keyboard hint shows while the pointer moves and goes away when it rests, so it never sits in a capture. */
+function useHint(): boolean {
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    let timer = 0;
+    const onMove = () => {
+      setHint(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setHint(false), HINT_MS);
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.clearTimeout(timer);
+    };
+  }, []);
+  return hint;
+}
 
 /**
  * The audience view. Every slide is in the DOM so Cmd+P prints the whole deck; on screen
@@ -9,6 +31,7 @@ import { useDeck, useStageScale } from "./useDeck";
 export function Show() {
   const { index, count, next, prev } = useDeck(SLIDE_IDS);
   const scale = useStageScale();
+  const hint = useHint();
 
   return (
     <main className="show" style={{ ["--d-scale" as string]: scale }}>
@@ -27,7 +50,7 @@ export function Show() {
           Next
         </button>
       </nav>
-      <div className="help" aria-hidden="true">
+      <div className={hint ? "help help--on" : "help"} aria-hidden="true">
         <kbd>→</kbd> next &nbsp; <kbd>←</kbd> back &nbsp; <kbd>1</kbd>–<kbd>0</kbd> jump &nbsp; <kbd>?notes</kbd> presenter &nbsp; <kbd>⌘P</kbd> PDF
       </div>
     </main>

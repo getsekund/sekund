@@ -27,14 +27,13 @@ export interface IllustrationSpec {
   gamma: number;
 }
 
-/** The watch-sim 3D capture the deck opened with. Kept for reference and as a fallback. */
+/** The watch-sim 3D capture the deck opened with. Kept for reference and as a fallback; the shipped slide shows it undithered. */
 export const CAPTURE: IllustrationSpec = {
   id: "capture",
   label: "0",
   name: "Watch-sim capture",
   note: "Straight-on 3D render from watch-sim, dark theme. Honest but flat; the strap and case merge into the ground.",
-  src: "/assets/watch-clock-dark.png",
-  approveSrc: "/assets/watch-approve-dark.png",
+  src: "/assets/watch-sim-3d.png",
   width: 1132,
   height: 1478,
   contrast: 1.35,

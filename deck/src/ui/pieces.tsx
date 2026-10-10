@@ -31,10 +31,10 @@ export function Step({
   return (
     <div className="step">
       <span className="step__n">{n}</span>
-      <div className="frame__img" style={{ width: "100%", aspectRatio: "724 / 560", background }}>
+      <div className="step__img" style={{ background }}>
         <img src={src} alt={alt} style={{ objectPosition: fit === "cover" ? "top" : "center", objectFit: fit }} />
       </div>
-      <h3 className="step__t">{title}</h3>
+      <h3 className="sub">{title}</h3>
       <p className="step__d">{detail}</p>
     </div>
   );

@@ -25,10 +25,19 @@
 
   --d-stage-w: 1920px;
   --d-stage-h: 1080px;
+  /* One margin on all four sides; titles start at it, footers end at it. */
   --d-margin: 112px;
+  /* Vertical rhythm: title to content, content to the closing line. */
+  --d-gap: 48px;
+  --d-gap-l: 64px;
 
-  --d-text-claim: 124px;
-  --d-text-title: 92px;
+  /*
+   * Type scale. One headline weight (600) at two sizes: the claim on the first and last
+   * slide, the title on every other. Below it a lead, a subhead at body size, body, and
+   * the mono sizes for facts, footers and captions.
+   */
+  --d-text-claim: 120px;
+  --d-text-title: 84px;
   --d-text-lead: 44px;
   --d-text-body: 36px;
   --d-text-mono: 30px;

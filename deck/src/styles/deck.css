@@ -65,16 +65,41 @@ a {
   padding: var(--d-margin);
   display: flex;
   flex-direction: column;
+  gap: var(--d-gap);
+  z-index: 1;
+}
+
+/* Quiet slides centre their group in the frame; dense ones run from the top margin to the bottom one. */
+.slide__body--quiet {
+  justify-content: center;
+  gap: var(--d-gap-l);
+}
+
+.slide__body--dense {
+  justify-content: flex-start;
+}
+
+/* The closing line of a dense slide sits on the bottom margin, in the same place on every slide. */
+.foot {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* Claim and close: the copy is centred in the space above the footer line. */
+.hero-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 28px;
+  max-width: 1040px;
 }
 
 .slide__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
-}
-
-.slide__body {
-  z-index: 1;
 }
 
 /* Text always sits on solid ground. Dots never run through glyphs. */
@@ -94,11 +119,10 @@ a {
 
 .claim {
   font-size: var(--d-text-claim);
-  font-weight: 620;
+  font-weight: 600;
   line-height: 1.02;
   letter-spacing: -0.028em;
   margin: 0;
-  text-wrap: balance;
 }
 
 .title {
@@ -107,7 +131,6 @@ a {
   line-height: 1.04;
   letter-spacing: -0.024em;
   margin: 0;
-  text-wrap: balance;
 }
 
 .lead {
@@ -118,10 +141,25 @@ a {
   margin: 0;
 }
 
+/* Subheads: body size, headline weight. Column heads, card titles, step titles. */
+.sub {
+  font-size: var(--d-text-body);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
 .body {
   font-size: var(--d-text-body);
   line-height: 1.3;
   margin: 0;
+}
+
+.link {
+  word-break: break-all;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
 }
 
 .mono {
@@ -178,6 +216,80 @@ a {
   display: inline-block;
   background: var(--d-ground);
   padding: 12px 40px 20px 0;
+}
+
+/* Paper: the ink colour as a surface, with the tokens swapped so everything on it reads in black. */
+.paper {
+  background: var(--d-ink);
+}
+
+.on-paper {
+  --d-ink: #000000;
+  --d-ground: #f3f1e8;
+  --d-dim: #5a5c63;
+  --d-rule: #c9c7bf;
+  color: var(--d-ink);
+}
+
+/* A column of stacked pieces with one gap. */
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* A bordered card: subhead and one mono paragraph. */
+.card {
+  border: 2px solid var(--d-ink);
+  padding: 32px 36px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--d-ground);
+}
+
+.card--centered {
+  min-height: 300px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+}
+
+/* Recovery: three cards joined by operators, centred in the space under the lead. */
+.equation {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr 120px 1fr;
+  align-items: center;
+  gap: 24px;
+}
+
+.op {
+  font-size: 72px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Proof: label column and value column, baseline aligned. */
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 40px;
+  row-gap: 8px;
+  align-items: baseline;
+}
+
+/* Shipped: the simulator render sits on the black ground with no frame; the figure takes the column height. */
+.render {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: contain;
+  object-position: top right;
 }
 
 /* Screenshot frames: a hairline box, a one-line caption underneath, no shadow. */
@@ -243,34 +355,42 @@ a {
 
 .step {
   border: 2px solid var(--d-ink);
-  padding: 28px 30px 30px;
+  padding: 24px 28px 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   background: var(--d-ground);
-  min-height: 300px;
 }
 
 .step__n {
   font-family: var(--d-font-lcd7);
   font-style: italic;
-  font-size: 44px;
+  font-size: 36px;
   line-height: 1;
 }
 
-.step__t {
-  font-size: 34px;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
-  margin: 0;
+/* The picture inside a step has no frame of its own; the card border is enough. */
+.step__img {
+  width: 100%;
+  aspect-ratio: 724 / 540;
+  background: var(--d-ground);
+  overflow: hidden;
+}
+
+.step__img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.step .sub {
+  margin-top: 4px;
 }
 
 .step__d {
   font-family: var(--d-font-mono);
-  font-size: 24px;
+  font-size: var(--d-text-small);
   line-height: 1.35;
-  color: var(--d-dim);
   margin: 0;
 }
 
@@ -317,8 +437,7 @@ a {
   pointer-events: none;
 }
 
-.show:hover .help,
-.show:focus-within .help {
+.help--on {
   opacity: 1;
 }
 
@@ -478,25 +597,30 @@ a {
   page-break-after: auto;
 }
 
-/* Contact sheet (?sheet): all slides on one 16:9 board, two columns. */
+/* Contact sheet (?sheet): all slides on one 16:9 board, five across, head and rows centred as one group. */
 .sheet {
   width: 1920px;
+  min-height: 1080px;
   padding: 48px 56px 48px;
   background: var(--d-ground);
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 28px 24px;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
 }
 
 .sheet__head {
-  grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
   border-bottom: 2px solid var(--d-ink);
-  margin-bottom: 8px;
+}
+
+.sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 36px 24px;
 }
 
 .sheet__title {
@@ -578,9 +702,55 @@ a {
   }
 }
 
+/*
+ * Reveal: in the show, the pieces of the slide that just became current rise in, one after the
+ * other, over half a second. Only in the show (not in print, the sheet or the presenter thumbs)
+ * and not under reduced motion. The export runs with reduced motion, so stills are stills.
+ */
+.show .slide[data-active="true"] .slide__body > * {
+  animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.show .slide[data-active="true"] .slide__body > :nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.show .slide[data-active="true"] .slide__body > :nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.show .slide[data-active="true"] .slide__body > :nth-child(4) {
+  animation-delay: 270ms;
+}
+
+.show .slide[data-active="true"] .slide__body > :nth-child(n + 5) {
+  animation-delay: 360ms;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media print {
+  .show .slide .slide__body > * {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .help {
     transition: none;
+  }
+
+  .show .slide .slide__body > * {
+    animation: none !important;
   }
 }
 
