@@ -795,6 +795,45 @@ a {
   border: 1px solid var(--d-rule);
 }
 
+/* ?hero: the live illustration at slide size, each treatment in its own column. */
+.opt__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 0;
+  border-top: 1px solid var(--d-rule);
+}
+
+.opt__meta--hero {
+  min-height: 150px; /* same head height in both columns, so the figures line up */
+}
+
+.opt__fig--hero {
+  width: auto;
+}
+
+.opt__fig--hero img,
+.opt__fig--hero canvas {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.opt__fig--hero > div {
+  outline: 1px solid var(--d-rule);
+}
+
+.opt__zoom {
+  position: relative;
+  overflow: hidden;
+}
+
+.opt__zoom > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
 /* Hero watch: the wordmark layer over the dithered photo arrives with the dither. */
 .hero__mark {
   pointer-events: none;

@@ -1,5 +1,5 @@
 /**
- * Export the deck: one PNG per slide, a contact sheet, the two brand option sheets, and a 16:9 PDF.
+ * Export the deck: one PNG per slide, a contact sheet, the brand option sheets, and a 16:9 PDF.
  *
  *   pnpm --filter @sekund/deck export                # against http://127.0.0.1:4320
  *   SEKUND_DECK_URL=http://127.0.0.1:4320 OUT=./out pnpm --filter @sekund/deck export
@@ -58,6 +58,7 @@ async function main(): Promise<void> {
     ["sheet", "contact-sheet.png"],
     ["logos", "logo-options.png"],
     ["illustrations", "illustration-options.png"],
+    ["hero", "hero-lcd-variants.png"],
   ] as const) {
     await page.goto(`${BASE}/?${mode}`);
     await settle(page);

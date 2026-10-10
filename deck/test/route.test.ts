@@ -41,6 +41,7 @@ describe("mode", () => {
     expect(modeFrom("?sheet=1")).toBe("sheet");
     expect(modeFrom("?logos")).toBe("logos");
     expect(modeFrom("?illustrations")).toBe("illustrations");
+    expect(modeFrom("?hero")).toBe("hero");
     expect(modeFrom("?other")).toBe("show");
   });
 });

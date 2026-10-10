@@ -133,7 +133,7 @@ pnpm dev:deck     # http://127.0.0.1:4320
 | `/?notes` | Presenter view: current slide, next slide, Serbian speaker notes, clock and elapsed time. Open it in a second window; both windows follow the same slide over a `BroadcastChannel`. |
 | `/?print` | Every slide at full size, one under the other. |
 | `/?sheet` | Contact sheet of the whole deck. |
-| `/?logos`, `/?illustrations` | Brand option sheets: the four wordmark directions and the four watch illustrations, with the live one marked. |
+| `/?logos`, `/?illustrations`, `/?hero` | Brand option sheets: the four wordmark directions, the four watch illustrations, and the live illustration fully dithered next to the crisp-LCD treatment, with the live one marked. |
 
 Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` jump to a slide; click the right part of the screen for next, the left edge for back. Motion stops under `prefers-reduced-motion`.
 
@@ -141,7 +141,7 @@ Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` ju
 
 Cmd+P (Ctrl+P) from any view prints the whole deck, one 16:9 page per slide, backgrounds included; pick "Save as PDF", no margins, and keep "Background graphics" on. The page size comes from the stylesheet (`@page { size: 1920px 1080px }`).
 
-The same result without a dialog, plus a PNG of every slide, the contact sheet and both option sheets:
+The same result without a dialog, plus a PNG of every slide, the contact sheet and the option sheets:
 
 ```bash
 pnpm dev:deck                                  # leave running

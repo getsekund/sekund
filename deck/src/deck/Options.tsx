@@ -1,5 +1,5 @@
 import { WORDMARK, WORDMARK_OPTIONS, SEGMENT, type WordmarkSpec } from "@/brand";
-import { ILLUSTRATION, ILLUSTRATION_OPTIONS, type IllustrationSpec } from "@/brand/illustrations";
+import { HERO_LCD_VARIANTS, ILLUSTRATION, ILLUSTRATION_OPTIONS, type IllustrationSpec } from "@/brand/illustrations";
 import { Dither } from "@/dither/Dither";
 import { HeroWatch } from "@/ui/HeroWatch";
 import { Wordmark } from "@/ui/Wordmark";
@@ -136,6 +136,60 @@ export function IllustrationOptions() {
       <div className="opt__grid">
         {ILLUSTRATION_OPTIONS.map((spec) => (
           <Candidate spec={spec} live={spec.id === ILLUSTRATION.id} key={spec.id} />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+/* Slide 1 draws the hero at this size; the zoom centres on the time row of the Brow composite (photo pixels). */
+const HERO = { w: 760, h: 960 };
+const TIME_ROW = { x: 422, y: 475 };
+
+/** A 2× window onto the hero, centred on the LCD's time row, so the digits can be judged up close. */
+function Zoom({ spec, zoom = 2, w = 760, h = 480 }: { spec: IllustrationSpec; zoom?: number; w?: number; h?: number }) {
+  const scale = Math.min(HERO.w / spec.width, HERO.h / spec.height);
+  const cx = (HERO.w - spec.width * scale) / 2 + TIME_ROW.x * scale;
+  const cy = (HERO.h - spec.height * scale) / 2 + TIME_ROW.y * scale;
+  return (
+    <div className="opt__zoom" style={{ width: w, height: h }}>
+      <div style={{ transform: `translate(${w / 2 - cx * zoom}px, ${h / 2 - cy * zoom}px) scale(${zoom})`, transformOrigin: "0 0" }}>
+        <HeroWatch spec={spec} width={HERO.w} height={HERO.h} />
+      </div>
+    </div>
+  );
+}
+
+/** `?hero`: the live illustration fully dithered next to the same photo with the LCD laid over undithered. */
+export function HeroLcdVariants() {
+  return (
+    <main className="opt">
+      <Head
+        title="Hero LCD treatments"
+        sub="The live Brow illustration at the exact size and cell slide 1 draws it. Left: everything through the dither. Right: the resin dithered, the LCD panel and wordmark laid over crisp, as a lit display."
+        note="One-line switch in deck/src/brand/illustrations.ts: ILLUSTRATION = BROW keeps the fully dithered hero; ILLUSTRATION = BROW_LIT lights the panel on slides 1 and 10."
+      />
+      <div className="opt__grid">
+        {HERO_LCD_VARIANTS.map((spec) => (
+          <section className="opt__hero" key={spec.id}>
+            <div className="opt__meta opt__meta--hero">
+              <h2 className="opt__name">{spec.lcdSrc ? "Crisp LCD" : "Fully dithered"}</h2>
+              <p className="caption">{spec.note}</p>
+              {spec.id === ILLUSTRATION.id && <span className="opt__tag">Current · live on the deck</span>}
+            </div>
+            <figure className="opt__fig opt__fig--hero">
+              <HeroWatch spec={spec} width={HERO.w} height={HERO.h} />
+              <figcaption className="caption">Slide 1 at 1:1 · 760 px wide, Bayer 8×8, cell 4</figcaption>
+            </figure>
+            <figure className="opt__fig opt__fig--hero">
+              <Zoom spec={spec} />
+              <figcaption className="caption">The time row at 2×</figcaption>
+            </figure>
+            <figure className="opt__fig opt__fig--hero">
+              <HeroWatch spec={spec} width={410} height={500} cell={2} variant="approve" />
+              <figcaption className="caption">Slide 10, APPROVE? page, at half size (cell 2 for the same density)</figcaption>
+            </figure>
+          </section>
         ))}
       </div>
     </main>

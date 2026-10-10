@@ -3,8 +3,10 @@ import { Dither } from "@/dither/Dither";
 
 /**
  * The watch illustration as the hero slides draw it: the composite photo through the one-bit
- * dither, with the wordmark laid over it crisp and in the same perspective. Both layers fill the
- * same box with `contain`, so they register exactly. `dither={false}` shows the photo itself.
+ * dither, with the wordmark laid over it crisp and in the same perspective. Specs with an LCD
+ * layer also lay the panel over the dither, so the display reads as lit and the digits stay
+ * sharp. Every layer fills the same box with `contain`, so they register exactly.
+ * `dither={false}` shows the photo itself.
  */
 export function HeroWatch({
   spec,
@@ -23,8 +25,11 @@ export function HeroWatch({
   reveal?: number;
   dither?: boolean;
 }) {
-  const src = variant === "approve" ? (spec.approveSrc ?? spec.src) : spec.src;
+  const approve = variant === "approve";
+  const src = approve ? (spec.approveSrc ?? spec.src) : spec.src;
+  const lcd = approve ? (spec.approveLcdSrc ?? spec.lcdSrc) : spec.lcdSrc;
   const layer: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", display: "block" };
+  const overlay = { className: reveal > 0 ? "hero__mark hero__mark--reveal" : "hero__mark", style: { ...layer, animationDuration: `${reveal}ms` } };
   return (
     <div style={{ position: "relative", width, height }} aria-hidden>
       {dither ? (
@@ -32,7 +37,8 @@ export function HeroWatch({
       ) : (
         <img src={src} alt="" style={layer} />
       )}
-      {spec.markSrc && <img src={spec.markSrc} alt="" className={reveal > 0 ? "hero__mark hero__mark--reveal" : "hero__mark"} style={{ ...layer, animationDuration: `${reveal}ms` }} />}
+      {dither && lcd && <img src={lcd} alt="" {...overlay} />}
+      {spec.markSrc && <img src={spec.markSrc} alt="" {...overlay} />}
     </div>
   );
 }
