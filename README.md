@@ -164,12 +164,13 @@ Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the 
 
 ## Pitch video
 
-`video/` renders the pitch video (1:59.5) with [Remotion](https://www.remotion.dev), drawing every frame with the deck's own components, so the video matches the deck. The timed voice-over script is `video/src/script.ts`; captions are burned in until Goran's recording is dropped in at `video/public/vo.mp3`.
+`video/` renders the pitch video (1:59.5) with [Remotion](https://www.remotion.dev), drawing every frame with the deck's own components, so the video matches the deck. The timed voice-over script is `video/src/script.ts`. The captions cut is silent with the script burned in; Goran reads along with it, and `pnpm video:vo` lines his take up with the script and renders the voiced cut.
 
 ```bash
-pnpm dev:video        # Remotion Studio, http://localhost:4321
-pnpm video:render     # video/out/*.mp4 and the poster frame
-pnpm video:capture    # with pnpm dev running: re-take the simulator and phone app captures
+pnpm dev:video                  # Remotion Studio, http://localhost:4321
+pnpm video:render               # video/out/*.mp4 and the poster frame
+pnpm video:vo --dir <folder>    # <folder>/vo.<any audio> -> <folder>/sekund-pitch-2min-vo.mp4
+pnpm video:capture              # with pnpm dev running: re-take the captures on devnet
 ```
 
 See `video/README.md`.

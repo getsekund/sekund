@@ -16,8 +16,18 @@ The first render downloads Remotion's Chrome Headless Shell.
 
 `src/script.ts` is the script: eight beats, each line with the second it starts and the second it should end. Scenes, builds and captions all follow it. Goran's recording guide and the same lines with timecodes are in the Project store at `docs/submission/pitch-video-script.md`.
 
-- Put the recording at `public/vo.mp3`, one file from 0:00, and render again. The audio is laid from frame 0 and the render's file name gains `-vo`.
-- Without `vo.mp3` the cut is silent and the captions carry the script.
+Goran records one take anywhere (phone or Mac), reading along with the captions cut, and drops it in a folder as `vo.<ext>`. Any format ffmpeg reads works: m4a, mp3, wav, aiff, caf, even a phone video. `pnpm video:vo` does the rest:
+
+```bash
+pnpm video:vo --dir <folder>            # <folder>/vo.* -> public/vo.mp3 -> <folder>/sekund-pitch-2min-vo.mp4
+pnpm video:vo --dir <folder> --watch    # wait for vo.* to appear or change, then the same
+pnpm video:vo --dir <folder> --captions # burn the captions in as well (-captions-vo.mp4)
+pnpm video:vo --dir <folder> --offset 3.2   # skip the alignment: the video's 0:00 is 3.2 s into the take
+```
+
+- It finds the take's speech onsets and picks the offset that puts them on the cue starts (`scripts/vo-align.ts`), so the lead-in before Goran pressed play doesn't matter. It prints the offset and any line more than 0.35 s off its cue.
+- Then it trims or pads the take to 0:00, normalises it to −16 LUFS, writes `public/vo.mp3` and renders. The cut is checked to be 2:00 or under with an audio track. `--watch` waits until the file has stopped growing, and skips a take it has already rendered.
+- `public/vo.mp3` can also be put there by hand; the Studio plays it under the picture and `pnpm video:render` names the file `-vo`. Without it the cut is silent and the captions carry the script.
 - Optional: `public/founder.mp4`, Goran on camera saying the team lines, up to 16 s. It plays in a frame on the team slide with its own sound, and the voice-over is muted for the team beat.
 - If a line runs long, change its `at`/`end` in `src/script.ts`; `pnpm --filter @sekund/video test` checks that beats still meet and the pace stays readable.
 
@@ -27,12 +37,27 @@ The team beat is the deck's `team` slide. The scene reads the founders' names fr
 
 ## Captures
 
-`public/captures/` comes from `scripts/capture.ts`, which drives the running apps (`pnpm dev`) through the approve flow in Playwright: it unlocks the watch simulator, sends 0.01 SOL to the proof destination from the phone app, pages through the review on the watch, presses D and waits for SIGNED. Two devnet calls are held back: the balance read (the simulator address is unfunded and the faucet is rate-limited) and the broadcast, so the capture run is never sent. The on-chain proof in the video is the confirmed transfer on the deck's proof slide.
+`public/captures/` comes from `scripts/capture.ts`. It drives the running apps (`pnpm dev`) through the approve flow on devnet in Playwright, with nothing mocked:
+
+1. It unlocks the watch simulator and pays the simulator's address 0.02 SOL from the devnet funder (`companion/.devnet/funder.json`, or `SEKUND_FUNDER_KEYPAIR`).
+2. It sends 0.01 SOL to the proof destination from the phone app, pages through the review on the watch and presses D.
+3. It waits for the app's CONFIRMED card, reads the transaction back (the only signer is the simulator, 0.01 SOL to the destination) and captures that signature's Explorer summary.
+4. The run is recorded in `captures.json` under `transaction`.
+
+Explorer turns headless Chrome away, so the script needs a display. It stops before deleting anything if the funder has no SOL.
 
 ```bash
 pnpm dev                  # leave running
-pnpm video:capture
+pnpm video:capture        # needs DISPLAY and about 0.05 devnet SOL in the funder
+pnpm --filter @sekund/video capture --explorer <signature>   # only the Explorer shot, again
 ```
+
+The proof beat reads the run (`src/capture-run.ts`):
+
+- **Confirmed run:** the phone app's card goes on to SIGNED and CONFIRMED, and the Explorer shot shows that same signature.
+- **Run without a transaction:** the card is shown only while it waits for the watch and leaves as the watch signs, and the Explorer shot is the deck's 8 October transfer.
+
+The committed captures are such a run. The faucet refused the capture machine, so nothing was broadcast. `test/captures.test.ts` fails if a SIGNED or CONFIRMED shot is present without a confirmed transaction.
 
 `public/assets` and `public/fonts` are links to `deck/public/`.
 
