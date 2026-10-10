@@ -28,4 +28,4 @@ export function shortKey(key: string): string {
   return `${key.slice(0, 4)}…${key.slice(-4)}`;
 }
 
-export const REPO_URL = "https://github.com/GoranUI/Sekund";
+export const REPO_URL = "https://github.com/getsekund/sekund";

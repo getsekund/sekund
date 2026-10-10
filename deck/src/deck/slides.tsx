@@ -349,7 +349,7 @@ export const SLIDES: readonly Slide[] = [
           </div>
           <p className="small foot">
             <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
-              <Knock>github.com/GoranUI/Sekund</Knock>
+              <Knock>github.com/getsekund/sekund</Knock>
             </a>
           </p>
         </div>
