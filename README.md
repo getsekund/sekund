@@ -23,6 +23,7 @@ This repository is the software proof of concept for the Colosseum Crypto World'
 | `companion/` | Devnet companion app (Vite, React, TypeScript, Tailwind, shadcn/ui), port 4317. Styles come from one tokens file, `companion/src/styles/tokens.css` (SEKUND design system) |
 | `watch-sim/` | Watch simulator, port 4318 (built in parallel) |
 | `deck/` | Pitch deck for the Colosseum Crypto World's Fair as a web app, port 4320. One-bit Bayer-dithered look, presenter notes, PDF export. See [Pitch deck](#pitch-deck) |
+| `video/` | The 2:00 pitch video, rendered with Remotion from the deck's own slides and real simulator captures. See [Pitch video](#pitch-video) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, trust boundary and request lifecycle as built |
 | [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | Threats, where each is handled, and what the PoC does not protect |
 | `docs/PROTOCOL.md` | Wire contract and transport |
@@ -161,6 +162,18 @@ pnpm --filter @sekund/deck lint       # oxlint
 
 Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. The captures under `deck/public/assets/` were taken from the running watch simulator (`?view=3d`, dark theme) and the Solana Explorer page of the proof transaction; `watch-target-render.png` is a generated render of the target design with the real simulator LCD composited in, and the slide says so. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`), the dither colours in `deck/src/dither/palette.ts` (`DITHER_PALETTE`); the alternatives stay next to each, so swapping is one assignment. See `deck/README.md`.
 
+## Pitch video
+
+`video/` renders the pitch video (1:59.5) with [Remotion](https://www.remotion.dev), drawing every frame with the deck's own components, so the video matches the deck. The timed voice-over script is `video/src/script.ts`; captions are burned in until Goran's recording is dropped in at `video/public/vo.mp3`.
+
+```bash
+pnpm dev:video        # Remotion Studio, http://localhost:4321
+pnpm video:render     # video/out/*.mp4 and the poster frame
+pnpm video:capture    # with pnpm dev running: re-take the simulator and phone app captures
+```
+
+See `video/README.md`.
+
 ## Solana SDK
 
 | Package | Version |
@@ -188,7 +201,7 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 
 - All work in this repository started on or after 5 October 2026, inside the hackathon window. There is no prior work.
 - Team: Goran (product and engineering) and Srki; each member's role is stated in the Colosseum submission. The code was written with AI coding agents (Cursor) working under the team's direction.
-- Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components, Phosphor Icons, Playwright). The Ed25519 test vectors are copied from RFC 8032 §7.1.
+- Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components, Phosphor Icons, Playwright; Remotion for the pitch video only). The Ed25519 test vectors are copied from RFC 8032 §7.1.
 - Fonts: Archivo (Omnibus-Type) and IBM Plex Mono (IBM), SIL Open Font License 1.1, self-hosted in `companion/public/fonts/` with their license files.
 
 ## License
@@ -203,6 +216,7 @@ Third-party assets keep their own licences and are not relicensed:
 | DSEG7 and DSEG14 (keshikan) | SIL Open Font License 1.1 | `deck/public/fonts/DSEG-LICENSE.txt`, `watch-sim/public/fonts/DSEG-LICENSE.txt` |
 | Inter (`@fontsource/inter`) | SIL Open Font License 1.1 | npm package, used by the deck |
 | Adafruit GFX `glcdfont` 5×7 glyphs | BSD | `deck/src/ui/glcdfont-LICENSE.txt`, `watch-sim/src/face/glcdfont-LICENSE.txt` |
+| Remotion (pitch video only) | Remotion License: free for individuals and companies of up to three people | `node_modules/remotion/LICENSE.md` |
 | Dependencies (`@solana/kit`, React, Vite, Playwright, …) | Their own | `node_modules/*/LICENSE` |
 
 The watch illustrations and the target render under `deck/public/assets/` are generated pictures of a watch that does not exist yet; the captures there were taken from the running simulator and from the Solana Explorer page of the proof transaction.
