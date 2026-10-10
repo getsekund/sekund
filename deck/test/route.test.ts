@@ -42,6 +42,7 @@ describe("mode", () => {
     expect(modeFrom("?logos")).toBe("logos");
     expect(modeFrom("?illustrations")).toBe("illustrations");
     expect(modeFrom("?hero")).toBe("hero");
+    expect(modeFrom("?palette")).toBe("palette");
     expect(modeFrom("?other")).toBe("show");
   });
 });

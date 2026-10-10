@@ -1,8 +1,11 @@
 import { WORDMARK, WORDMARK_OPTIONS, SEGMENT, type WordmarkSpec } from "@/brand";
 import { HERO_LCD_VARIANTS, ILLUSTRATION, ILLUSTRATION_OPTIONS, type IllustrationSpec } from "@/brand/illustrations";
 import { Dither } from "@/dither/Dither";
+import { DITHER_PALETTE, PALETTE_OPTIONS, PaletteProvider, type DitherPalette } from "@/dither/palette";
 import { HeroWatch } from "@/ui/HeroWatch";
 import { Wordmark } from "@/ui/Wordmark";
+import { SlideFrame } from "./SlideFrame";
+import { SLIDES } from "./slides";
 
 /** A black-on-white SVG of the mark as a data URL, so the dither canvas can sample it like any image. */
 function markDataUrl(spec: WordmarkSpec): string {
@@ -163,6 +166,71 @@ function Zoom({ spec, zoom = 2, w = 760, h = 480 }: { spec: IllustrationSpec; zo
         <HeroWatch spec={spec} width={HERO.w} height={HERO.h} />
       </div>
     </div>
+  );
+}
+
+/** A slide drawn at thumbnail scale, with the option sheet's palette. */
+function Thumb({ index, width, palette }: { index: number; width: number; palette: DitherPalette }) {
+  const slide = SLIDES[index]!;
+  return (
+    <div className="thumb" style={{ width }}>
+      <div className="thumb__stage" style={{ ["--thumb-scale" as string]: width / 1920 }}>
+        <PaletteProvider value={palette}>
+          <SlideFrame slide={slide} index={index} count={SLIDES.length} active={false}>
+            {slide.render({ active: false })}
+          </SlideFrame>
+        </PaletteProvider>
+      </div>
+    </div>
+  );
+}
+
+/** `?palette`: three white-and-blue dither palettes on slide 1, each with a mini contact sheet of the whole deck. */
+export function PaletteOptions() {
+  const flat = (coverage: number) => () => coverage;
+  return (
+    <main className="opt">
+      <Head
+        title="Dither colour options"
+        sub="Every dithered surface (the watch case, the field backgrounds, the shipped-this-week crops) draws its lit cells in white and blue on the black ground. Text, plates and the lit LCD stay ink and paper."
+        note="Mix is the share of lit cells drawn blue; they are the first cells in the Bayer order, so the blue sits evenly in the white at every density. Live palette: deck/src/dither/palette.ts, DITHER_PALETTE."
+      />
+      <div className="opt__grid opt__grid--3">
+        {PALETTE_OPTIONS.map((palette) => (
+          <section className="opt__hero" key={palette.id}>
+            <div className="opt__meta opt__meta--palette">
+              <span className="opt__letter">{palette.label}</span>
+              <h2 className="opt__name">{palette.name}</h2>
+              <p className="caption">{palette.note}</p>
+              <p className="caption">
+                <span className="opt__swatch" style={{ background: palette.blue }} /> {palette.blue} · {Math.round(palette.mix * 100)}% blue, {Math.round((1 - palette.mix) * 100)}% white
+              </p>
+              {palette.id === DITHER_PALETTE.id && <span className="opt__tag">Recommended · live on the deck</span>}
+            </div>
+            <figure className="opt__fig opt__fig--hero">
+              <Thumb index={0} width={570} palette={palette} />
+              <figcaption className="caption">Slide 1</figcaption>
+            </figure>
+            <figure className="opt__fig opt__fig--hero">
+              <div className="opt__swatches">
+                {[0.15, 0.35, 0.6, 0.85].map((coverage) => (
+                  <Dither key={coverage} width={132} height={88} cell={4} field={flat(coverage)} palette={palette} />
+                ))}
+              </div>
+              <figcaption className="caption">The field at 15, 35, 60 and 85% coverage, cell 4, 1:1</figcaption>
+            </figure>
+            <figure className="opt__fig opt__fig--hero">
+              <div className="opt__mini">
+                {SLIDES.map((slide, i) => (
+                  <Thumb key={slide.id} index={i} width={106} palette={palette} />
+                ))}
+              </div>
+              <figcaption className="caption">All ten slides</figcaption>
+            </figure>
+          </section>
+        ))}
+      </div>
+    </main>
   );
 }
 

@@ -59,6 +59,7 @@ async function main(): Promise<void> {
     ["logos", "logo-options.png"],
     ["illustrations", "illustration-options.png"],
     ["hero", "hero-lcd-variants.png"],
+    ["palette", "dither-colour-options.png"],
   ] as const) {
     await page.goto(`${BASE}/?${mode}`);
     await settle(page);

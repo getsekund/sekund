@@ -821,6 +821,39 @@ a {
   min-height: 150px; /* same head height in both columns, so the figures line up */
 }
 
+/* ?palette: three columns, each a slide, four flat swatches and a mini contact sheet. */
+.opt__grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px 32px;
+}
+
+.opt__meta--palette {
+  min-height: 330px;
+}
+
+.opt__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: -1px;
+  margin-right: 4px;
+}
+
+.opt__swatches {
+  display: flex;
+  gap: 14px;
+}
+
+.opt__mini {
+  display: grid;
+  grid-template-columns: repeat(5, 106px);
+  gap: 10px;
+}
+
+.opt__fig--hero .thumb {
+  border-color: var(--d-rule);
+}
+
 .opt__fig--hero {
   width: auto;
 }

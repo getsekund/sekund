@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { luma, on, tone, type Tone } from "./bayer";
+import { luma, on, threshold, tone, type Tone } from "./bayer";
 import type { Field } from "./fields";
+import { usePalette, type DitherPalette } from "./palette";
 
 export interface DitherProps extends Tone {
   /** Size of the surface in stage pixels. */
@@ -14,7 +15,9 @@ export interface DitherProps extends Tone {
   fit?: "cover" | "contain";
   /** Procedural coverage when there is no image. */
   field?: Field;
-  /** Ink and ground colours. */
+  /** Colours for lit and unlit cells. Defaults to the live `DITHER_PALETTE` (or the one a `PaletteProvider` sets). */
+  palette?: DitherPalette;
+  /** Overrides for the palette's white and ground, for one-off surfaces. */
   ink?: string;
   ground?: string;
   /** Animate the field (fields only). Still under reduced motion. */
@@ -28,9 +31,6 @@ export interface DitherProps extends Tone {
   "aria-hidden"?: boolean;
 }
 
-const INK = "#f3f1e8";
-const GROUND = "#000000";
-
 function parseColor(css: string): [number, number, number] {
   const m = css.replace("#", "");
   const hex = m.length === 3 ? m.split("").map((ch) => ch + ch).join("") : m;
@@ -39,11 +39,12 @@ function parseColor(css: string): [number, number, number] {
 }
 
 /**
- * One-bit ordered dither on a canvas. The work happens at cell resolution in a small
- * offscreen canvas; the visible canvas scales it up with smoothing off, so every cell
- * stays a crisp square at any device pixel ratio.
+ * Ordered dither on a canvas: every cell is ground, white or blue. The work happens at cell
+ * resolution in a small offscreen canvas; the visible canvas scales it up with smoothing off,
+ * so every cell stays a crisp square at any device pixel ratio.
  */
 export function Dither(props: DitherProps) {
+  const live = usePalette();
   const {
     width,
     height,
@@ -51,8 +52,9 @@ export function Dither(props: DitherProps) {
     src,
     fit = "contain",
     field,
-    ink = INK,
-    ground = GROUND,
+    palette = live,
+    ink = palette.white,
+    ground = palette.ground,
     animate = false,
     fps = 18,
     reveal = 0,
@@ -83,6 +85,8 @@ export function Dither(props: DitherProps) {
 
     const inkRgb = parseColor(ink);
     const groundRgb = parseColor(ground);
+    const blueRgb = parseColor(palette.blue);
+    const mix = palette.mix;
     const out = sctx.createImageData(cols, rows);
     const data = out.data;
     const toneOpts: Tone = { contrast, gamma, invert };
@@ -98,8 +102,10 @@ export function Dither(props: DitherProps) {
     const paint = (coverage: (x: number, y: number) => number) => {
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const lit = on(coverage(x, y), x, y);
-          const rgb = lit ? inkRgb : groundRgb;
+          const c = coverage(x, y);
+          const lit = on(c, x, y);
+          // Of the lit cells, the earliest in the Bayer order take the blue: a fixed share at any density.
+          const rgb = lit ? (mix > 0 && threshold(x, y) < c * mix ? blueRgb : inkRgb) : groundRgb;
           const i = (y * cols + x) * 4;
           data[i] = rgb[0];
           data[i + 1] = rgb[1];
@@ -171,7 +177,7 @@ export function Dither(props: DitherProps) {
     };
     raf = requestAnimationFrame(tick);
     return stop;
-  }, [width, height, cell, src, fit, field, ink, ground, animate, fps, reveal, contrast, gamma, invert]);
+  }, [width, height, cell, src, fit, field, ink, ground, palette.blue, palette.mix, animate, fps, reveal, contrast, gamma, invert]);
 
   return (
     <canvas
