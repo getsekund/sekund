@@ -1,6 +1,8 @@
+import { ILLUSTRATION } from "@/brand/illustrations";
 import { Dither } from "@/dither/Dither";
 import { bands, fade, horizon, pulse } from "@/dither/fields";
 import { DotText } from "@/ui/DotText";
+import { HeroWatch } from "@/ui/HeroWatch";
 import { Shot, Step } from "@/ui/pieces";
 import { Wordmark } from "@/ui/Wordmark";
 import { EARLIER_TX, PROOF_TX, REPO_URL, explorerUrl, shortKey } from "./facts";
@@ -22,17 +24,8 @@ export const SLIDES: readonly Slide[] = [
       <>
         <div className="slide__bg">
           <Dither width={STAGE_W} height={STAGE_H} cell={6} field={pulse} animate={active} fps={16} contrast={1} />
-          <div style={{ position: "absolute", right: 96, top: 60, width: 760, height: 960 }}>
-            <Dither
-              width={760}
-              height={960}
-              cell={4}
-              src="/assets/watch-clock-dark.png"
-              fit="contain"
-              contrast={1.35}
-              gamma={0.9}
-              reveal={active ? 900 : 0}
-            />
+          <div style={{ position: "absolute", right: 96, top: 60 }}>
+            <HeroWatch spec={ILLUSTRATION} width={760} height={960} reveal={active ? 900 : 0} />
           </div>
         </div>
         <div className="slide__body" style={{ justifyContent: "space-between" }}>
@@ -364,8 +357,8 @@ export const SLIDES: readonly Slide[] = [
       <>
         <div className="slide__bg">
           <Dither width={STAGE_W} height={STAGE_H} cell={6} field={pulse} animate={active} fps={16} />
-          <div style={{ position: "absolute", left: 1060, top: 40, width: 820, height: 1000 }}>
-            <Dither width={820} height={1000} cell={4} src="/assets/watch-approve-dark.png" fit="contain" contrast={1.35} gamma={0.9} reveal={active ? 900 : 0} />
+          <div style={{ position: "absolute", left: 1060, top: 40 }}>
+            <HeroWatch spec={ILLUSTRATION} width={820} height={1000} variant="approve" reveal={active ? 900 : 0} />
           </div>
         </div>
         <div className="slide__body" style={{ justifyContent: "space-between" }}>

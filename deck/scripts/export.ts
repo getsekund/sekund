@@ -1,5 +1,5 @@
 /**
- * Export the deck: one PNG per slide, a contact sheet, and a 16:9 PDF.
+ * Export the deck: one PNG per slide, a contact sheet, the two brand option sheets, and a 16:9 PDF.
  *
  *   pnpm --filter @sekund/deck export                # against http://127.0.0.1:4320
  *   SEKUND_DECK_URL=http://127.0.0.1:4320 OUT=./out pnpm --filter @sekund/deck export
@@ -54,12 +54,18 @@ async function main(): Promise<void> {
   }
 
   await page.setViewportSize({ width: WIDTH, height: HEIGHT });
-  await page.goto(`${BASE}/?sheet`);
-  await settle(page);
-  const sheet = resolve(OUT, "contact-sheet.png");
-  await page.screenshot({ path: sheet, fullPage: true });
-  written.push(sheet);
-  console.log("contact sheet");
+  for (const [mode, name] of [
+    ["sheet", "contact-sheet.png"],
+    ["logos", "logo-options.png"],
+    ["illustrations", "illustration-options.png"],
+  ] as const) {
+    await page.goto(`${BASE}/?${mode}`);
+    await settle(page);
+    const file = resolve(OUT, name);
+    await page.screenshot({ path: file, fullPage: true });
+    written.push(file);
+    console.log(name.replace(".png", ""));
+  }
 
   await page.goto(`${BASE}/?print`);
   await settle(page, 2200);

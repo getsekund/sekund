@@ -645,3 +645,181 @@ a {
     transition: none;
   }
 }
+
+/* Brand option sheets (?logos, ?illustrations): 1920 wide, as tall as the rows need. */
+.opt {
+  width: 1920px;
+  padding: 48px 56px 56px;
+  background: var(--d-ground);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.opt__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 48px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--d-ink);
+}
+
+.opt__title {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.opt__ref {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 10px 0 2px;
+}
+
+.opt__row {
+  display: grid;
+  grid-template-columns: 230px 500px 280px 300px 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 26px 0;
+  border-top: 1px solid var(--d-rule);
+}
+
+.opt__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 200px;
+}
+
+.opt__letter {
+  font-family: var(--d-font-lcd14);
+  font-style: italic;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.opt__name {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.opt__tag {
+  font-family: var(--d-font-mono);
+  font-size: 16px;
+  background: var(--d-ink);
+  color: var(--d-ground);
+  padding: 4px 10px;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.opt__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  color: var(--d-ink);
+}
+
+.opt__cell--ink {
+  justify-content: center;
+  min-height: 200px;
+}
+
+.opt__cell--stack {
+  gap: 16px;
+}
+
+.opt__paper {
+  background: #e9eae4;
+  color: #141517;
+  padding: 18px 22px;
+  display: inline-flex;
+}
+
+.opt__smalls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.opt__face {
+  overflow: hidden;
+  border: 1px solid var(--d-rule);
+}
+
+.opt__face img {
+  display: block;
+}
+
+.opt__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px 40px;
+}
+
+.opt__cand {
+  display: grid;
+  grid-template-columns: 236px 1fr;
+  gap: 24px;
+  padding: 26px 0;
+  border-top: 1px solid var(--d-rule);
+}
+
+.opt__pair {
+  display: flex;
+  gap: 24px;
+}
+
+.opt__fig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+}
+
+.opt__fig img,
+.opt__fig canvas {
+  display: block;
+  width: 300px;
+  height: auto;
+  border: 1px solid var(--d-rule);
+}
+
+/* Hero watch: the wordmark layer over the dithered photo arrives with the dither. */
+.hero__mark {
+  pointer-events: none;
+}
+
+.hero__mark--reveal {
+  animation-name: hero-mark-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes hero-mark-in {
+  from {
+    opacity: 0;
+  }
+  60% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__mark--reveal {
+    animation: none;
+  }
+}

@@ -39,6 +39,8 @@ describe("mode", () => {
     expect(modeFrom("?notes")).toBe("notes");
     expect(modeFrom("?print")).toBe("print");
     expect(modeFrom("?sheet=1")).toBe("sheet");
+    expect(modeFrom("?logos")).toBe("logos");
+    expect(modeFrom("?illustrations")).toBe("illustrations");
     expect(modeFrom("?other")).toBe("show");
   });
 });

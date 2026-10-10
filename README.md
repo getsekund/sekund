@@ -133,6 +133,7 @@ pnpm dev:deck     # http://127.0.0.1:4320
 | `/?notes` | Presenter view: current slide, next slide, Serbian speaker notes, clock and elapsed time. Open it in a second window; both windows follow the same slide over a `BroadcastChannel`. |
 | `/?print` | Every slide at full size, one under the other. |
 | `/?sheet` | Contact sheet of the whole deck. |
+| `/?logos`, `/?illustrations` | Brand option sheets: the four wordmark directions and the four watch illustrations, with the live one marked. |
 
 Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` jump to a slide; click the right part of the screen for next, the left edge for back. Motion stops under `prefers-reduced-motion`.
 
@@ -140,7 +141,7 @@ Keys: `→` `←` `Space` `PageDown` `PageUp` `Home` `End`, `1`–`9` and `0` ju
 
 Cmd+P (Ctrl+P) from any view prints the whole deck, one 16:9 page per slide, backgrounds included; pick "Save as PDF", no margins, and keep "Background graphics" on. The page size comes from the stylesheet (`@page { size: 1920px 1080px }`).
 
-The same result without a dialog, plus a PNG of every slide and the contact sheet:
+The same result without a dialog, plus a PNG of every slide, the contact sheet and both option sheets:
 
 ```bash
 pnpm dev:deck                                  # leave running
@@ -156,7 +157,7 @@ pnpm --filter @sekund/deck typecheck
 pnpm --filter @sekund/deck lint       # oxlint
 ```
 
-Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction.
+Slide copy lives in `deck/src/deck/slides.tsx`; the on-chain facts shown on the proof slide are in `deck/src/deck/facts.ts`. Product screenshots under `deck/public/assets/` were taken from the running apps (`?view=3d` watch, companion at phone width) and the Solana Explorer page of the proof transaction. The wordmark and the hero watch illustration are picked in `deck/src/brand/` (`WORDMARK`, `ILLUSTRATION`); the alternatives stay next to them, so swapping is one import. See `deck/README.md`.
 
 ## Solana SDK
 

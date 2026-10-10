@@ -1,11 +1,16 @@
-export type Mode = "show" | "notes" | "print" | "sheet";
+export type Mode = "show" | "notes" | "print" | "sheet" | "logos" | "illustrations";
 
-/** `?notes`, `?print` and `?sheet` pick a view; anything else is the audience show. */
+/**
+ * `?notes`, `?print` and `?sheet` pick a view; `?logos` and `?illustrations` are the brand
+ * option sheets. Anything else is the audience show.
+ */
 export function modeFrom(search: string): Mode {
   const params = new URLSearchParams(search);
   if (params.has("notes")) return "notes";
   if (params.has("print")) return "print";
   if (params.has("sheet")) return "sheet";
+  if (params.has("logos")) return "logos";
+  if (params.has("illustrations")) return "illustrations";
   return "show";
 }
 
