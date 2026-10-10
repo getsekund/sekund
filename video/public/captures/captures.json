@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-10-10T18:41:52.904Z",
+  "room": "sekund-video-mv2qpmqk",
+  "watch": "http://127.0.0.1:4318/?room=sekund-video-mv2qpmqk&view=3d",
+  "companion": "http://127.0.0.1:4317/?room=sekund-video-mv2qpmqk",
+  "shots": {
+    "watch-clock": "Normal mode: the clock",
+    "watch-pin": "Secure Mode: NEW PIN entry",
+    "watch-menu": "Secure Mode menu after the PIN",
+    "companion-ready": "Companion connected to the simulator",
+    "companion-waiting": "Companion: request sent, waiting for the watch",
+    "companion-waiting-page": "Companion page while waiting",
+    "watch-review-amount": "Review page 1: amount",
+    "watch-review-to-1": "Review page 2: to-1",
+    "watch-review-to-2": "Review page 3: to-2",
+    "watch-review-network": "Review page 4: network",
+    "watch-review-fee": "Review page 5: fee",
+    "watch-review-approve": "Review page 6: approve",
+    "watch-review-approve-2": "APPROVE? one second later, the countdown running",
+    "watch-press-d": "D held down on APPROVE?",
+    "watch-signed": "Result after approve",
+    "companion-signed": "Companion: signature back from the watch, verified",
+    "companion-signed-page": "Companion page after the signature"
+  }
+}

@@ -4,6 +4,7 @@ packages:
   - companion
   - watch-sim
   - deck
+  - video
 
 onlyBuiltDependencies:
   - esbuild

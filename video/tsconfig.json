@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": { "@/*": ["../deck/src/*"] },
+    "types": ["node"]
+  },
+  "include": ["src", "scripts", "test", "remotion.config.ts", "webpack-override.ts", "vitest.config.ts"]
+}
