@@ -56,7 +56,7 @@ export function describeRequest(entry: RequestEntry, sol: string): RequestView {
           announce: `${what} is waiting for approval on the watch.`,
         };
       case "verifying":
-        return { chip: "SIGNED", summary: signedSummary(entry), step: "Verifying the signature against the message and the watch address.", announce: `${what} signed on the watch.` };
+        return { chip: "SIGNED", summary: signedSummary(entry), step: "Verifying the signature against the message and the watch address.", announce: `${what} signed by the watch simulator.` };
       case "broadcasting":
         return { chip: "SIGNED", summary: signedSummary(entry), step: "Broadcasting to devnet.", announce: `${what} signed. Broadcasting to devnet.` };
       case "confirming":

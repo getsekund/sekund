@@ -1,8 +1,10 @@
 # SEKUND
 
-A Solana hardware wallet inside a retro digital watch. This repository is the software proof of concept for the Colosseum Crypto World's Fair hackathon, on **Solana devnet only**.
+Verify and sign Solana on-wrist. SEKUND is a simple resin digital watch that parses the Solana message it is asked to sign, shows the amount and destination from those exact bytes, and signs only after an approve on the watch. The key never reaches the companion; the hardware target keeps it inside the secure element.
 
-> **The secure element in this proof of concept is simulated in software.** It runs in a Web Worker and holds a non-extractable WebCrypto Ed25519 key in IndexedDB. Real hardware (nRF52840 with a TROPIC01 or SE050E secure element) is the post-hackathon roadmap. Nothing here claims hardware security or mainnet readiness.
+This repository is the software proof of concept for the Colosseum Crypto World's Fair hackathon, on **Solana devnet only**: a watch simulator in the browser, a simulated secure element and a companion app. The simulator's signature was accepted on devnet (see [Devnet proof](#devnet-proof)). The case, the buttons, Bluetooth LE and the TROPIC01 are the roadmap, not in this build.
+
+> **The secure element in this proof of concept is simulated in software.** It runs in a Web Worker and holds a non-extractable WebCrypto Ed25519 key in IndexedDB. Real hardware (nRF52840 with a TROPIC01 or SE050E secure element) is the post-hackathon roadmap. Nothing here claims hardware security or mainnet readiness, and nothing here claims to be the first wearable or Solana-native signer: wearable signers exist. What this build shows is the exact-byte review, the approve-gated signing and the devnet acceptance.
 
 ## What works
 
@@ -173,7 +175,7 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 1. Private keys never leave the simulated secure element on the honest path. The PoC SE cannot stop same-origin page code from using the stored non-extractable `CryptoKey` handle: non-extractable prevents export, not use.
 2. No wallet private key is stored in plaintext; the simulated SE stores a non-extractable `CryptoKey` handle in IndexedDB.
 3. No private keys or sensitive cryptographic material are logged.
-4. On the honest watch path, nothing is signed without physical approval inside a PIN session, before expiry. A compromised watch UI or same-origin script can still call the simulated SE while a session is open.
+4. On the honest watch path, nothing is signed without the approve action on the watch (a button in the simulator, a physical button on hardware) inside a PIN session, before expiry. A compromised watch UI or same-origin script can still call the simulated SE while a session is open.
 5. Pure Ed25519 over the exact, unhashed message bytes that were displayed.
 6. Messages longer than `maxMessageBytes` are rejected before display.
 7. All secure-element byte-order conversion happens in the `seDriver` wrapper only.
@@ -185,6 +187,22 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 ## Disclosure
 
 - All work in this repository started on or after 5 October 2026, inside the hackathon window. There is no prior work.
-- Team: Goran (3D model, watch face, pitch, video) and Srki (code). The code was written with AI coding agents (Cursor) working under the team's direction.
+- Team: Goran (product and engineering) and Srki; each member's role is stated in the Colosseum submission. The code was written with AI coding agents (Cursor) working under the team's direction.
 - Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components, Phosphor Icons, Playwright). The Ed25519 test vectors are copied from RFC 8032 §7.1.
 - Fonts: Archivo (Omnibus-Type) and IBM Plex Mono (IBM), SIL Open Font License 1.1, self-hosted in `companion/public/fonts/` with their license files.
+
+## License
+
+The code in this repository is licensed under the Apache License, Version 2.0 ([`LICENSE`](LICENSE)). Every workspace package declares `"license": "Apache-2.0"`.
+
+Third-party assets keep their own licences and are not relicensed:
+
+| Asset | Licence | Where |
+|---|---|---|
+| Archivo (Omnibus-Type), IBM Plex Mono (IBM) | SIL Open Font License 1.1 | `*/public/fonts/*-OFL.txt` |
+| DSEG7 and DSEG14 (keshikan) | SIL Open Font License 1.1 | `deck/public/fonts/DSEG-LICENSE.txt`, `watch-sim/public/fonts/DSEG-LICENSE.txt` |
+| Inter (`@fontsource/inter`) | SIL Open Font License 1.1 | npm package, used by the deck |
+| Adafruit GFX `glcdfont` 5×7 glyphs | BSD | `deck/src/ui/glcdfont-LICENSE.txt`, `watch-sim/src/face/glcdfont-LICENSE.txt` |
+| Dependencies (`@solana/kit`, React, Vite, Playwright, …) | Their own | `node_modules/*/LICENSE` |
+
+The watch illustrations under `deck/public/assets/` are generated pictures of a watch that does not exist yet; the screenshots there were taken from the running apps and from the Solana Explorer page of the proof transaction.

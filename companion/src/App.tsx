@@ -119,8 +119,8 @@ export default function App() {
 
       <footer className="mx-auto max-w-(--sk-content-max) px-(--sk-margin) pb-(--sk-space-7)">
         <p className="sk-plate max-w-[72ch] border-t border-rule pt-4 text-14 text-graphite">
-          The secure element in this demo is simulated in software. The signatures are real, on Solana devnet only. This page never sees a private key: it sends the exact
-          message bytes, verifies the returned signature, then broadcasts.
+          The watch in this demo is a simulator and its secure element is software; the case, Bluetooth and the chip are roadmap. The signatures are real, on Solana devnet
+          only. This page never sees a private key: it sends the exact message bytes, verifies the returned signature, then broadcasts.
         </p>
       </footer>
     </div>
