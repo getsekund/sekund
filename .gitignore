@@ -19,3 +19,6 @@ test-results/
 
 # Pitch deck export (pnpm deck:export)
 deck/out/
+
+# Pitch video renders (pnpm --filter @sekund/video render)
+video/out/

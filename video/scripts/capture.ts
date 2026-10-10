@@ -94,14 +94,14 @@ async function main(): Promise<void> {
   await shot("watch-menu", bench, "Secure Mode menu after the PIN");
 
   const companion = await context.newPage();
-  let release: (() => void) | null = null;
+  const held: { release?: () => void } = {};
   await companion.route("https://api.devnet.solana.com/**", async (route: Route) => {
     const body = route.request().postDataJSON() as { id: string | number; method: string };
     if (body.method === "getBalance") {
       return route.fulfill({ json: { jsonrpc: "2.0", id: body.id, error: { code: -32000, message: "balance not read in this capture" } } });
     }
     if (body.method === "sendTransaction") {
-      await new Promise<void>((done) => (release = done));
+      await new Promise<void>((done) => (held.release = done));
       return route.abort();
     }
     return route.continue();
@@ -146,7 +146,7 @@ async function main(): Promise<void> {
   await shot("companion-signed", card, "Companion: signature back from the watch, verified");
   await shot("companion-signed-page", companion, "Companion page after the signature");
 
-  release?.();
+  held.release?.();
   writeFileSync(resolve(OUT, "captures.json"), `${JSON.stringify({ capturedAt: new Date().toISOString(), room: ROOM, watch: WATCH_URL, companion: COMPANION_URL, shots }, null, 2)}\n`);
   await browser.close();
 }
