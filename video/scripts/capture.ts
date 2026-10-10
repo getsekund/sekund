@@ -1,30 +1,46 @@
 /**
- * Real captures for the pitch video: the watch simulator and the companion, driven through the
- * actual approve flow over the local relay, written to video/public/captures/.
+ * Real captures for the pitch video: the watch simulator and the phone app (the companion), driven
+ * through the actual approve flow over the local relay, broadcast to devnet, confirmed, and read
+ * back from Solana Explorer. Everything lands in video/public/captures/.
  *
  *   pnpm dev                                  # relay 4319, companion 4317, watch simulator 4318
  *   pnpm --filter @sekund/video capture
+ *   pnpm --filter @sekund/video capture --explorer <signature>   # only Explorer, again
  *
- * The companion builds a real devnet transfer (a fresh devnet blockhash, 0.01 SOL to the proof
- * destination) and the watch simulator reviews and signs it; the companion verifies the
- * signature. Two RPC calls are held back, and nothing else is touched:
- * - getBalance answers "unknown", so the form does not stop on an unfunded simulator address
- *   (the devnet faucet is rate-limited). The balance is not in any capture.
- * - sendTransaction is held and then dropped, so this run is never broadcast. The on-chain proof
- *   in the video is the 8 Oct 2026 transaction on the deck's proof slide, not this run.
+ * The simulator generates a fresh key in its simulated secure element. Its address is funded from
+ * the devnet-only funder wallet the proof script uses (companion/scripts/devnet-funder.ts: a plain
+ * software key that pays for tests and never signs the SEKUND transfer). The companion then builds
+ * 0.01 SOL to the proof destination, the simulator reviews and signs it, and the companion
+ * verifies, broadcasts and confirms it. Nothing is mocked. The transfer is read back with
+ * getTransaction before anything is written, and Explorer is captured once it says Finalized.
+ *
+ * Explorer sits behind Vercel's bot check, which turns headless Chrome away; it is opened in a
+ * headed window, so this needs a display (DISPLAY).
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { chromium, type Locator, type Page, type Route } from "@playwright/test";
+import { parseArgs } from "node:util";
+import { chromium, type Locator, type Page } from "@playwright/test";
+import { address, signature as toSignature } from "@solana/kit";
+import { fundFrom, loadFunder } from "../../companion/scripts/devnet-funder.ts";
+import { createDevnetRpc, explorerTxUrl, getBalance } from "../../companion/src/lib/solana.ts";
 
-const OUT = resolve(import.meta.dirname, "../public/captures");
+const { values } = parseArgs({ options: { explorer: { type: "string" }, out: { type: "string" } } });
+const OUT = resolve(values.out ?? resolve(import.meta.dirname, "../public/captures"));
 const ROOM = `sekund-video-${Date.now().toString(36)}`;
 const WATCH_URL = `http://127.0.0.1:4318/?room=${ROOM}&view=${process.env.SEKUND_VIEW ?? "3d"}`;
 const COMPANION_URL = `http://127.0.0.1:4317/?room=${ROOM}`;
 const PIN = "1234";
 const DESTINATION = "5awdRY3zVWWNZXmHH955bDxdUoZ7aFqjKKaCeCeBuAbg";
 const AMOUNT = "0.01";
+const LAMPORTS = 10_000_000n;
+/** The transfer, the fee, and enough left over that the simulator's account stays rent-exempt. */
+const FUNDING = 20_000_000n;
 const CHROME = process.env.CHROME_PATH ?? "/usr/local/bin/google-chrome";
+/** The rows the deck's proof slide shows, in Explorer's own words. */
+const EXPLORER_ROWS = ["Status", "Confirmation", "Signature", "Fee payer", "Slot", "Timestamp (UTC)"];
+/** The deck's Explorer frame on the proof slide, 1267 × 454; the capture keeps its shape. */
+const EXPLORER_ASPECT = 1267 / 454;
 
 type Key = "a" | "b" | "c" | "d";
 
@@ -68,8 +84,63 @@ async function shot(name: string, target: Locator | Page, note: string): Promise
   console.log("capture", name);
 }
 
+async function chip(companion: Page, word: string, timeout = 15_000): Promise<void> {
+  await companion.waitForFunction((w) => document.querySelector('[data-testid="request-card"]')?.getAttribute("data-chip") === w, word, { timeout });
+}
+
+/** Explorer's summary for the transfer, cut to the deck's rows and the deck's frame. */
+async function captureExplorer(signature: string): Promise<void> {
+  mkdirSync(OUT, { recursive: true });
+  const browser = await chromium.launch({
+    executablePath: CHROME,
+    headless: !process.env.DISPLAY,
+    args: ["--disable-blink-features=AutomationControlled"],
+    ignoreDefaultArgs: ["--enable-automation"],
+  });
+  const page = await browser.newPage({ viewport: { width: 1180, height: 1000 }, deviceScaleFactor: 2, colorScheme: "dark" });
+  await page.goto(explorerTxUrl(signature), { waitUntil: "domcontentloaded" });
+  // The summary is a section headed "Summary" whose card holds one label/value row per field.
+  const summary = (hide: readonly string[] | null) =>
+    page.evaluate((keep) => {
+      const section = [...document.querySelectorAll("section")].find((s) => s.querySelector("h2")?.textContent?.trim() === "Summary");
+      const rows: Record<string, string> = {};
+      for (const row of section?.children[1]?.children ?? []) {
+        const label = row.children[0]?.textContent?.trim() ?? "";
+        rows[label] = row.children[1]?.textContent?.replace(/\s+/g, "") ?? "";
+        if (keep && !keep.includes(label)) (row as HTMLElement).style.display = "none";
+      }
+      return rows;
+    }, hide);
+  for (let i = 0; ; i++) {
+    await page.getByText("Confirmation", { exact: true }).first().waitFor({ timeout: 45_000 });
+    if ((await summary(null))["Confirmation"]?.startsWith("Finalized")) break;
+    if (i >= 12) throw new Error("Explorer never showed the transfer as finalized");
+    await page.waitForTimeout(5_000);
+    await page.reload({ waitUntil: "domcontentloaded" });
+  }
+  const rows = await summary(EXPLORER_ROWS);
+  if (rows["Status"] !== "Success" || rows["Signature"] !== signature) throw new Error(`Explorer shows ${JSON.stringify(rows)}`);
+  const box = await page.locator("section", { has: page.locator("h2", { hasText: /^Summary$/ }) }).first().boundingBox();
+  if (!box) throw new Error("Explorer summary not on the page");
+  const pad = 14;
+  const width = box.width + 2 * pad;
+  await page.screenshot({ path: resolve(OUT, "explorer-rows.png"), clip: { x: box.x - pad, y: box.y - pad, width, height: width / EXPLORER_ASPECT } });
+  shots["explorer-rows"] = "Solana Explorer, devnet: the summary of this run's transfer, finalized";
+  console.log("capture explorer-rows");
+  await browser.close();
+}
+
 async function main(): Promise<void> {
   mkdirSync(OUT, { recursive: true });
+  const rpc = createDevnetRpc();
+  const { signer: funder } = await loadFunder();
+  const funds = await getBalance(rpc, funder.address);
+  if (funds < FUNDING + 10_000n) {
+    throw new Error(`the funder ${funder.address} has ${funds} lamports; fund it on devnet (faucet.solana.com) and run again`);
+  }
+  // A shot this run cannot take must not survive from an earlier one.
+  for (const name of readdirSync(OUT)) if (name.endsWith(".png")) rmSync(resolve(OUT, name));
+
   const browser = await chromium.launch({
     executablePath: CHROME,
     args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
@@ -94,30 +165,25 @@ async function main(): Promise<void> {
   await shot("watch-menu", bench, "Secure Mode menu after the PIN");
 
   const companion = await context.newPage();
-  const held: { release?: () => void } = {};
-  await companion.route("https://api.devnet.solana.com/**", async (route: Route) => {
-    const body = route.request().postDataJSON() as { id: string | number; method: string };
-    if (body.method === "getBalance") {
-      return route.fulfill({ json: { jsonrpc: "2.0", id: body.id, error: { code: -32000, message: "balance not read in this capture" } } });
-    }
-    if (body.method === "sendTransaction") {
-      await new Promise<void>((done) => (held.release = done));
-      return route.abort();
-    }
-    return route.continue();
-  });
   await openCompanion(companion);
-  await companion.waitForTimeout(800);
-  await shot("companion-ready", companion, "Companion connected to the simulator");
+  const watchAddress = address((await companion.getByTestId("watch-address").getAttribute("data-address"))!);
+  const funding = await fundFrom(rpc, funder, watchAddress, FUNDING);
+  console.log("funded", watchAddress, "from", funder.address, funding);
+  await companion.getByRole("button", { name: "Refresh" }).click();
+  await companion.getByText(/^0\.02 SOL$/).waitFor({ timeout: 20_000 });
+  await companion.waitForTimeout(500);
+  await shot("companion-ready", companion, "Companion connected to the simulator, its address funded");
 
-  const to = companion.locator("#to");
-  await to.fill(DESTINATION);
-  const amount = companion.locator("#amount");
-  await amount.fill(AMOUNT);
+  await watch.bringToFront();
+  await shot("watch-address", watch.getByText("Address", { exact: true }).first().locator(".."), "The simulator's own address, from its secure element");
+
+  await companion.bringToFront();
+  await companion.locator("#to").fill(DESTINATION);
+  await companion.locator("#amount").fill(AMOUNT);
   await companion.getByRole("button", { name: "Send to watch" }).click();
   const card = companion.getByTestId("request-card").first();
   await card.waitFor();
-  await companion.waitForFunction(() => document.querySelector('[data-testid="request-card"]')?.getAttribute("data-chip") === "WAITING");
+  await chip(companion, "WAITING");
   await companion.waitForTimeout(500);
   await shot("companion-waiting", card, "Companion: request sent, waiting for the watch");
   await shot("companion-waiting-page", companion, "Companion page while waiting");
@@ -141,14 +207,48 @@ async function main(): Promise<void> {
   await shot("watch-signed", bench, "Result after approve");
 
   await companion.bringToFront();
-  await companion.waitForFunction(() => document.querySelector('[data-testid="request-card"]')?.getAttribute("data-chip") === "SIGNED", undefined, { timeout: 15_000 });
+  // Broadcasting and confirming take a second or two on devnet; the shot is taken if it is caught.
+  try {
+    await chip(companion, "SIGNED", 5_000);
+    await shot("companion-signed", card, "Companion: signature back from the watch, verified, going to devnet");
+  } catch {
+    console.log("SIGNED passed before it could be captured");
+  }
+  await chip(companion, "CONFIRMED", 90_000);
   await companion.waitForTimeout(300);
-  await shot("companion-signed", card, "Companion: signature back from the watch, verified");
-  await shot("companion-signed-page", companion, "Companion page after the signature");
-
-  held.release?.();
-  writeFileSync(resolve(OUT, "captures.json"), `${JSON.stringify({ capturedAt: new Date().toISOString(), room: ROOM, watch: WATCH_URL, companion: COMPANION_URL, shots }, null, 2)}\n`);
+  await shot("companion-confirmed", card, "Companion: verified, broadcast and confirmed on devnet");
+  await shot("companion-confirmed-page", companion, "Companion page after confirmation");
+  const sig = (await companion.getByTestId("signature-row").first().getAttribute("data-signature"))!;
   await browser.close();
+
+  const tx = await rpc.getTransaction(toSignature(sig), { encoding: "jsonParsed", maxSupportedTransactionVersion: 0, commitment: "confirmed" }).send();
+  if (!tx || tx.meta?.err) throw new Error(`devnet does not show ${sig} as a successful transaction`);
+  const keys = tx.transaction.message.accountKeys;
+  const transfer = tx.transaction.message.instructions[0] as { parsed?: { type: string; info: { source: string; destination: string; lamports: number | bigint } } };
+  const info = transfer.parsed?.info;
+  if (keys[0]?.pubkey !== watchAddress || !keys[0]?.signer || keys.filter((k) => k.signer).length !== 1) throw new Error("the transfer's only signer is not the simulator");
+  if (transfer.parsed?.type !== "transfer" || info?.source !== watchAddress || info.destination !== DESTINATION || BigInt(info.lamports) !== LAMPORTS) {
+    throw new Error(`unexpected instruction ${JSON.stringify(transfer, (_k, v) => (typeof v === "bigint" ? v.toString() : v))}`);
+  }
+  const transaction = {
+    signature: sig,
+    signer: watchAddress,
+    destination: DESTINATION,
+    amountSol: AMOUNT,
+    slot: Number(tx.slot),
+    blockTimeUtc: tx.blockTime ? new Date(Number(tx.blockTime) * 1000).toISOString() : null,
+    cluster: "devnet",
+    explorer: explorerTxUrl(sig),
+    fundedBy: { funder: funder.address, signature: funding },
+  };
+  console.log("confirmed", transaction);
+
+  await captureExplorer(sig);
+  writeFileSync(
+    resolve(OUT, "captures.json"),
+    `${JSON.stringify({ capturedAt: new Date().toISOString(), room: ROOM, watch: WATCH_URL, companion: COMPANION_URL, transaction, shots }, null, 2)}\n`,
+  );
 }
 
-await main();
+if (values.explorer) await captureExplorer(values.explorer);
+else await main();
