@@ -200,6 +200,8 @@ Pinned exactly in `companion/package.json`. Network: Solana devnet (`https://api
 
 ## Disclosure
 
+Goran Petkovic and Srdjan Solajic built SEKUND. Cursor agents assisted under their direction, and many commits appear as "Cursor Agent" for that reason.
+
 - All work in this repository started on or after 5 October 2026, inside the hackathon window. There is no prior work.
 - Team: Goran (product and engineering) and Srki; each member's role is stated in the Colosseum submission. The code was written with AI coding agents (Cursor) working under the team's direction.
 - Third-party code is used only as declared dependencies (`@solana/kit`, `@solana-program/system`, `@scure/base`, `ws`, React, Vite, Tailwind CSS, shadcn/ui components, Phosphor Icons, Playwright; Remotion for the pitch video only). The Ed25519 test vectors are copied from RFC 8032 §7.1.
