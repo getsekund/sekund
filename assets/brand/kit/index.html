@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEKUND brand kit</title>
+<link rel="icon" href="assets/mark/favicon-32.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/profiles/apple-touch-180-black.png">
+<style>
+@font-face {
+  font-family: Inter;
+  src: url("fonts/Inter-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: Inter;
+  src: url("fonts/Inter-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+:root {
+  --paper: #f3f1e8;
+  --ink: #141517;
+  --line: #d5d2c8;
+  --mute: #5c5e56;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body {
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.45;
+}
+a { color: var(--ink); }
+a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 36px 24px 80px; }
+header.top {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+header.top img { display: block; width: 117px; height: auto; background: transparent; }
+h1 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 44px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.kicker { margin: 8px 0 0; font-size: 16px; }
+.lede { max-width: 38em; margin: 0 0 8px; }
+.site { margin: 0 0 22px; }
+a.pack {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 12px 16px;
+}
+a.pack:hover { background: #000; }
+.pack-note { margin: 8px 0 0; color: var(--mute); font-size: 14px; }
+h2 {
+  margin: 48px 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.section-note { margin: 0 0 18px; max-width: 40em; color: var(--mute); }
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 20px;
+}
+article h3 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.meta { margin: 0 0 10px; color: var(--mute); font-size: 14px; }
+.thumbs { display: flex; gap: 10px; align-items: center; }
+.thumbs a { line-height: 0; border: 1px solid var(--line); }
+.thumbs img { width: 112px; height: 112px; display: block; object-fit: cover; }
+.circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-block;
+  line-height: 0;
+  border: 1px solid var(--line);
+}
+.circle img { width: 72px; height: 72px; display: block; object-fit: cover; }
+.files { margin: 10px 0 0; display: flex; gap: 16px; }
+.files a { font-weight: 600; }
+.banner a { display: block; line-height: 0; border: 1px solid var(--line); margin: 0 0 8px; }
+.banner img { width: 100%; height: auto; display: block; }
+.banner.story img { width: auto; max-height: 560px; max-width: 100%; }
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 18px;
+}
+.pair figure { margin: 0; }
+.pair img { width: auto; max-width: 100%; height: auto; max-height: 440px; display: block; border: 1px solid var(--line); background: #000; }
+.pair figcaption { margin-top: 6px; font-size: 14px; color: var(--mute); }
+.marks { columns: 2; padding-left: 18px; margin: 0; }
+.marks li { margin: 0 0 6px; break-inside: avoid; }
+pre.sizes {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: auto;
+  border: 1px solid var(--line);
+  padding: 16px;
+  margin: 12px 0 0;
+  white-space: pre;
+}
+.pixel {
+  image-rendering: pixelated;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(45deg, #e4e1d6 25%, transparent 25%),
+    linear-gradient(-45deg, #e4e1d6 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e4e1d6 75%),
+    linear-gradient(-45deg, transparent 75%, #e4e1d6 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-color: var(--paper);
+}
+.favs { display: flex; gap: 16px; align-items: end; margin: 8px 0 16px; }
+footer { margin-top: 48px; color: var(--mute); font-size: 14px; }
+@media (max-width: 720px) {
+  .grid, .pair, .marks { grid-template-columns: 1fr; columns: 1; }
+  h1 { font-size: 34px; }
+  header.top { align-items: flex-start; }
+  .wrap { padding: 24px 16px 64px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img src="assets/mark/sekund-mark-ink.png" alt="" width="117" height="178">
+    <div>
+      <h1>SEKUND</h1>
+      <p class="kicker">Brand kit</p>
+    </div>
+  </header>
+  <p class="lede">Mark A, the chamfer slab. Steel dither on black. Ink on paper. The 16 and 32 px files are the flat plan.</p>
+  <p class="kicker">A hardware wallet you wear.</p>
+  <p class="site"><a href="https://getsekund.com">getsekund.com</a></p>
+  <p><a class="pack" href="sekund-social-pack.zip" download>Download the social pack</a></p>
+  <p class="pack-note">One zip. Profiles, banners, and the mark.</p>
+
+  <div class="pair">
+    <figure>
+      <img src="assets/mark/sekund-mark-on-black.png" alt="Chamfer slab on black">
+      <figcaption>Black</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/mark/sekund-mark-on-paper.png" alt="Chamfer slab on paper">
+      <figcaption>Paper</figcaption>
+    </figure>
+  </div>
+
+  <h2>Profile pictures</h2>
+  <p class="section-note">Square files. The mark sits inside the circle a network will crop. The round sample on each card is that crop.</p>
+  <div class="grid">
+    
+        <article>
+          <h3>Master</h3>
+          <p class="meta">1024 × 1024. Largest square. Use it when a site does not name a size.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/master-1024-black.png" download><img src="assets/profiles/master-1024-black.png" alt="Master profile on black" width="1024" height="1024"></a>
+            <a href="assets/profiles/master-1024-paper.png" download><img src="assets/profiles/master-1024-paper.png" alt="Master profile on paper" width="1024" height="1024"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/master-1024-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/master-1024-black.png" download>Black</a><a href="assets/profiles/master-1024-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>X</h3>
+          <p class="meta">400 × 400. Profile photo. The network crops a circle.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/x-400-black.png" download><img src="assets/profiles/x-400-black.png" alt="X profile on black" width="400" height="400"></a>
+            <a href="assets/profiles/x-400-paper.png" download><img src="assets/profiles/x-400-paper.png" alt="X profile on paper" width="400" height="400"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/x-400-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/x-400-black.png" download>Black</a><a href="assets/profiles/x-400-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>Instagram</h3>
+          <p class="meta">320 × 320. Profile photo. The network crops a circle.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/instagram-320-black.png" download><img src="assets/profiles/instagram-320-black.png" alt="Instagram profile on black" width="320" height="320"></a>
+            <a href="assets/profiles/instagram-320-paper.png" download><img src="assets/profiles/instagram-320-paper.png" alt="Instagram profile on paper" width="320" height="320"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/instagram-320-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/instagram-320-black.png" download>Black</a><a href="assets/profiles/instagram-320-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>LinkedIn</h3>
+          <p class="meta">800 × 800. Profile photo. The network crops a circle.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/linkedin-800-black.png" download><img src="assets/profiles/linkedin-800-black.png" alt="LinkedIn profile on black" width="800" height="800"></a>
+            <a href="assets/profiles/linkedin-800-paper.png" download><img src="assets/profiles/linkedin-800-paper.png" alt="LinkedIn profile on paper" width="800" height="800"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/linkedin-800-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/linkedin-800-black.png" download>Black</a><a href="assets/profiles/linkedin-800-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>Discord</h3>
+          <p class="meta">128 × 128. User or server icon. Cropped to a circle.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/discord-128-black.png" download><img src="assets/profiles/discord-128-black.png" alt="Discord profile on black" width="128" height="128"></a>
+            <a href="assets/profiles/discord-128-paper.png" download><img src="assets/profiles/discord-128-paper.png" alt="Discord profile on paper" width="128" height="128"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/discord-128-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/discord-128-black.png" download>Black</a><a href="assets/profiles/discord-128-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>GitHub</h3>
+          <p class="meta">500 × 500. Avatar.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/github-500-black.png" download><img src="assets/profiles/github-500-black.png" alt="GitHub profile on black" width="500" height="500"></a>
+            <a href="assets/profiles/github-500-paper.png" download><img src="assets/profiles/github-500-paper.png" alt="GitHub profile on paper" width="500" height="500"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/github-500-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/github-500-black.png" download>Black</a><a href="assets/profiles/github-500-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>YouTube</h3>
+          <p class="meta">800 × 800. Channel icon. Cropped to a circle.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/youtube-800-black.png" download><img src="assets/profiles/youtube-800-black.png" alt="YouTube profile on black" width="800" height="800"></a>
+            <a href="assets/profiles/youtube-800-paper.png" download><img src="assets/profiles/youtube-800-paper.png" alt="YouTube profile on paper" width="800" height="800"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/youtube-800-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/youtube-800-black.png" download>Black</a><a href="assets/profiles/youtube-800-paper.png" download>Paper</a></p>
+        </article>
+
+        <article>
+          <h3>Apple touch</h3>
+          <p class="meta">180 × 180. Home screen icon.</p>
+          <div class="thumbs">
+            <a href="assets/profiles/apple-touch-180-black.png" download><img src="assets/profiles/apple-touch-180-black.png" alt="Apple touch profile on black" width="180" height="180"></a>
+            <a href="assets/profiles/apple-touch-180-paper.png" download><img src="assets/profiles/apple-touch-180-paper.png" alt="Apple touch profile on paper" width="180" height="180"></a>
+            <span class="circle" title="Circle crop"><img src="assets/profiles/apple-touch-180-black.png" alt=""></span>
+          </div>
+          <p class="files"><a href="assets/profiles/apple-touch-180-black.png" download>Black</a><a href="assets/profiles/apple-touch-180-paper.png" download>Paper</a></p>
+        </article>
+  </div>
+
+  <h2>Web banners</h2>
+  <p class="section-note">Covers, link previews, a post, and a story. The line is the product. Dither stays on the mark.</p>
+  
+        <article class="banner">
+          <h3>Open Graph</h3>
+          <p class="meta">1200 × 630. Link preview.</p>
+          <a href="assets/banners/og-1200x630-black.png" download><img src="assets/banners/og-1200x630-black.png" alt="Open Graph on black" width="1200" height="630"></a>
+          <a href="assets/banners/og-1200x630-paper.png" download><img src="assets/banners/og-1200x630-paper.png" alt="Open Graph on paper" width="1200" height="630"></a>
+          <p class="files"><a href="assets/banners/og-1200x630-black.png" download>Black</a><a href="assets/banners/og-1200x630-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>X header</h3>
+          <p class="meta">1500 × 500. Cover. The profile photo covers the lower left, so the type sits clear of it.</p>
+          <a href="assets/banners/x-header-1500x500-black.png" download><img src="assets/banners/x-header-1500x500-black.png" alt="X header on black" width="1500" height="500"></a>
+          <a href="assets/banners/x-header-1500x500-paper.png" download><img src="assets/banners/x-header-1500x500-paper.png" alt="X header on paper" width="1500" height="500"></a>
+          <p class="files"><a href="assets/banners/x-header-1500x500-black.png" download>Black</a><a href="assets/banners/x-header-1500x500-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>LinkedIn cover</h3>
+          <p class="meta">1584 × 396. Personal cover. The profile photo covers the lower left.</p>
+          <a href="assets/banners/linkedin-1584x396-black.png" download><img src="assets/banners/linkedin-1584x396-black.png" alt="LinkedIn cover on black" width="1584" height="396"></a>
+          <a href="assets/banners/linkedin-1584x396-paper.png" download><img src="assets/banners/linkedin-1584x396-paper.png" alt="LinkedIn cover on paper" width="1584" height="396"></a>
+          <p class="files"><a href="assets/banners/linkedin-1584x396-black.png" download>Black</a><a href="assets/banners/linkedin-1584x396-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>Facebook cover</h3>
+          <p class="meta">820 × 312. Page cover. Short, with the profile photo at the lower left.</p>
+          <a href="assets/banners/facebook-820x312-black.png" download><img src="assets/banners/facebook-820x312-black.png" alt="Facebook cover on black" width="820" height="312"></a>
+          <a href="assets/banners/facebook-820x312-paper.png" download><img src="assets/banners/facebook-820x312-paper.png" alt="Facebook cover on paper" width="820" height="312"></a>
+          <p class="files"><a href="assets/banners/facebook-820x312-black.png" download>Black</a><a href="assets/banners/facebook-820x312-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>Discord</h3>
+          <p class="meta">960 × 540. Server invite image.</p>
+          <a href="assets/banners/discord-960x540-black.png" download><img src="assets/banners/discord-960x540-black.png" alt="Discord on black" width="960" height="540"></a>
+          <a href="assets/banners/discord-960x540-paper.png" download><img src="assets/banners/discord-960x540-paper.png" alt="Discord on paper" width="960" height="540"></a>
+          <p class="files"><a href="assets/banners/discord-960x540-black.png" download>Black</a><a href="assets/banners/discord-960x540-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>GitHub social</h3>
+          <p class="meta">1280 × 640. Repository social preview.</p>
+          <a href="assets/banners/github-1280x640-black.png" download><img src="assets/banners/github-1280x640-black.png" alt="GitHub social on black" width="1280" height="640"></a>
+          <a href="assets/banners/github-1280x640-paper.png" download><img src="assets/banners/github-1280x640-paper.png" alt="GitHub social on paper" width="1280" height="640"></a>
+          <p class="files"><a href="assets/banners/github-1280x640-black.png" download>Black</a><a href="assets/banners/github-1280x640-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>Web banner</h3>
+          <p class="meta">1600 × 500. Site header.</p>
+          <a href="assets/banners/web-1600x500-black.png" download><img src="assets/banners/web-1600x500-black.png" alt="Web banner on black" width="1600" height="500"></a>
+          <a href="assets/banners/web-1600x500-paper.png" download><img src="assets/banners/web-1600x500-paper.png" alt="Web banner on paper" width="1600" height="500"></a>
+          <p class="files"><a href="assets/banners/web-1600x500-black.png" download>Black</a><a href="assets/banners/web-1600x500-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>YouTube banner</h3>
+          <p class="meta">2560 × 1440. Channel art. The lockup sits in the centre every screen keeps.</p>
+          <a href="assets/banners/youtube-2560x1440-black.png" download><img src="assets/banners/youtube-2560x1440-black.png" alt="YouTube banner on black" width="2560" height="1440"></a>
+          <a href="assets/banners/youtube-2560x1440-paper.png" download><img src="assets/banners/youtube-2560x1440-paper.png" alt="YouTube banner on paper" width="2560" height="1440"></a>
+          <p class="files"><a href="assets/banners/youtube-2560x1440-black.png" download>Black</a><a href="assets/banners/youtube-2560x1440-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner">
+          <h3>Post</h3>
+          <p class="meta">1080 × 1080. Square post.</p>
+          <a href="assets/banners/post-1080-black.png" download><img src="assets/banners/post-1080-black.png" alt="Post on black" width="1080" height="1080"></a>
+          <a href="assets/banners/post-1080-paper.png" download><img src="assets/banners/post-1080-paper.png" alt="Post on paper" width="1080" height="1080"></a>
+          <p class="files"><a href="assets/banners/post-1080-black.png" download>Black</a><a href="assets/banners/post-1080-paper.png" download>Paper</a></p>
+        </article>
+
+        <article class="banner story">
+          <h3>Story</h3>
+          <p class="meta">1080 × 1920. Vertical story. The type sits in the middle, clear of the top and bottom bars.</p>
+          <a href="assets/banners/story-1080x1920-black.png" download><img src="assets/banners/story-1080x1920-black.png" alt="Story on black" width="1080" height="1920"></a>
+          <a href="assets/banners/story-1080x1920-paper.png" download><img src="assets/banners/story-1080x1920-paper.png" alt="Story on paper" width="1080" height="1920"></a>
+          <p class="files"><a href="assets/banners/story-1080x1920-black.png" download>Black</a><a href="assets/banners/story-1080x1920-paper.png" download>Paper</a></p>
+        </article>
+
+  <h2>The mark</h2>
+  <p class="section-note">SVG and PNG, with the word and without. Favicons are the flat plan, transparent.</p>
+  <div class="favs">
+    <img class="pixel" src="assets/mark/favicon-32.png" alt="32 px favicon" width="32" height="32">
+    <img class="pixel" src="assets/mark/favicon-16.png" alt="16 px favicon" width="16" height="16">
+  </div>
+  <ul class="marks">
+    <li><a href="assets/mark/sekund-mark-steel.svg" download>Mark, steel, SVG</a></li>
+<li><a href="assets/mark/sekund-mark-ink.svg" download>Mark, ink, SVG</a></li>
+<li><a href="assets/mark/sekund-mark-steel.png" download>Mark, steel, PNG, transparent</a></li>
+<li><a href="assets/mark/sekund-mark-ink.png" download>Mark, ink, PNG, transparent</a></li>
+<li><a href="assets/mark/sekund-mark-steel@2.png" download>Mark, steel, PNG, 2×</a></li>
+<li><a href="assets/mark/sekund-mark-ink@2.png" download>Mark, ink, PNG, 2×</a></li>
+<li><a href="assets/mark/sekund-mark-on-black.png" download>Mark on black</a></li>
+<li><a href="assets/mark/sekund-mark-on-paper.png" download>Mark on paper</a></li>
+<li><a href="assets/mark/sekund-lockup-black.png" download>Lockup on black</a></li>
+<li><a href="assets/mark/sekund-lockup-paper.png" download>Lockup on paper</a></li>
+<li><a href="assets/mark/sekund-icon-512.png" download>App icon, 512, black</a></li>
+<li><a href="assets/mark/favicon-32.png" download>Favicon, 32 px, transparent</a></li>
+<li><a href="assets/mark/favicon-16.png" download>Favicon, 16 px, transparent</a></li>
+<li><a href="assets/mark/favicon-32.svg" download>Favicon, 32 px, SVG</a></li>
+<li><a href="assets/mark/favicon-16.svg" download>Favicon, 16 px, SVG</a></li>
+<li><a href="assets/mark/favicon.ico" download>Favicon, ICO</a></li>
+  </ul>
+
+  <h2>File list</h2>
+  <pre class="sizes">SEKUND social pack
+Mark A, chamfer slab.
+
+A hardware wallet you wear.
+getsekund.com
+
+Black files are the steel dither on black.
+Paper files are the ink dither on paper.
+Profile pictures keep the mark inside a circle crop.
+16 and 32 px files are the flat plan, for favicons.
+
+assets/profiles/master-1024-black.png            1024×1024  black
+assets/profiles/master-1024-paper.png            1024×1024  paper
+assets/profiles/x-400-black.png                  400×400  black
+assets/profiles/x-400-paper.png                  400×400  paper
+assets/profiles/instagram-320-black.png          320×320  black
+assets/profiles/instagram-320-paper.png          320×320  paper
+assets/profiles/linkedin-800-black.png           800×800  black
+assets/profiles/linkedin-800-paper.png           800×800  paper
+assets/profiles/discord-128-black.png            128×128  black
+assets/profiles/discord-128-paper.png            128×128  paper
+assets/profiles/github-500-black.png             500×500  black
+assets/profiles/github-500-paper.png             500×500  paper
+assets/profiles/youtube-800-black.png            800×800  black
+assets/profiles/youtube-800-paper.png            800×800  paper
+assets/profiles/apple-touch-180-black.png        180×180  black
+assets/profiles/apple-touch-180-paper.png        180×180  paper
+assets/banners/og-1200x630-black.png             1200×630  black
+assets/banners/og-1200x630-paper.png             1200×630  paper
+assets/banners/x-header-1500x500-black.png       1500×500  black
+assets/banners/x-header-1500x500-paper.png       1500×500  paper
+assets/banners/linkedin-1584x396-black.png       1584×396  black
+assets/banners/linkedin-1584x396-paper.png       1584×396  paper
+assets/banners/facebook-820x312-black.png        820×312  black
+assets/banners/facebook-820x312-paper.png        820×312  paper
+assets/banners/discord-960x540-black.png         960×540  black
+assets/banners/discord-960x540-paper.png         960×540  paper
+assets/banners/github-1280x640-black.png         1280×640  black
+assets/banners/github-1280x640-paper.png         1280×640  paper
+assets/banners/web-1600x500-black.png            1600×500  black
+assets/banners/web-1600x500-paper.png            1600×500  paper
+assets/banners/youtube-2560x1440-black.png       2560×1440  black
+assets/banners/youtube-2560x1440-paper.png       2560×1440  paper
+assets/banners/post-1080-black.png               1080×1080  black
+assets/banners/post-1080-paper.png               1080×1080  paper
+assets/banners/story-1080x1920-black.png         1080×1920  black
+assets/banners/story-1080x1920-paper.png         1080×1920  paper
+assets/mark/sekund-mark-steel.svg                Mark, steel, SVG
+assets/mark/sekund-mark-ink.svg                  Mark, ink, SVG
+assets/mark/sekund-mark-steel.png                Mark, steel, PNG, transparent
+assets/mark/sekund-mark-ink.png                  Mark, ink, PNG, transparent
+assets/mark/sekund-mark-steel@2.png              Mark, steel, PNG, 2×
+assets/mark/sekund-mark-ink@2.png                Mark, ink, PNG, 2×
+assets/mark/sekund-mark-on-black.png             Mark on black
+assets/mark/sekund-mark-on-paper.png             Mark on paper
+assets/mark/sekund-lockup-black.png              Lockup on black
+assets/mark/sekund-lockup-paper.png              Lockup on paper
+assets/mark/sekund-icon-512.png                  App icon, 512, black
+assets/mark/favicon-32.png                       Favicon, 32 px, transparent
+assets/mark/favicon-16.png                       Favicon, 16 px, transparent
+assets/mark/favicon-32.svg                       Favicon, 32 px, SVG
+assets/mark/favicon-16.svg                       Favicon, 16 px, SVG
+assets/mark/favicon.ico                          Favicon, ICO
+</pre>
+  <footer>SEKUND. Mark A.</footer>
+</div>
+</body>
+</html>
